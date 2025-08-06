@@ -25,22 +25,34 @@ export function Dashboard() {
 
     try {
       // Get content count
-      const { count: contentCount } = await supabase
+      const { count: contentCount, error: contentError } = await supabase
         .from('content_generations')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
+      if (contentError) {
+        console.error('Error loading content count:', contentError);
+      }
+
       // Get image count
-      const { count: imageCount } = await supabase
+      const { count: imageCount, error: imageError } = await supabase
         .from('image_generations')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
+      if (imageError) {
+        console.error('Error loading image count:', imageError);
+      }
+
       // Get project count
-      const { count: projectCount } = await supabase
+      const { count: projectCount, error: projectError } = await supabase
         .from('projects')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
+
+      if (projectError) {
+        console.error('Error loading project count:', projectError);
+      }
 
       setStats({
         contentCount: contentCount || 0,
@@ -49,6 +61,12 @@ export function Dashboard() {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+      // Set default values if database operations fail
+      setStats({
+        contentCount: 0,
+        imageCount: 0,
+        projectCount: 0,
+      });
     }
   };
 

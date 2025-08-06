@@ -6,6 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg';
   icon?: LucideIcon;
   loading?: boolean;
+  asChild?: boolean;
   children: React.ReactNode;
 }
 
@@ -14,6 +15,7 @@ export function Button({
   size = 'md',
   icon: Icon,
   loading = false,
+  asChild = false,
   children,
   className = '',
   disabled,
