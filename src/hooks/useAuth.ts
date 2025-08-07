@@ -41,11 +41,28 @@ export function useAuth() {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
       });
-      return { error };
+      
+      if (error) {
+        return { error };
+      }
+      
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        return { 
+          error: { 
+            message: 'Please check your email to confirm your account before signing in.' 
+          } 
+        };
+      }
+      
+      return { data };
     } catch (error) {
       console.error('Sign up error:', error);
       return { error: { message: 'An unexpected error occurred during sign up.' } };

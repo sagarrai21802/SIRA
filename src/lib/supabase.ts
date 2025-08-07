@@ -3,15 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Provide fallback values for development
-const fallbackUrl = 'https://your-project.supabase.co';
-const fallbackKey = 'your-anon-key';
-
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables. Using fallback values for development.');
+  console.error('Missing Supabase environment variables!');
+  console.error('Please create a .env file with:');
+  console.error('VITE_SUPABASE_URL=your-supabase-project-url');
+  console.error('VITE_SUPABASE_ANON_KEY=your-supabase-anon-key');
+  throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(
-  supabaseUrl || fallbackUrl,
-  supabaseAnonKey || fallbackKey
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
