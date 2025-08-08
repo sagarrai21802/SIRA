@@ -238,3 +238,4 @@ const createSystemPrompt = (contentType: string, tone: string): string => {
 
   return `${baseInstructions}\n\n${specificInstructions}\n\nTone: ${tone}\nContent Type: ${contentType}`;
 };
+

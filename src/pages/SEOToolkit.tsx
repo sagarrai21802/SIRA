@@ -6,6 +6,7 @@ import { Input } from '../components/UI/Input';
 import { TextArea } from '../components/UI/Input';
 import toast from 'react-hot-toast';
 
+
 export function SEOToolkit() {
   const [activeTab, setActiveTab] = useState('meta');
   const [title, setTitle] = useState('');
