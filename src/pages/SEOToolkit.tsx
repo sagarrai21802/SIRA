@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { generateWithGemini } from '../lib/gemini';
 import { Search, Target, Hash, FileText, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
@@ -45,30 +44,37 @@ export function SEOToolkit() {
     setLoading(false);
   };
 
-  const generateMeta = () => {
+  const generateMeta = async () => {
     if (!title) {
       toast.error('Please enter a title');
       setLoading(false);
       return;
     }
 
-    const metaTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
-    const metaDesc = description || `Learn about ${title}. Comprehensive guide and insights.`;
-    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    try {
+      const { metaTitle, metaDescription, slug } = await generateSEOContent({
+        topic: title,
+        industry: 'general',
+        targetAudience: 'online users'
+      });
 
-    setResults({
-      type: 'meta',
-      title: metaTitle,
-      description: metaDesc.length > 160 ? metaDesc.substring(0, 157) + '...' : metaDesc,
-      slug,
-      preview: {
-        title: metaTitle,
-        description: metaDesc,
-        url: `https://yoursite.com/${slug}`,
-      }
-    });
+      setResults({
+        type: 'meta',
+        metaTitle,
+        metaDescription,
+        slug,
+        preview: {
+          title: metaTitle,
+          description: metaDescription,
+          url: `https://yoursite.com/${slug}`
+        }
+      });
 
-    toast.success('Meta tags generated!');
+      toast.success('Meta tags generated!');
+    } catch (error) {
+      toast.error('Error generating meta tags.');
+      console.error(error);
+    }
   };
 
   const analyzeKeywords = async () => {
@@ -123,63 +129,30 @@ export function SEOToolkit() {
     }
   };
 
-  const generateSchema = () => {
+  const generateSchema = async () => {
     if (!title) {
       toast.error('Please enter a topic');
       setLoading(false);
       return;
     }
 
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": title,
-      "description": description || `Article about ${title}`,
-      "author": {
-        "@type": "Person",
-        "name": "Your Name"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "Your Site Name",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://yoursite.com/logo.png"
-        }
-      },
-      "datePublished": new Date().toISOString(),
-      "dateModified": new Date().toISOString(),
-    };
+    try {
+      const { schemaMarkup } = await generateSEOContent({
+        topic: title,
+        industry: 'general',
+        targetAudience: 'online users'
+      });
 
-    setResults({
-      type: 'schema',
-      schema: JSON.stringify(schema, null, 2),
-    });
+      setResults({
+        type: 'schema',
+        schemaMarkup
+      });
 
-    toast.success('Schema markup generated!');
-  };
-
-  const handleGenerate = () => {
-    switch (activeTab) {
-      case 'meta':
-        generateMeta();
-        break;
-      case 'keywords':
-        analyzeKeywords();
-        break;
-      case 'readability':
-        analyzeReadability();
-        break;
-      case 'schema':
-        generateSchema();
-        break;
+      toast.success('Schema markup generated!');
+    } catch (error) {
+      toast.error('Error generating schema markup.');
+      console.error(error);
     }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
   };
 
   return (
@@ -216,62 +189,29 @@ export function SEOToolkit() {
               placeholder="Enter a title or topic..."
             />
 
-              <Button
-                onClick={handleGenerate}
-                className="w-full"
-                icon={Search}
-              >
-                Generate {tabs.find(t => t.id === activeTab)?.label}
-              </Button>
-            </CardContent>
-          </Card>
+            <Button
+              onClick={handleGenerate}
+              className="w-full"
+              icon={Search}
+              disabled={loading}
+            >
+              {loading ? 'Generating...' : `Generate ${tabs.find(t => t.id === activeTab)?.label}`}
+            </Button>
 
-          {/* Results */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Results
-              </h2>
-            </CardHeader>
-            <CardContent>
-              {results ? (
-                <div className="space-y-4">
-                  {results.type === 'meta' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Meta Title ({results.title.length}/60)
-                        </label>
-                        <Input value={results.title} readOnly />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Meta Description ({results.description.length}/160)
-                        </label>
-                        <TextArea value={results.description} readOnly rows={3} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          URL Slug
-                        </label>
-                        <Input value={results.slug} readOnly />
-                      </div>
-                      <div className="mt-6">
-                        <h3 className="font-medium text-gray-900 dark:text-white mb-3">Search Preview</h3>
-                        <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                          <div className="text-blue-600 text-lg hover:underline cursor-pointer">
-                            {results.preview.title}
-                          </div>
-                          <div className="text-green-600 text-sm">
-                            {results.preview.url}
-                          </div>
-                          <div className="text-gray-600 dark:text-gray-300 text-sm mt-1">
-                            {results.preview.description}
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
+            {results?.type === activeTab && (
+              <div className="space-y-4">
+                {activeTab === 'meta' && (
+                  <>
+                    <Input label="Meta Title" value={results.metaTitle} readOnly />
+                    <TextArea label="Meta Description" value={results.metaDescription} readOnly rows={3} />
+                    <Input label="URL Slug" value={results.slug} readOnly />
+                    <div className="border rounded-lg p-4 text-sm bg-white dark:bg-gray-800">
+                      <div className="text-blue-600 mb-1">{results.preview?.url}</div>
+                      <div className="font-medium text-black dark:text-white">{results.preview?.title}</div>
+                      <div className="text-gray-700 dark:text-gray-300">{results.preview?.description}</div>
+                    </div>
+                  </>
+                )}
 
                 {activeTab === 'keywords' && (
                   <TextArea label="Keywords" value={results.keywords?.join(', ') || ''} readOnly rows={3} />
