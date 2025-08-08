@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { generateWithGemini } from '../lib/gemini';
 import { Search, Target, Hash, FileText, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
@@ -23,29 +24,49 @@ export function SEOToolkit() {
     { id: 'schema', label: 'Schema', icon: Target },
   ];
 
-  const generateMeta = () => {
+
+  const [loading, setLoading] = useState(false);
+
+  const generateMeta = async () => {
     if (!title) {
       toast.error('Please enter a title');
       return;
     }
-
-    const metaTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
-    const metaDesc = description || `Learn about ${title}. Comprehensive guide and insights.`;
-    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-
-    setResults({
-      type: 'meta',
-      title: metaTitle,
-      description: metaDesc.length > 160 ? metaDesc.substring(0, 157) + '...' : metaDesc,
-      slug,
-      preview: {
-        title: metaTitle,
-        description: metaDesc,
-        url: `https://yoursite.com/${slug}`,
-      }
-    });
-
-    toast.success('Meta tags generated!');
+    setLoading(true);
+    try {
+      const prompt = `Generate SEO meta title and meta description for a page with the following title and description.\nTitle: ${title}\nDescription: ${description || ''}`;
+      const aiResult = await generateWithGemini({
+        prompt,
+        contentType: 'meta',
+        tone: 'professional',
+      });
+      // Try to extract title and description from AI result
+      let metaTitle = title;
+      let metaDesc = description || '';
+      const titleMatch = aiResult.match(/title\s*[:\-]?\s*(.*)/i);
+      const descMatch = aiResult.match(/description\s*[:\-]?\s*(.*)/i);
+      if (titleMatch && titleMatch[1]) metaTitle = titleMatch[1].trim();
+      if (descMatch && descMatch[1]) metaDesc = descMatch[1].trim();
+      if (!metaTitle) metaTitle = title;
+      if (!metaDesc) metaDesc = description || '';
+      const slug = metaTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      setResults({
+        type: 'meta',
+        title: metaTitle.length > 60 ? metaTitle.substring(0, 57) + '...' : metaTitle,
+        description: metaDesc.length > 160 ? metaDesc.substring(0, 157) + '...' : metaDesc,
+        slug,
+        preview: {
+          title: metaTitle,
+          description: metaDesc,
+          url: `https://yoursite.com/${slug}`,
+        }
+      });
+      toast.success('Meta tags generated!');
+    } catch (err) {
+      toast.error('Failed to generate meta tags with Gemini AI.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const analyzeKeywords = () => {
@@ -108,39 +129,34 @@ export function SEOToolkit() {
     toast.success('Readability analyzed!');
   };
 
-  const generateSchema = () => {
+
+  const generateSchema = async () => {
     if (!title) {
       toast.error('Please enter a title');
       return;
     }
-
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": title,
-      "description": description || `Article about ${title}`,
-      "author": {
-        "@type": "Person",
-        "name": "Your Name"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "Your Site Name",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://yoursite.com/logo.png"
-        }
-      },
-      "datePublished": new Date().toISOString(),
-      "dateModified": new Date().toISOString(),
-    };
-
-    setResults({
-      type: 'schema',
-      schema: JSON.stringify(schema, null, 2),
-    });
-
-    toast.success('Schema markup generated!');
+    setLoading(true);
+    try {
+      const prompt = `Generate a valid JSON-LD schema.org Article markup for the following page.\nTitle: ${title}\nDescription: ${description || ''}\nReturn only the JSON.`;
+      const aiResult = await generateWithGemini({
+        prompt,
+        contentType: 'schema',
+        tone: 'professional',
+      });
+      let schema = aiResult;
+      // Try to extract JSON from AI result
+      const jsonMatch = aiResult.match(/({[\s\S]*})/);
+      if (jsonMatch && jsonMatch[1]) schema = jsonMatch[1];
+      setResults({
+        type: 'schema',
+        schema: schema.trim(),
+      });
+      toast.success('Schema markup generated!');
+    } catch (err) {
+      toast.error('Failed to generate schema markup with Gemini AI.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGenerate = () => {
@@ -249,8 +265,9 @@ export function SEOToolkit() {
                 onClick={handleGenerate}
                 className="w-full"
                 icon={Search}
+                disabled={loading}
               >
-                Generate {tabs.find(t => t.id === activeTab)?.label}
+                {loading ? 'Generating...' : `Generate ${tabs.find(t => t.id === activeTab)?.label}`}
               </Button>
             </CardContent>
           </Card>
