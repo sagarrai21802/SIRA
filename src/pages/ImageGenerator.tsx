@@ -4,7 +4,7 @@ import { Button } from '../components/UI/Button';
 import { Input } from '../components/UI/Input';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
 import { Image, Download, Wand2 } from 'lucide-react';
-import { generateImage } from '../lib/imageGeneration';
+import { generateImageWithOpenAI } from '../lib/imageGeneration';
 
 export default function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -22,7 +22,7 @@ export default function ImageGenerator() {
     setError(null);
     
     try {
-      const imageUrl = await generateImage(prompt);
+      const imageUrl = await generateImageWithOpenAI(prompt);
       setGeneratedImage(imageUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate image');
