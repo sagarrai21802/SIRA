@@ -10,7 +10,7 @@ import { Signup } from './pages/Auth/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { ContentGenerator } from './pages/ContentGenerator';
 import ImageGenerator from './pages/ImageGenerator';
-import { SEOToolkit } from './pages/SEOToolkit';
+import SEOToolkit from './pages/SEOToolkit';
 
 function App() {
   return (
