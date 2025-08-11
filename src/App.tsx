@@ -9,7 +9,7 @@ import { Login } from './pages/Auth/Login';
 import { Signup } from './pages/Auth/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { ContentGenerator } from './pages/ContentGenerator';
-import { ImageGenerator } from './pages/ImageGenerator';
+import ImageGenerator from './pages/ImageGenerator';
 import { SEOToolkit } from './pages/SEOToolkit';
 
 function App() {
