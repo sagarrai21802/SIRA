@@ -15,6 +15,7 @@ import { ContentGenerator } from "./pages/ContentGenerator";
 import SEOToolkit from "./pages/SEOToolkit";
 import { useAuth } from "./hooks/useAuth";
 import GenerateTemplate from "./pages/Template";
+import { ImageGenerator } from "./pages/ImageGeneration";
 
 function AppContent() {
   const { loading } = useAuth();
@@ -89,9 +90,7 @@ function AppContent() {
                 path="/images"
                 element={
                   <ProtectedRoute>
-                    <div className="text-gray-700 dark:text-white text-lg">
-                      Images page coming soon...
-                    </div>
+                      <ImageGenerator />
                   </ProtectedRoute>
                 }
               />
@@ -124,3 +123,5 @@ export default function App() {
     </Router>
   );
 }
+
+
