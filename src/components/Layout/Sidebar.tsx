@@ -1,7 +1,7 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Layers, BarChart3, Image, FileText } from "lucide-react";
+import { LayoutDashboard, Layers, BarChart3, Image, FileText ,UserCircle} from "lucide-react";
+
 export function Sidebar() {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -9,6 +9,7 @@ export function Sidebar() {
     { name: "SEO Tools", icon: BarChart3, href: "/seo" },
     { name: "Content", icon: FileText, href: "/content" },
     { name: "Images", icon: Image, href: "/images" },
+    { name: "Profile", icon: UserCircle, href: "/profile" }, 
   ];
 
   return (
