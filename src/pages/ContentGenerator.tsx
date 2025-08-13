@@ -24,8 +24,9 @@ export function ContentGenerator() {
     { value: 'blog-post', label: 'Blog Post', icon: '📝', description: 'Comprehensive articles and guides' },
     { value: 'social-media', label: 'Social Media Post', icon: '📱', description: 'Engaging posts for social platforms' },
     { value: 'email', label: 'Email', icon: '✉️', description: 'Marketing emails and newsletters' },
-    { value: 'ad-copy', label: 'Ad Copy', icon: '🎯', description: 'Persuasive advertising content' },
-    { value: 'product-description', label: 'Product Description', icon: '🛍️', description: 'Compelling product pages' },
+    // { value: 'ad-copy', label: 'Ad Copy', icon: '🎯', description: 'Persuasive advertising content' },
+    //{ value: 'product-description', label: 'Product Description', icon: '🛍️', description: 'Compelling product pages' },
+{ value: 'job-description', label: 'Job Description', icon: '💼', description: 'AI-powered professional job postings' },
   ];
 
   const tones = [
@@ -99,10 +100,9 @@ export function ContentGenerator() {
       
       'email': `Subject: Unlock the Power of ${prompt}\n\nHi there!\n\nI hope this email finds you well. Today, I want to share something exciting about ${prompt} that could make a real difference for you.\n\nHere's what makes this special:\n\n• Benefit 1: Clear value proposition\n• Benefit 2: Practical application\n• Benefit 3: Long-term impact\n\nReady to get started? [Call-to-Action Button]\n\nBest regards,\nYour Marketing Team`,
       
-      'ad-copy': `Transform Your Success with ${prompt}!\n\n${tone === 'professional' ? 'Discover the professional solution that delivers results.' : 'Ready to take things to the next level?'}\n\n✅ Proven results\n✅ Easy to implement\n✅ Trusted by thousands\n\nLimited Time Offer: Get started today and see the difference!\n\n[Learn More] [Get Started Now]`,
+      // 'ad-copy': `Transform Your Success with ${prompt}!\n\n${tone === 'professional' ? 'Discover the professional solution that delivers results.' : 'Ready to take things to the next level?'}\n\n✅ Proven results\n✅ Easy to implement\n✅ Trusted by thousands\n\nLimited Time Offer: Get started today and see the difference!\n\n[Learn More] [Get Started Now]`,
       
-      'product-description': `${prompt} - Premium Quality & Performance\n\nExperience the perfect blend of innovation and reliability with our ${prompt}. Designed for those who demand excellence, this product delivers outstanding results every time.\n\nFeatures:\n• High-quality materials and construction\n• User-friendly design\n• Exceptional performance\n• Backed by our satisfaction guarantee\n\nOrder now and discover why customers choose us for their ${prompt} needs!`
-    };
+     'job-description': `${prompt} - Exciting Career Opportunity\n\nWe are looking for a talented and motivated ${prompt} to join our dynamic team. In this role, you will play a key part in driving our success and contributing to impactful projects.\n\nResponsibilities:\n• Perform core duties related to ${prompt}\n• Collaborate with team members to achieve goals\n• Maintain high standards of quality and professionalism\n• Contribute innovative ideas and solutions\n\nQualifications:\n• Relevant education or experience in ${prompt}\n• Strong communication and teamwork skills\n• Ability to manage time and prioritize tasks effectively\n\nIf you’re passionate about ${prompt} and eager to grow your career, apply today!`    };
 
     return contentTemplates[type as keyof typeof contentTemplates] || contentTemplates['blog-post'];
   };

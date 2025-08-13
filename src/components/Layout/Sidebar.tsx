@@ -1,7 +1,7 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { LayoutDashboard, Layers, BarChart3, Image, FileText } from "lucide-react";
-
 export function Sidebar() {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -12,7 +12,7 @@ export function Sidebar() {
   ];
 
   return (
-    <div className="h-screen w-64 bg-gray-900 text-white flex flex-col p-4">
+    <div className="h-screen w-64 bg-white text-gray-900 dark:bg-gray-900 dark:text-white flex flex-col p-4 shadow-lg">
       {/* Logo */}
       <div className="mb-8 text-2xl font-bold text-center">SIRA</div>
 
@@ -22,7 +22,7 @@ export function Sidebar() {
           <Link
             key={index}
             to={item.href}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition"
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             <item.icon className="w-5 h-5" />
             {item.name}
