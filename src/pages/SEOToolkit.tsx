@@ -1,160 +1,194 @@
-
 import React, { useState } from 'react';
 import { Card } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Input } from '../components/UI/Input';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
-import { Search, BarChart3, Globe, TrendingUp } from 'lucide-react';
+import { Search, Tags, Key } from 'lucide-react';
+import { generateMetaTags, generateKeywords } from '../lib/seoToolkitFixed';
 
 export default function SEOToolkit() {
-  const [url, setUrl] = useState('');
-  const [keyword, setKeyword] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Meta state
+  const [metaPrompt, setMetaPrompt] = useState('');
+  const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
+  const [metaResults, setMetaResults] = useState<{ title: string; description: string; slug?: string } | null>(null);
+  const [metaError, setMetaError] = useState<string | null>(null);
 
-  const handleAnalyze = async () => {
-    if (!url.trim()) {
-      setError('Please enter a URL to analyze');
+  // Keywords state
+  const [keywordsPrompt, setKeywordsPrompt] = useState('');
+  const [isGeneratingKeywords, setIsGeneratingKeywords] = useState(false);
+  const [keywordsResults, setKeywordsResults] = useState<string[] | null>(null);
+  const [keywordsError, setKeywordsError] = useState<string | null>(null);
+  const [keywordType, setKeywordType] = useState<'short' | 'long'>('short');
+
+  // Generate Meta Tags
+  const handleGenerateMeta = async () => {
+    if (!metaPrompt.trim()) {
+      setMetaError('Please enter a prompt to generate meta tags');
       return;
     }
-
-    setIsAnalyzing(true);
-    setError(null);
-    
+    setIsGeneratingMeta(true);
+    setMetaError(null);
+    setMetaResults(null);
     try {
-      // Simulate SEO analysis
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setResults({
-        score: Math.floor(Math.random() * 40) + 60,
-        issues: [
-          'Missing meta description',
-          'Images without alt text',
-          'Slow loading speed'
-        ],
-        suggestions: [
-          'Add meta description',
-          'Optimize images',
-          'Improve page speed'
-        ]
+      const result = await generateMetaTags({ topic: metaPrompt });
+      setMetaResults({
+        title: result.metaTitle || '',
+        description: result.metaDescription || '',
+        slug: result.slug || '',
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze website');
+      setMetaError(err instanceof Error ? err.message : 'Failed to generate meta tags');
     } finally {
-      setIsAnalyzing(false);
+      setIsGeneratingMeta(false);
+    }
+  };
+
+  // Generate Keywords
+  const handleGenerateKeywords = async (type: 'short' | 'long') => {
+    if (!keywordsPrompt.trim()) {
+      setKeywordsError('Please enter a prompt to generate keywords');
+      return;
+    }
+    setIsGeneratingKeywords(true);
+    setKeywordsError(null);
+    setKeywordsResults(null);
+
+    try {
+      const typeInstruction =
+        type === 'short'
+          ? `Generate 10 short-tail keywords for: ${keywordsPrompt}`
+          : `Generate 10 long-tail keywords for: ${keywordsPrompt}`;
+
+      const result = await generateKeywords({ topic: typeInstruction });
+      setKeywordsResults(result.keywords || []);
+    } catch (err) {
+      setKeywordsError(err instanceof Error ? err.message : 'Failed to generate keywords');
+    } finally {
+      setIsGeneratingKeywords(false);
+    }
+  };
+
+  // ✅ Fix: Set state first, then run keywords generation with *new type*
+  const handleTypeChange = (type: 'short' | 'long') => {
+    setKeywordType(type);
+    if (keywordsPrompt.trim()) {
+      handleGenerateKeywords(type);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-          <Search className="w-8 h-8 text-green-600" />
-          SEO Toolkit
+    <div className="max-w-5xl mx-auto p-6 space-y-10">
+      {/* Header */}
+      <div>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+          <Search className="w-10 h-10 text-green-600" /> SEO Toolkit
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
-          Analyze and optimize your website's search engine performance
+        <p className="text-gray-600 dark:text-gray-300 text-lg">
+          Generate <strong>meta tags</strong> and <strong>keywords</strong> for your website with professional formatting.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Website Analysis</h2>
-          
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Meta Tags Generator */}
+        <Card className="p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+            <Tags className="w-6 h-6 text-green-600" /> Meta Tags Generator
+          </h2>
+
           <div className="space-y-4">
-            <div>
-              <label htmlFor="url" className="block text-sm font-medium mb-2">
-                Website URL
-              </label>
-              <Input
-                id="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="w-full"
-                disabled={isAnalyzing}
-              />
-            </div>
+            <Input
+              value={metaPrompt}
+              onChange={(e) => setMetaPrompt(e.target.value)}
+              placeholder="Describe your webpage content..."
+              disabled={isGeneratingMeta}
+            />
+            {metaError && <p className="text-red-600">{metaError}</p>}
+            <Button onClick={handleGenerateMeta} disabled={isGeneratingMeta || !metaPrompt.trim()}>
+              {isGeneratingMeta ? <><LoadingSpinner size="sm" /> Generating...</> : 'Generate Meta Tags'}
+            </Button>
 
-            <div>
-              <label htmlFor="keyword" className="block text-sm font-medium mb-2">
-                Target Keyword (Optional)
-              </label>
-              <Input
-                id="keyword"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="Enter target keyword..."
-                className="w-full"
-                disabled={isAnalyzing}
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-600 text-sm">{error}</p>
+            {metaResults && (
+              <div className="mt-6 space-y-4">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded shadow-sm">
+                  <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Meta Title</h3>
+                  <p className="text-xl font-semibold text-blue-600 dark:text-blue-400">{metaResults.title}</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded shadow-sm">
+                  <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Meta Description</h3>
+                  <p className="text-gray-800 dark:text-gray-300">{metaResults.description}</p>
+                </div>
+                {metaResults.slug && (
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded shadow-sm">
+                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">URL Slug</h3>
+                    <p className="text-green-600 dark:text-green-400 font-medium">
+                      https://example.com/{metaResults.slug}
+                    </p>
+                  </div>
+                )}
+                {/* Google SERP Preview */}
+                <div className="border border-gray-300 dark:border-gray-700 rounded p-4 mt-4 bg-white dark:bg-gray-900">
+                  <a href="#" className="text-blue-600 dark:text-blue-400 text-lg font-semibold hover:underline">
+                    {metaResults.title}
+                  </a>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">{metaResults.description}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    https://example.com/{metaResults.slug || ''}
+                  </p>
+                </div>
               </div>
             )}
-
-            <Button
-              onClick={handleAnalyze}
-              disabled={isAnalyzing || !url.trim()}
-              className="w-full"
-            >
-              {isAnalyzing ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Analyze Website
-                </>
-              )}
-            </Button>
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">SEO Analysis Results</h2>
-          
+        {/* Keywords Generator */}
+        <Card className="p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+            <Key className="w-6 h-6 text-green-600" /> Keywords Generator
+          </h2>
+
+          {/* Short/Long toggle */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={keywordType === 'long' ? 'default' : 'outline'}
+              onClick={() => handleTypeChange('short')}
+            >
+              Short Tail
+            </Button>
+            <Button
+              variant={keywordType === 'short' ? 'default' : 'outline'}
+              onClick={() => handleTypeChange('long')}
+            >
+              Long Tail
+            </Button>
+          </div>
+
           <div className="space-y-4">
-            {isAnalyzing ? (
-              <div className="text-center py-8">
-                <LoadingSpinner size="lg" />
-                <p className="mt-2 text-gray-500">Analyzing your website...</p>
-              </div>
-            ) : results ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                  <span className="text-lg font-semibold">SEO Score: {results.score}/100</span>
+            <Input
+              value={keywordsPrompt}
+              onChange={(e) => setKeywordsPrompt(e.target.value)}
+              placeholder={`Describe your webpage content for ${keywordType} tail keywords...`}
+              disabled={isGeneratingKeywords}
+            />
+            {keywordsError && <p className="text-red-600">{keywordsError}</p>}
+            <Button onClick={() => handleGenerateKeywords(keywordType)} disabled={isGeneratingKeywords || !keywordsPrompt.trim()}>
+              {isGeneratingKeywords ? <><LoadingSpinner size="sm" /> Generating...</> : 'Generate Keywords'}
+            </Button>
+
+            {keywordsResults && (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-200 capitalize">
+                  Generated {keywordType} Tail Keywords
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {keywordsResults.map((kw, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-gradient-to-r from-green-100 to-green-200 text-green-800 px-3 py-1 rounded-full font-semibold text-sm shadow-sm"
+                    >
+                      {kw}
+                    </span>
+                  ))}
                 </div>
-                
-                <div>
-                  <h3 className="font-medium mb-2">Issues Found:</h3>
-                  <ul className="space-y-1">
-                    {results.issues.map((issue: string, index: number) => (
-                      <li key={index} className="text-sm text-red-600">• {issue}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium mb-2">Suggestions:</h3>
-                  <ul className="space-y-1">
-                    {results.suggestions.map((suggestion: string, index: number) => (
-                      <li key={index} className="text-sm text-green-600">• {suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <Globe className="w-16 h-16 mx-auto mb-2 opacity-50" />
-                <p>Enter a URL and click analyze to see SEO insights</p>
               </div>
             )}
           </div>
