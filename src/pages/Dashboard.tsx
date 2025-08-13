@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Image, BarChart3, Clock, TrendingUp } from 'lucide-react';
+import { Plus, FileText, Image, BarChart3, Clock, TrendingUp, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
@@ -12,6 +12,7 @@ export function Dashboard() {
     contentCount: 0,
     imageCount: 0,
     projectCount: 0,
+    templateCount: 0,
   });
 
   useEffect(() => {
@@ -24,48 +25,47 @@ export function Dashboard() {
     if (!user) return;
 
     try {
-      // Get content count
       const { count: contentCount, error: contentError } = await supabase
         .from('content_generations')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      if (contentError) {
-        console.error('Error loading content count:', contentError);
-      }
+      if (contentError) console.error('Error loading content count:', contentError);
 
-      // Get image count
       const { count: imageCount, error: imageError } = await supabase
         .from('image_generations')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      if (imageError) {
-        console.error('Error loading image count:', imageError);
-      }
+      if (imageError) console.error('Error loading image count:', imageError);
 
-      // Get project count
       const { count: projectCount, error: projectError } = await supabase
         .from('projects')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      if (projectError) {
-        console.error('Error loading project count:', projectError);
-      }
+      if (projectError) console.error('Error loading project count:', projectError);
+
+      const { count: templateCount, error: templateError } = await supabase
+        .from('templates')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (templateError) console.error('Error loading template count:', templateError);
 
       setStats({
         contentCount: contentCount || 0,
         imageCount: imageCount || 0,
         projectCount: projectCount || 0,
+        templateCount: templateCount || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
-      // Set default values if database operations fail
       setStats({
         contentCount: 0,
         imageCount: 0,
         projectCount: 0,
+        templateCount: 0,
       });
     }
   };
@@ -92,6 +92,13 @@ export function Dashboard() {
       href: '/seo',
       color: 'bg-green-500',
     },
+    {
+      title: 'Templates',
+      description: 'Access ready-made templates for your projects',
+      icon: Layers,
+      href: '/template',
+      color: 'bg-orange-500',
+    },
   ];
 
   return (
@@ -108,7 +115,7 @@ export function Dashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -156,6 +163,8 @@ export function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+         
         </div>
 
         {/* Quick Actions */}
@@ -163,7 +172,7 @@ export function Dashboard() {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {quickActions.map((action, index) => (
               <Card key={index} hover>
                 <CardContent className="p-6">
