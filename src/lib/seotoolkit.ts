@@ -18,6 +18,7 @@ export interface SEOContentParams {
 export interface SEOContentResult {
   metaTitle: string;
   metaDescription: string;
+  slug:String;
   keywords: string[];
   readabilityTips: string;
   schemaMarkup: string;

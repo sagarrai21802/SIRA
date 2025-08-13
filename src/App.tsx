@@ -14,6 +14,9 @@ import ImageGenerator from './pages/ImageGenerator';
 import SEOToolkit from './pages/SEOToolkit';
 import { useAuth } from './hooks/useAuth';
 
+// ✅ Import your new GenerateTemplate page
+import  GenerateTemplate  from './pages/Template';
+
 function App() {
   const { loading } = useAuth();
 
@@ -62,6 +65,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <SEOToolkit />
+                </ProtectedRoute>
+              }
+            />
+            {/* ✅ New Generate Template Route */}
+            <Route
+              path="/template"
+              element={
+                <ProtectedRoute>
+                  <GenerateTemplate />
                 </ProtectedRoute>
               }
             />

@@ -52,6 +52,16 @@ export function Header() {
                   Content
                 </Link>
                 <Link
+                  to="/template"
+                  className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                    isActive('/content')
+                      ? 'text-blue-600'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  Template
+                </Link>
+                <Link
                   to="/images"
                   className={`text-sm font-medium transition-colors hover:text-blue-600 ${
                     isActive('/images')
