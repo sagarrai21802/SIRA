@@ -12,8 +12,8 @@ const model = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
 export interface TemplateParams {
   title: string;
   description?: string;
-  tone?: string;       // e.g., "professional", "casual", "playful"
-  style?: string;      // e.g., "formal", "minimalist", "creative"
+  tone?: string;       
+  style?: string;      
 }
 
 export interface TemplateResult {
