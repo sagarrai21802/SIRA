@@ -7,15 +7,20 @@ import { Sidebar } from "./components/Layout/Sidebar";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { Home } from "./pages/Home";
-import Login from "./pages/Auth/Login"; // ✅ default import
+import Login from "./pages/Auth/Login"; 
 import { Signup } from "./pages/Auth/Signup";
 import Profile from "./pages/Profile";
 import { Dashboard } from "./pages/Dashboard";
 import { ContentGenerator } from "./pages/ContentGenerator";
 import SEOToolkit from "./pages/SEOToolkit";
-import { useAuth, AuthProvider } from "./hooks/useAuth"; // ✅ AuthProvider imported
+import { useAuth, AuthProvider } from "./hooks/useAuth"; 
 import GenerateTemplate from "./pages/Template";
 import { ImageGenerator } from "./pages/ImageGeneration";
+import Pricing from "./pages/Pricing";
+import About from "./pages/About";
+import ContactUs from "./pages/Contact";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -95,6 +100,46 @@ function AppContent() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/pricing"
+                element={
+                  <ProtectedRoute>
+                    < Pricing/>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/about"
+                element={
+                  <ProtectedRoute>
+                    < About/>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <ProtectedRoute>
+                    < Terms/>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <ProtectedRoute>
+                    < ContactUs/>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <ProtectedRoute>
+                    < Privacy/>
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
           <Footer />
@@ -117,7 +162,7 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider> {/* ✅ Wrap whole app with AuthProvider */}
+    <AuthProvider> 
       <Router>
         <AppContent />
       </Router>
