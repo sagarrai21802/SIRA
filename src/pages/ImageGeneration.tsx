@@ -742,7 +742,16 @@ const IMAGE_SIZES = [
   { label: "256x256", width: 256, height: 256 },
   { label: "512x512", width: 512, height: 512 },
   { label: "1024x1024", width: 1024, height: 1024 },
+  
+  // Social Media Sizes
+  { label: "Instagram Post 1:1", width: 1080, height: 1080 }, // square
+  { label: "Instagram Story 9:16", width: 1080, height: 1920 }, // story
+  { label: "Facebook Post 1.91:1", width: 1200, height: 628 }, // horizontal
+  { label: "Facebook Cover 16:9", width: 820, height: 312 }, // cover
+  { label: "LinkedIn Post 1.91:1", width: 1200, height: 627 },
+  { label: "LinkedIn Banner 4:1", width: 1584, height: 396 },
 ];
+
 
 export const ImageGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState("");
@@ -841,19 +850,25 @@ export const ImageGenerator: React.FC = () => {
           </select>
 
           <select
-            className="p-2 border rounded-lg dark:bg-gray-900 dark:text-white hover:border-blue-500 transition"
-            value={size.label}
-            onChange={(e) => {
-              const selected = IMAGE_SIZES.find((s) => s.label === e.target.value);
-              if (selected) setSize(selected);
-            }}
-          >
-            {IMAGE_SIZES.map((s) => (
-              <option key={s.label} value={s.label}>
-                {s.label}
+              className="p-2 border rounded-lg dark:bg-gray-900 dark:text-white hover:border-blue-500 transition"
+              value={size.label || ""}
+              onChange={(e) => {
+                const selected = IMAGE_SIZES.find((s) => s.label === e.target.value);
+                if (selected) setSize(selected);
+              }}
+            >
+              {/* Default heading option */}
+              <option value="" disabled>
+                Select Size
               </option>
-            ))}
-          </select>
+
+              {IMAGE_SIZES.map((s) => (
+                <option key={s.label} value={s.label}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+
         </div>
 
         <div className="flex flex-wrap gap-4 justify-center mt-2">
