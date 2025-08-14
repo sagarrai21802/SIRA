@@ -1,8 +1,8 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, Sun, Moon, User, LogOut, Settings } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Sparkles, Sun, Moon, User, LogOut, Settings } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+import { useTheme } from "../../hooks/useTheme";
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -12,7 +12,13 @@ export function Header() {
   const isActive = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+      alert("Signed out successfully!");
+    } catch (err: any) {
+      console.error("Error signing out:", err);
+      alert(err.message);
+    }
   };
 
   return (
@@ -38,7 +44,7 @@ export function Header() {
             onClick={toggleTheme}
             className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
-            {theme === 'light' ? (
+            {theme === "light" ? (
               <Moon className="w-5 h-5" />
             ) : (
               <Sun className="w-5 h-5" />
