@@ -15,6 +15,8 @@ const textModel = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
 export interface ContentGenerationParams {
   prompt: string;
   contentType: string; // e.g. "ads", "blog-post", "email"
+  top_p?: number;
+  temperature?: number; 
   tone: string;
 }
 
