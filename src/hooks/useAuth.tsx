@@ -45,11 +45,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string) => {
+    // Get the current domain, whether it's localhost or the deployed URL
+    const redirectBaseUrl = process.env.NODE_ENV === 'production' 
+      ? import.meta.env.VITE_APP_URL || window.location.origin
+      : window.location.origin;
+
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        emailRedirectTo: `${redirectBaseUrl}/auth/callback`
       }
     });
     if (error) throw error;
