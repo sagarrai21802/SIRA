@@ -1,11 +1,12 @@
-import { supabase } from "./supabaseClient";
-import { generateWithGemini } from "./gemini";
+import { generateWithGemini } from "../lib/gemini";
 
 export interface AdRequest {
-  platform: "google" | "meta";
-  product: string;
-  audience: string;
-  tone: string;
+  platform: "meta";
+  campaignObjective: string;
+  budget: string;
+  duration: string;
+  creativeType: string;
+  declaration: string;
 }
 
 export interface AdVariant {
@@ -14,42 +15,68 @@ export interface AdVariant {
   callToAction: string;
 }
 
-export async function generateAds(req: AdRequest, userId?: string) {
+export interface AdOutput {
+  adSet: {
+    audience: string;
+    demographics: string;
+    location: string;
+    placements: string;
+  };
+  adCopy: AdVariant[];
+}
+
+export async function generateAdStrategy(req: AdRequest): Promise<AdOutput> {
   const prompt = `
-Generate 3 ${req.platform === "google" ? "Google Search Ads" : "Meta (Facebook/Instagram) Ads"} 
-for a product: "${req.product}".  
-Target audience: ${req.audience}.  
-Tone: ${req.tone}.
+Generate a Meta Ads strategy with two parts:
+
+1) **Ad Set Suggestions**
+- Suggest the ideal target audience (interests, behaviors).
+- Suggest demographics (age, gender).
+- Suggest locations.
+- Suggest best ad placements (Reels, Feed, Stories, Timeline, etc).
+
+2) **Ad Copy Suggestions**
+Based on Creative Type = ${req.creativeType}.
+Generate 3 ads with Headline, Description, and Call To Action.
+
+Campaign Objective: ${req.campaignObjective}
+Budget: ${req.budget}
+Duration: ${req.duration} days
+Product/Service Declaration: ${req.declaration}
 `;
 
   const text = await generateWithGemini({
     prompt,
     contentType: "ads",
-    tone: req.tone,
+    tone: req.creativeType,
   });
 
-  // parse Gemini output
-  const variants: AdVariant[] = text
-    .split(/\d+\./)
+  // Rough parsing
+  const adSet = {
+    audience:
+      text.match(/Audience:(.*)/i)?.[1]?.trim() || "General Interest Audience",
+    demographics:
+      text.match(/Demographics:(.*)/i)?.[1]?.trim() ||
+      "18-45, All Genders",
+    location:
+      text.match(/Location:(.*)/i)?.[1]?.trim() || "Urban Cities",
+    placements:
+      text.match(/Placements:(.*)/i)?.[1]?.trim() ||
+      "Meta Reels, Stories, Feed",
+  };
+
+  const adCopy: AdVariant[] = text
+    .split(/\d+\./) // split ads
     .map((chunk) => {
       const headline = chunk.match(/Headline:(.*)/i)?.[1]?.trim() || "";
-      const description = chunk.match(/Description:(.*)/i)?.[1]?.trim() || "";
-      const callToAction = chunk.match(/(CTA|Call To Action):(.*)/i)?.[2]?.trim() || "";
+      const description =
+        chunk.match(/Description:(.*)/i)?.[1]?.trim() || "";
+      const callToAction =
+        chunk.match(/(CTA|Call To Action):(.*)/i)?.[2]?.trim() || "";
       if (!headline && !description) return null;
       return { headline, description, callToAction };
     })
     .filter(Boolean) as AdVariant[];
 
-  if (userId) {
-    await supabase.from("ads_generations").insert({
-      user_id: userId,
-      platform: req.platform,
-      product: req.product,
-      audience: req.audience,
-      tone: req.tone,
-      ads: variants,
-    });
-  }
-
-  return variants;
+  return { adSet, adCopy };
 }

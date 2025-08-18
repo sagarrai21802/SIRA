@@ -21,7 +21,7 @@ import About from "./pages/About";
 import ContactUs from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import AdsPage from "./pages/Ad";
+import AdGenerator from "./pages/Ad";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -105,7 +105,7 @@ function AppContent() {
                 path="/ads"
                 element={
                   <ProtectedRoute>
-                    <AdsPage />
+                    <AdGenerator />
                   </ProtectedRoute>
                 }
               />
