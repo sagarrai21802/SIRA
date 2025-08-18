@@ -182,12 +182,12 @@ import toast from "react-hot-toast";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
 
 export default function AdGenerator() {
-  const [campaignObjective, setCampaignObjective] = useState("traffic");
+  const [campaignObjective, setCampaignObjective] = useState("Traffic");
   const [budget, setBudget] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [creativeType, setCreativeType] = useState("image");
+  const [creativeType, setCreativeType] = useState("Image");
   const [declaration, setDeclaration] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdOutput | null>(null);
@@ -237,7 +237,7 @@ export default function AdGenerator() {
 
           <ModernDropdown
             label="Creative Type"
-            options={["image", "carousal", "video"]}
+            options={["Image", "Carousal", "Video"]}
             selected={creativeType}
             onChange={setCreativeType}
           />
