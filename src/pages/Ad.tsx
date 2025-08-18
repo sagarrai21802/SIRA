@@ -1,6 +1,8 @@
+
 // import React, { useState } from "react";
 // import { generateAdStrategy, AdRequest, AdOutput } from "../lib/Ad";
 // import toast from "react-hot-toast";
+// import { ModernDropdown } from "../components/UI/ModernDropdown";
 
 // export default function AdGenerator() {
 //   const [campaignObjective, setCampaignObjective] = useState("traffic");
@@ -20,7 +22,6 @@
 //     }
 //     setLoading(true);
 
-//     // 👇 Add randomness so results aren’t identical every run
 //     const randomizer = Math.random().toString(36).substring(2, 8);
 
 //     const req: AdRequest = {
@@ -44,59 +45,59 @@
 //   };
 
 //   return (
-//     <div className="max-w-6xl mx-auto py-10 px-4">
-//       <h1 className="text-3xl font-bold mb-6">Meta Ad Generator</h1>
+//     <div className="max-w-5xl mx-auto py-10 px-6">
+//       <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg">
+//         <h1 className="text-3xl font-bold mb-10 text-center">Meta Ad Generator</h1>
 
-//       {/* Campaign Objective */}
-//       <div className="mb-4">
-//         <label className="block font-medium mb-2">Campaign Objective</label>
-//         <select
-//           value={campaignObjective}
-//           onChange={(e) => setCampaignObjective(e.target.value)}
-//           className="w-full border rounded-lg p-2"
-//         >
-//           <option value="traffic">Traffic</option>
-//           <option value="leads">Leads</option>
-//           <option value="engagement">Engagement</option>
-//           <option value="sales">Sales</option>
-//           <option value="app-downloads">App Downloads</option>
-//           <option value="app-installs">App Installs</option>
-//         </select>
-//       </div>
+//         {/* Campaign Objective & Creative Type */}
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+//           <ModernDropdown
+//             label="Campaign Objective"
+//             options={["traffic", "leads", "engagement", "sales", "app-downloads", "app-installs"]}
+//             selected={campaignObjective}
+//             onChange={setCampaignObjective}
+//           />
 
-//       {/* Budget + Currency + Duration */}
-//       <div className="grid grid-cols-3 gap-4 mb-4">
-//         <div>
-//           <label className="block font-medium mb-2">Budget</label>
-//           <input
-//             type="number"
-//             placeholder="e.g. 500"
-//             value={budget}
-//             onChange={(e) => setBudget(e.target.value)}
-//             className="w-full border rounded-lg p-2"
+//           <ModernDropdown
+//             label="Creative Type"
+//             options={["image", "carousal", "video"]}
+//             selected={creativeType}
+//             onChange={setCreativeType}
 //           />
 //         </div>
-//         <div>
-//           <label className="block font-medium mb-2">Currency</label>
-//           <select
-//             value={currency}
-//             onChange={(e) => setCurrency(e.target.value)}
-//             className="w-full border rounded-lg p-2"
-//           >
-//             <option value="USD">USD ($)</option>
-//             <option value="EUR">EUR (€)</option>
-//             <option value="INR">INR (₹)</option>
-//             <option value="GBP">GBP (£)</option>
-//           </select>
+
+//         {/* Budget + Currency */}
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+//           <div>
+//             <label className="block font-medium mb-2">Budget</label>
+//             <input
+//               type="number"
+//               placeholder="e.g. 500"
+//               value={budget}
+//               onChange={(e) => setBudget(e.target.value)}
+//               className="w-full border rounded-lg p-3"
+//             />
+//           </div>
+
+//           <ModernDropdown
+//             label="Currency"
+//             options={[
+//               "USD", "EUR", "INR", "GBP", "AUD", "CAD", "JPY", "CNY", "SGD", "AED", "CHF", "NZD", "SEK", "ZAR", "BRL", "HKD"
+//             ]}
+//             selected={currency}
+//             onChange={setCurrency}
+//           />
 //         </div>
-//         <div className="flex flex-col space-y-2">
+
+//         {/* Duration */}
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 //           <div>
 //             <label className="block font-medium mb-2">Start Date</label>
 //             <input
 //               type="date"
 //               value={startDate}
 //               onChange={(e) => setStartDate(e.target.value)}
-//               className="w-full border rounded-lg p-2"
+//               className="w-full border rounded-lg p-3"
 //             />
 //           </div>
 //           <div>
@@ -105,57 +106,44 @@
 //               type="date"
 //               value={endDate}
 //               onChange={(e) => setEndDate(e.target.value)}
-//               className="w-full border rounded-lg p-2"
+//               className="w-full border rounded-lg p-3"
 //             />
 //           </div>
 //         </div>
-//       </div>
 
-//       {/* Creative Type */}
-//       <div className="mb-4">
-//         <label className="block font-medium mb-2">Creative Type</label>
-//         <select
-//           value={creativeType}
-//           onChange={(e) => setCreativeType(e.target.value)}
-//           className="w-full border rounded-lg p-2"
-//         >
-//           <option value="image">Image</option>
-//           <option value="carousal">Carousal</option>
-//           <option value="video">Video</option>
-//         </select>
-//       </div>
+//         {/* Declaration */}
+//         <div className="mb-8">
+//           <label className="block font-medium mb-2">Ad Declaration / Prompt</label>
+//           <textarea
+//             value={declaration}
+//             onChange={(e) => setDeclaration(e.target.value)}
+//             placeholder="Describe your product/service and what you want to advertise..."
+//             className="w-full border rounded-lg p-3 h-28"
+//           />
+//         </div>
 
-//       {/* Declaration */}
-//       <div className="mb-6">
-//         <label className="block font-medium mb-2">
-//           Ad Declaration / Prompt
-//         </label>
-//         <textarea
-//           value={declaration}
-//           onChange={(e) => setDeclaration(e.target.value)}
-//           placeholder="Describe your product/service and what you want to advertise..."
-//           className="w-full border rounded-lg p-3 h-28"
-//         />
+//         {/* Generate Button */}
+//         <div className="text-center">
+//           <button
+//             onClick={handleGenerate}
+//             disabled={loading}
+//             className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 shadow-md"
+//           >
+//             {loading ? "Generating..." : "Generate Ads"}
+//           </button>
+//         </div>
 //       </div>
-
-//       {/* Generate Button */}
-//       <button
-//         onClick={handleGenerate}
-//         disabled={loading}
-//         className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-//       >
-//         {loading ? "Generating..." : "Generate Ads"}
-//       </button>
 
 //       {/* Results */}
 //       {result && (
-//         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+//         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
 //           {/* Ad Set Section */}
 //           <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl shadow-md">
 //             <h2 className="text-2xl font-semibold mb-4">Ad Set Suggestions</h2>
 //             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
 //               <li><strong>Audience:</strong> {result.adSet.audience}</li>
 //               <li><strong>Demographics:</strong> {result.adSet.demographics}</li>
+//               <li><strong>Targeting Type:</strong> {result.adSet.targetingType}</li>
 //               <li><strong>Placements:</strong> {result.adSet.placements}</li>
 //               {result.adSet.imageTips && (
 //                 <li><strong>Image Usage Tips:</strong> {result.adSet.imageTips}</li>
@@ -169,9 +157,9 @@
 //             {result.adCopy.map((v, i) => (
 //               <div
 //                 key={i}
-//                 className="p-4 border rounded-lg bg-white dark:bg-gray-900 shadow-sm mb-3"
+//                 className="p-4 border rounded-lg bg-white dark:bg-gray-900 shadow-sm mb-4"
 //               >
-//                 <h4 className="font-semibold text-lg">Ad {i + 1}</h4>
+//                 <h4 className="font-semibold text-lg mb-2">Ad {i + 1}</h4>
 //                 <p><strong>Headline:</strong> {v.headline}</p>
 //                 <p><strong>Description:</strong> {v.description}</p>
 //                 <p><strong>CTA:</strong> {v.callToAction}</p>
@@ -191,6 +179,7 @@
 import React, { useState } from "react";
 import { generateAdStrategy, AdRequest, AdOutput } from "../lib/Ad";
 import toast from "react-hot-toast";
+import { ModernDropdown } from "../components/UI/ModernDropdown";
 
 export default function AdGenerator() {
   const [campaignObjective, setCampaignObjective] = useState("traffic");
@@ -210,7 +199,6 @@ export default function AdGenerator() {
     }
     setLoading(true);
 
-    // 👇 Add randomizer to avoid repeated results
     const randomizer = Math.random().toString(36).substring(2, 8);
 
     const req: AdRequest = {
@@ -234,59 +222,59 @@ export default function AdGenerator() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-6">Meta Ad Generator</h1>
+    <div className="max-w-5xl mx-auto py-10 px-6">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg">
+        <h1 className="text-3xl font-bold mb-10 text-center">Meta Ad Generator</h1>
 
-      {/* Campaign Objective */}
-      <div className="mb-4">
-        <label className="block font-medium mb-2">Campaign Objective</label>
-        <select
-          value={campaignObjective}
-          onChange={(e) => setCampaignObjective(e.target.value)}
-          className="w-full border rounded-lg p-2"
-        >
-          <option value="traffic">Traffic</option>
-          <option value="leads">Leads</option>
-          <option value="engagement">Engagement</option>
-          <option value="sales">Sales</option>
-          <option value="app-downloads">App Downloads</option>
-          <option value="app-installs">App Installs</option>
-        </select>
-      </div>
+        {/* Campaign Objective & Creative Type */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <ModernDropdown
+            label="Campaign Objective"
+            options={["traffic", "leads", "engagement", "sales", "app-downloads", "app-installs"]}
+            selected={campaignObjective}
+            onChange={setCampaignObjective}
+          />
 
-      {/* Budget + Currency + Duration */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div>
-          <label className="block font-medium mb-2">Budget</label>
-          <input
-            type="number"
-            placeholder="e.g. 500"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            className="w-full border rounded-lg p-2"
+          <ModernDropdown
+            label="Creative Type"
+            options={["image", "carousal", "video"]}
+            selected={creativeType}
+            onChange={setCreativeType}
           />
         </div>
-        <div>
-          <label className="block font-medium mb-2">Currency</label>
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="w-full border rounded-lg p-2"
-          >
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-            <option value="INR">INR (₹)</option>
-            <option value="GBP">GBP (£)</option>
-          </select>
+
+        {/* Budget + Currency */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <label className="block font-medium mb-2">Budget</label>
+            <input
+              type="number"
+              placeholder="e.g. 500"
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              className="w-full border rounded-lg p-3"
+            />
+          </div>
+
+          <ModernDropdown
+            label="Currency"
+            options={[
+              "USD", "EUR", "INR", "GBP", "AUD", "CAD", "JPY", "CNY", "SGD", "AED", "CHF", "NZD", "SEK", "ZAR", "BRL", "HKD"
+            ]}
+            selected={currency}
+            onChange={setCurrency}
+          />
         </div>
-        <div className="flex flex-col space-y-2">
+
+        {/* Duration */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
             <label className="block font-medium mb-2">Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full border rounded-lg p-2"
+              className="w-full border rounded-lg p-3"
             />
           </div>
           <div>
@@ -295,83 +283,103 @@ export default function AdGenerator() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full border rounded-lg p-2"
+              className="w-full border rounded-lg p-3"
             />
           </div>
         </div>
+
+        {/* Declaration */}
+        <div className="mb-8">
+          <label className="block font-medium mb-2">Ad Declaration / Prompt</label>
+          <textarea
+            value={declaration}
+            onChange={(e) => setDeclaration(e.target.value)}
+            placeholder="Describe your product/service and what you want to advertise..."
+            className="w-full border rounded-lg p-3 h-28"
+          />
+        </div>
+
+        {/* Generate Button */}
+        <div className="text-center">
+          <button
+            onClick={handleGenerate}
+            disabled={loading}
+            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 shadow-md"
+          >
+            {loading ? "Generating..." : "Generate Ads"}
+          </button>
+        </div>
       </div>
 
-      {/* Creative Type */}
-      <div className="mb-4">
-        <label className="block font-medium mb-2">Creative Type</label>
-        <select
-          value={creativeType}
-          onChange={(e) => setCreativeType(e.target.value)}
-          className="w-full border rounded-lg p-2"
-        >
-          <option value="image">Image</option>
-          <option value="carousal">Carousal</option>
-          <option value="video">Video</option>
-        </select>
-      </div>
-
-      {/* Declaration */}
-      <div className="mb-6">
-        <label className="block font-medium mb-2">
-          Ad Declaration / Prompt
-        </label>
-        <textarea
-          value={declaration}
-          onChange={(e) => setDeclaration(e.target.value)}
-          placeholder="Describe your product/service and what you want to advertise..."
-          className="w-full border rounded-lg p-3 h-28"
-        />
-      </div>
-
-      {/* Generate Button */}
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? "Generating..." : "Generate Ads"}
-      </button>
-
-      {/* Results */}
+      {/* Results (Improved) */}
       {result && (
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Ad Set Section */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Ad Set Suggestions</h2>
-            <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
-              <li><strong>Audience:</strong> {result.adSet.audience}</li>
-              <li><strong>Demographics:</strong> {result.adSet.demographics}</li>
-              <li><strong>Targeting Type:</strong> {result.adSet.targetingType}</li>
-              <li><strong>Placements:</strong> {result.adSet.placements}</li>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-xl border border-blue-200 dark:border-gray-600">
+            <h2 className="text-2xl font-bold mb-6 text-blue-700 dark:text-blue-300">
+              🎯 Ad Set Suggestions
+            </h2>
+            <div className="space-y-4">
+              <p>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">Audience:</span>{" "}
+                <span className="px-2 py-1 bg-blue-200 dark:bg-blue-600 rounded-full text-sm">
+                  {result.adSet.audience}
+                </span>
+              </p>
+              <p>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">Demographics:</span>{" "}
+                {result.adSet.demographics}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">Targeting Type:</span>{" "}
+                {result.adSet.targetingType}
+              </p>
+              <p>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">Placements:</span>{" "}
+                {result.adSet.placements}
+              </p>
               {result.adSet.imageTips && (
-                <li><strong>Image Usage Tips:</strong> {result.adSet.imageTips}</li>
+                <p className="italic text-gray-600 dark:text-gray-400">
+                  💡 {result.adSet.imageTips}
+                </p>
               )}
-            </ul>
+            </div>
           </div>
 
           {/* Ad Copy Section */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Ad Copy Suggestions</h2>
-            {result.adCopy.map((v, i) => (
-              <div
-                key={i}
-                className="p-4 border rounded-lg bg-white dark:bg-gray-900 shadow-sm mb-3"
-              >
-                <h4 className="font-semibold text-lg">Ad {i + 1}</h4>
-                <p><strong>Headline:</strong> {v.headline}</p>
-                <p><strong>Description:</strong> {v.description}</p>
-                <p><strong>CTA:</strong> {v.callToAction}</p>
-                {v.tagline && <p><strong>Tagline:</strong> {v.tagline}</p>}
-                {v.imagePlacement && (
-                  <p><strong>Image Placement:</strong> {v.imagePlacement}</p>
-                )}
-              </div>
-            ))}
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-xl border border-purple-200 dark:border-gray-600">
+            <h2 className="text-2xl font-bold mb-6 text-purple-700 dark:text-purple-300">
+              ✨ Ad Copy Suggestions
+            </h2>
+            <div className="grid gap-6">
+              {result.adCopy.map((v, i) => (
+                <div
+                  key={i}
+                  className="p-5 rounded-xl bg-white dark:bg-gray-900 shadow-md hover:shadow-xl transition-shadow duration-200"
+                >
+                  <h4 className="font-semibold text-lg mb-3 text-gray-800 dark:text-gray-100">
+                     Ad {i + 1}
+                  </h4>
+                  <p><strong>Headline:</strong> {v.headline}</p>
+                  <p><strong>Description:</strong> {v.description}</p>
+                  <p>
+                    <strong>CTA:</strong>{" "}
+                    <span className="px-2 py-1 bg-green-200 dark:bg-green-700 rounded-full text-sm">
+                      {v.callToAction}
+                    </span>
+                  </p>
+                  {v.tagline && <p><strong>Tagline:</strong> {v.tagline}</p>}
+                  {v.imagePlacement && (
+                    <p>
+                      <strong>Image Placement:</strong>{" "}
+                      <span className="px-2 py-1 bg-pink-200 dark:bg-pink-700 rounded-full text-sm">
+                        {v.imagePlacement}
+                      </span>
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
