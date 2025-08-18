@@ -1,33 +1,30 @@
-
 // src/lib/gemini.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Use environment variable for API key, fallback to your provided key temporarily if needed
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDw2c6Pec7Ws-e19__PryKZZdLNyJIl010';
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 if (!API_KEY) {
-  console.warn('Gemini API key not found. AI content generation will use fallback mode.');
+  console.warn('Gemini API key not found. Please add VITE_GEMINI_API_KEY.');
 }
 
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// Get text model for content generation (optional, you can swap models)
+// Default text model
 const textModel = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 export interface ContentGenerationParams {
   prompt: string;
-  contentType: string;
+  contentType: string; // e.g. "ads", "blog-post", "email"
   tone: string;
 }
 
-// Generate marketing content with Gemini text model
 export const generateWithGemini = async ({
   prompt,
   contentType,
   tone,
 }: ContentGenerationParams): Promise<string> => {
   if (!genAI || !textModel) {
-    throw new Error('Gemini AI not configured. Please add VITE_GEMINI_API_KEY to your environment variables.');
+    throw new Error('Gemini AI not configured. Please add VITE_GEMINI_API_KEY.');
   }
 
   try {
@@ -48,25 +45,23 @@ export const generateWithGemini = async ({
   }
 };
 
-// Enhance prompt for creative image generation
+// ---------------- Image Utilities (kept same) ----------------
 export async function enhancePrompt(originalPrompt: string): Promise<string> {
-  if (!API_KEY) {
-    console.warn('Gemini API key not found for prompt enhancement.');
-    return originalPrompt;
-  }
+  if (!API_KEY) return originalPrompt;
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `Make this a creative, visual image prompt: ${originalPrompt}` }] }]
-      }),
-    });
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Make this a creative, visual image prompt: ${originalPrompt}` }] }],
+        }),
+      }
+    );
 
-    if (!res.ok) {
-      throw new Error(`API call failed with status: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`API call failed with status: ${res.status}`);
 
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -77,17 +72,12 @@ export async function enhancePrompt(originalPrompt: string): Promise<string> {
   }
 }
 
-// Generate image using Gemini 2.0 Flash Preview Image Generation model
 export async function generateImageWithGemini(prompt: string): Promise<string | null> {
-  if (!genAI) {
-    throw new Error('Gemini AI not configured. Please add VITE_GEMINI_API_KEY to your environment variables.');
-  }
+  if (!genAI) throw new Error('Gemini AI not configured. Please add VITE_GEMINI_API_KEY.');
 
   const imageModel = genAI.getGenerativeModel({
     model: 'gemini-2.0-flash-preview-image-generation',
-    generationConfig: {
-      responseMimeType: 'image/jpeg',
-    },
+    generationConfig: { responseMimeType: 'image/jpeg' },
   });
 
   try {
@@ -96,14 +86,12 @@ export async function generateImageWithGemini(prompt: string): Promise<string | 
 
     if (response.candidates && response.candidates.length > 0) {
       const part = response.candidates[0].content.parts[0];
-
       if ('inlineData' in part && part.inlineData) {
         const imageData = part.inlineData.data;
         const mimeType = part.inlineData.mimeType;
         return `data:${mimeType};base64,${imageData}`;
       }
     }
-
     return null;
   } catch (error) {
     console.error('Error generating image with Gemini:', error);
@@ -111,52 +99,24 @@ export async function generateImageWithGemini(prompt: string): Promise<string | 
   }
 }
 
-// Helper: create system prompt based on content type and tone
+// ---------------- System Prompt ----------------
 const createSystemPrompt = (contentType: string, tone: string): string => {
-  const baseInstructions = `You are a professional marketing content writer. Write high-quality, engaging content that is ${tone} in tone.`;
+  const baseInstructions = `You are a professional marketing content writer. Write engaging content in a ${tone} tone.`;
 
   const typeSpecificInstructions = {
-    'blog-post': `Create a comprehensive blog post with:
-- Engaging headline
-- Clear introduction
-- Structured body with subheadings
-- Key takeaways or bullet points
-- Strong conclusion
-- SEO-friendly text
-- Length: 500-800 words`,
+    'blog-post': `Create a blog post with headline, intro, structured body, SEO keywords, and conclusion.`,
+    'social-media': `Create catchy social media posts with hooks, emojis, hashtags, and CTA.`,
+    'email': `Write persuasive emails with subject line, greeting, benefits, and strong CTA.`,
+    'product-description': `Write detailed product descriptions with features, SEO keywords, and appeal.`,
 
-    'social-media': `Create engaging social media content with:
-- Attention-grabbing hook
-- Clear value proposition
-- Emojis (not overused)
-- Call-to-action
-- Relevant hashtags
-- Short and catchy
-- Platform: Instagram/LinkedIn`,
-
-    'email': `Create an effective email with:
-- Catchy subject line
-- Personal greeting
-- Clear benefits
-- Bullet-point breakdown
-- Call-to-action
-- Professional closing`,
-
-    'ad-copy': `Create persuasive ad copy with:
-- Strong headline
-- Key features/benefits
-- Social proof or testimonials
-- Urgency/Scarcity
-- Call-to-action
-- Compact & punchy`,
-
-    'product-description': `Create a detailed product description with:
-- Clear product title
-- Key features and uses
-- Audience appeal
-- SEO keywords
-- Motivation to buy
-- 100-150 words`
+    // ✅ New ads instructions
+    'ads': `Generate multiple ad variations. Each ad must include:
+- Headline
+- Description
+- Call To Action
+Keep them short, punchy, and persuasive.
+If platform = Google: follow Google Ads format.
+If platform = Meta: follow social media ad style.`,
   };
 
   const specificInstructions =

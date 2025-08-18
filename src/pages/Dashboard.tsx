@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Image, BarChart3, Clock, TrendingUp, Layers } from 'lucide-react';
+import { Plus, FileText, Image, BarChart3, Clock, TrendingUp, Layers, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
@@ -118,6 +118,13 @@ export function Dashboard() {
       description: 'Access ready-made templates for your projects',
       icon: Layers,
       href: '/template',
+      color: 'bg-orange-500',
+    },
+    {
+      title: 'Ad Generation',
+      description: 'Access ready-made templates for your projects',
+      icon: Megaphone,
+      href: '/ads',
       color: 'bg-orange-500',
     },
   ];

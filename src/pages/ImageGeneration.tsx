@@ -91,7 +91,7 @@ export const ImageGenerator: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h2 className="text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">
+      <h2 className="text-3xl font-bold text-center mb-6 bg-gray-200 text-gray-900 dark:text-white dark:bg-gray-950">
         AI Image Generator
       </h2>
 
