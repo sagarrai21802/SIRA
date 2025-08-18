@@ -1,11 +1,10 @@
-
-
 import React, { useState, useEffect } from "react";
-import { FileText, Sparkles, Copy, Download, Linkedin, Twitter } from "lucide-react";
+import { FileText,Sparkles, Copy, Download, Linkedin,  Twitter} from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import toast from "react-hot-toast";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ModernDropdown } from "../components/UI/ModernDropdown";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -15,14 +14,33 @@ export default function GenerateTemplate() {
   const [prompt, setPrompt] = useState("");
   const [generatedTemplate, setGeneratedTemplate] = useState("");
   const [dailyCount, setDailyCount] = useState(0);
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCard, setSelectedCard] = useState<"linkedin" | "xpost" | null>(
+    null
+  );
 
   // LinkedIn-specific inputs
   const [industry, setIndustry] = useState("");
   const [role, setRole] = useState("");
 
-  const industries = ["Technology", "Finance", "Healthcare", "Education", "Marketing", "Other"];
-  const roles = ["Founder", "HR", "Employee", "Student", "Manager", "CEO", "Assistant Manager", "Accountant", "Team Lead"];
+  const industries = [
+    "Technology",
+    "Finance",
+    "Healthcare",
+    "Education",
+    "Marketing",
+    "Other",
+  ];
+  const roles = [
+    "Founder",
+    "HR",
+    "Employee",
+    "Student",
+    "Manager",
+    "CEO",
+    "Assistant Manager",
+    "Accountant",
+    "Team Lead",
+  ];
 
   useEffect(() => {
     if (user) checkDailyQuota();
@@ -56,7 +74,8 @@ export default function GenerateTemplate() {
     }
 
     if (!finalPrompt.trim()) return toast.error("Please enter a prompt");
-    if (dailyCount >= 5) return toast.error("Daily limit reached! Upgrade to generate more.");
+    if (dailyCount >= 5)
+      return toast.error("Daily limit reached! Upgrade to generate more.");
 
     setLoading(true);
     setGeneratedTemplate("");
@@ -112,55 +131,55 @@ export default function GenerateTemplate() {
             <div
               onClick={() => setSelectedCard("linkedin")}
               className={`p-4 rounded-xl border cursor-pointer ${
-                selectedCard === "linkedin" ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-50"
+                selectedCard === "linkedin"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:bg-gray-50"
               }`}
             >
               <div className="flex items-center gap-3">
                 <Linkedin className="text-blue-700 w-6 h-6" />
                 <h3 className="font-semibold">LinkedIn Post</h3>
               </div>
-              <p className="text-sm text-gray-600">Craft engaging LinkedIn posts with emojis</p>
+              <p className="text-sm text-gray-600">
+                Craft engaging LinkedIn posts with emojis
+              </p>
             </div>
 
             {/* X Post Card */}
             <div
               onClick={() => setSelectedCard("xpost")}
               className={`p-4 rounded-xl border cursor-pointer ${
-                selectedCard === "xpost" ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-50"
+                selectedCard === "xpost"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:bg-gray-50"
               }`}
             >
               <div className="flex items-center gap-3">
                 <Twitter className="text-sky-500 w-6 h-6" />
                 <h3 className="font-semibold">X (Twitter) Post</h3>
               </div>
-              <p className="text-sm text-gray-600">Create impactful tweets with emojis</p>
+              <p className="text-sm text-gray-600">
+                Create impactful tweets with emojis
+              </p>
             </div>
           </div>
 
           {/* LinkedIn Inputs */}
           {selectedCard === "linkedin" && (
             <div className="space-y-4 mb-4">
-              <select
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                className="w-full border p-2 rounded-lg"
-              >
-                <option value="">Select Industry</option>
-                {industries.map((ind) => (
-                  <option key={ind} value={ind}>{ind}</option>
-                ))}
-              </select>
+              <ModernDropdown
+                label="Select Industry"
+                options={industries}
+                selected={industry}
+                onChange={(val) => setIndustry(val)}
+              />
 
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full border p-2 rounded-lg"
-              >
-                <option value="">Select Role</option>
-                {roles.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
+              <ModernDropdown
+                label="Select Role"
+                options={roles}
+                selected={role}
+                onChange={(val) => setRole(val)}
+              />
 
               <textarea
                 value={prompt}
@@ -205,11 +224,15 @@ export default function GenerateTemplate() {
                   />
                   <div>
                     <h4 className="font-semibold">John Doe</h4>
-                    <p className="text-xs text-gray-500">1st • {industry} | {role}</p>
+                    <p className="text-xs text-gray-500">
+                      1st • {industry} | {role}
+                    </p>
                     <p className="text-xs text-gray-400">2h • 🌐</p>
                   </div>
                 </div>
-                <p className="text-gray-800 whitespace-pre-wrap">{generatedTemplate}</p>
+                <p className="text-gray-800 whitespace-pre-wrap">
+                  {generatedTemplate}
+                </p>
               </div>
             )}
 
@@ -223,17 +246,32 @@ export default function GenerateTemplate() {
                     className="w-10 h-10 rounded-full"
                   />
                   <div>
-                    <h4 className="font-semibold">Jane Smith <span className="text-gray-500">@janesmith</span></h4>
+                    <h4 className="font-semibold">
+                      Jane Smith{" "}
+                      <span className="text-gray-500">@janesmith</span>
+                    </h4>
                     <p className="text-xs text-gray-400">· 1h</p>
                   </div>
                 </div>
-                <p className="text-gray-800 whitespace-pre-wrap">{generatedTemplate}</p>
+                <p className="text-gray-800 whitespace-pre-wrap">
+                  {generatedTemplate}
+                </p>
               </div>
             )}
 
             <div className="flex gap-3 mt-4">
-              <button onClick={copyToClipboard} className="border p-2 rounded-lg">Copy</button>
-              <button onClick={downloadTemplate} className="border p-2 rounded-lg">Download</button>
+              <button
+                onClick={copyToClipboard}
+                className="border p-2 rounded-lg"
+              >
+                Copy
+              </button>
+              <button
+                onClick={downloadTemplate}
+                className="border p-2 rounded-lg"
+              >
+                Download
+              </button>
             </div>
           </div>
         )}

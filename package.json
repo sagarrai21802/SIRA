@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/genai": "^1.14.0",
     "@google/generative-ai": "^0.24.1",
+    "@headlessui/react": "^2.2.7",
     "@supabase/supabase-js": "^2.53.0",
     "@types/node": "^24.2.0",
     "framer-motion": "^12.23.12",

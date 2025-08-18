@@ -1,25 +1,21 @@
-
-
 import React, { useState } from "react";
 import { generateImage } from "../lib/generateimage";
 import { Loader2, Download, Copy, Cpu } from "lucide-react";
 import toast from "react-hot-toast";
+import { ModernDropdown } from "../components/UI/ModernDropdown";
 
 const IMAGE_TYPES = ["Realistic", "Cartoon", "3D", "Anime", "Pixel Art"];
 const IMAGE_SIZES = [
   { label: "256x256", width: 256, height: 256 },
   { label: "512x512", width: 512, height: 512 },
   { label: "1024x1024", width: 1024, height: 1024 },
-  
-  // Social Media Sizes
-  { label: "Instagram Post 1:1", width: 1080, height: 1080 }, // square
-  { label: "Instagram Story 9:16", width: 1080, height: 1920 }, // story
-  { label: "Facebook Post 1.91:1", width: 1200, height: 628 }, // horizontal
-  { label: "Facebook Cover 16:9", width: 820, height: 312 }, // cover
+  { label: "Instagram Post 1:1", width: 1080, height: 1080 },
+  { label: "Instagram Story 9:16", width: 1080, height: 1920 },
+  { label: "Facebook Post 1.91:1", width: 1200, height: 628 },
+  { label: "Facebook Cover 16:9", width: 820, height: 312 },
   { label: "LinkedIn Post 1.91:1", width: 1200, height: 627 },
   { label: "LinkedIn Banner 4:1", width: 1584, height: 396 },
 ];
-
 
 export const ImageGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState("");
@@ -35,7 +31,6 @@ export const ImageGenerator: React.FC = () => {
       toast.error("Please enter a prompt");
       return;
     }
-
     setLoading(true);
     setError(null);
     setImage(null);
@@ -43,20 +38,14 @@ export const ImageGenerator: React.FC = () => {
 
     try {
       const fullPrompt = `${prompt} | Style: ${type} | Size: ${size.label}`;
-      
-      // Animate loading messages
-      const messages = [
-        "Analyzing your prompt...",
-        "Generating visual...",
-        "Almost there..."
-      ];
+
+      const messages = ["Analyzing your prompt...", "Generating visual...", "Almost there..."];
       let i = 0;
       const msgInterval = setInterval(() => {
         setLoadingMessage(messages[i % messages.length]);
         i++;
       }, 1000);
 
-      // Generate a single image
       const url = await generateImage(fullPrompt);
       setImage(url);
       toast.success("Image generated!");
@@ -91,72 +80,52 @@ export const ImageGenerator: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h2 className="text-3xl font-bold text-center mb-6 bg-gray-200 text-gray-900 dark:text-white dark:bg-gray-950">
+      <h2 className="text-4xl font-extrabold text-center mb-10 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
         AI Image Generator
       </h2>
 
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 flex flex-col gap-4 transition-all duration-300">
+      <div className="bg-white/30 dark:bg-gray-900/40 backdrop-blur-xl border border-white/20 dark:border-gray-700 shadow-xl rounded-2xl p-8 flex flex-col gap-6 transition-all duration-300">
+        {/* Prompt box */}
         <textarea
-          className="w-full p-4 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none dark:bg-gray-900 dark:text-white transition-all"
+          className="w-full p-5 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-indigo-400/50 resize-none dark:bg-gray-900/70 dark:text-white transition-all text-lg shadow-sm"
           rows={4}
-          placeholder="Enter your creative prompt here... Example: 'A futuristic city skyline at sunset, cinematic lighting'"
+          placeholder="✨ Describe your creative vision... Example: 'A futuristic city skyline at sunset, cinematic lighting'"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
 
-        <div className="flex flex-wrap gap-4 justify-center">
-          <select
-            className="p-2 border rounded-lg dark:bg-gray-900 dark:text-white hover:border-blue-500 transition"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          >
-            {IMAGE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+        {/* Modern Dropdowns */}
+        <div className="flex flex-wrap gap-6 justify-center">
+          <ModernDropdown
+            label="Style"
+            options={IMAGE_TYPES}
+            selected={type}
+            onChange={setType}
+          />
 
-          <select
-              className="p-2 border rounded-lg dark:bg-gray-900 dark:text-white hover:border-blue-500 transition"
-              value={size.label || ""}
-              onChange={(e) => {
-                const selected = IMAGE_SIZES.find((s) => s.label === e.target.value);
-                if (selected) setSize(selected);
-              }}
-            >
-              {/* Default heading option */}
-              <option value="" disabled>
-                Select Size
-              </option>
-
-              {IMAGE_SIZES.map((s) => (
-                <option key={s.label} value={s.label}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-
+          <ModernDropdown
+            label="Size"
+            options={IMAGE_SIZES}
+            selected={size}
+            onChange={setSize}
+            displayKey="label"
+          />
         </div>
 
-        <div className="flex flex-wrap gap-4 justify-center mt-2">
+        {/* Buttons */}
+        <div className="flex flex-wrap gap-4 justify-center">
           <button
-            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-lg hover:scale-105 hover:shadow-xl transition-transform"
             onClick={handleGenerate}
             disabled={loading}
           >
-            {loading ? (
-              <Loader2 className="animate-spin w-5 h-5" />
-            ) : (
-              <>
-                <Cpu className="w-5 h-5" /> Generate Image
-              </>
-            )}
+            {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <Cpu className="w-5 h-5" />}
+            {loading ? "Generating..." : "Generate Image"}
           </button>
 
           {image && (
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-gray-700 dark:text-white bg-gray-200 dark:bg-gray-800 shadow hover:scale-105 transition-transform"
               onClick={handleCopyPrompt}
             >
               <Copy className="w-4 h-4" /> Copy Prompt
@@ -164,35 +133,35 @@ export const ImageGenerator: React.FC = () => {
           )}
         </div>
 
-        {error && (
-          <div className="text-red-500 text-center font-medium mt-2">{error}</div>
-        )}
+        {error && <div className="text-red-500 text-center font-medium">{error}</div>}
       </div>
 
+      {/* Loading animation */}
       {loading && (
-        <div className="mt-6 flex flex-col items-center justify-center text-gray-500 dark:text-gray-300 space-y-4">
-          <div className="animate-pulse bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-full w-12 h-12 flex items-center justify-center">
-            <Cpu className="w-6 h-6 text-white animate-bounce" />
+        <div className="mt-8 flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 space-y-4">
+          <div className="animate-spin bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full w-14 h-14 flex items-center justify-center shadow-lg">
+            <Cpu className="w-7 h-7 text-white" />
           </div>
           <p className="text-lg font-medium">{loadingMessage}</p>
         </div>
       )}
 
+      {/* Generated Image */}
       {image && (
-        <div className="mt-8 relative rounded-xl overflow-hidden shadow-2xl hover:scale-105 transition-transform">
-          <img src={image} alt="Generated" className="w-full h-auto" />
-          <div className="absolute bottom-2 left-2 flex gap-2">
+        <div className="mt-10 relative rounded-2xl overflow-hidden shadow-2xl hover:scale-[1.02] transition-transform">
+          <img src={image} alt="Generated" className="w-full h-auto rounded-2xl" />
+          <div className="absolute bottom-4 left-4 flex gap-3">
             <button
-              className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 flex items-center gap-1"
+              className="bg-green-500/90 backdrop-blur-md text-white px-3 py-2 rounded-lg hover:bg-green-600 shadow flex items-center gap-1"
               onClick={handleDownload}
             >
-              <Download className="w-3 h-3" /> Download
+              <Download className="w-4 h-4" /> Download
             </button>
             <button
-              className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600 flex items-center gap-1"
+              className="bg-gray-700/80 backdrop-blur-md text-white px-3 py-2 rounded-lg hover:bg-gray-800 shadow flex items-center gap-1"
               onClick={handleCopyImageUrl}
             >
-              <Copy className="w-3 h-3" /> Copy URL
+              <Copy className="w-4 h-4" /> Copy URL
             </button>
           </div>
         </div>
