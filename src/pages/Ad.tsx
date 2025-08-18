@@ -230,7 +230,7 @@ export default function AdGenerator() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <ModernDropdown
             label="Campaign Objective"
-            options={["traffic", "leads", "engagement", "sales", "app-downloads", "app-installs"]}
+            options={["Traffic", "Leads", "Engagement", "Sales", "App-Installs"]}
             selected={campaignObjective}
             onChange={setCampaignObjective}
           />
@@ -317,7 +317,7 @@ export default function AdGenerator() {
           {/* Ad Set Section */}
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-xl border border-blue-200 dark:border-gray-600">
             <h2 className="text-2xl font-bold mb-6 text-blue-700 dark:text-blue-300">
-              🎯 Ad Set Suggestions
+               Ad Set Suggestions
             </h2>
             <div className="space-y-4">
               <p>
