@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Layers, BarChart3, Image, FileText ,UserCircle,Megaphone} from "lucide-react";
+import { LayoutDashboard, Layers, BarChart3, Image, FileText ,UserCircle,Megaphone, Zap} from "lucide-react";
 
 export function Sidebar() {
   const menuItems = [
@@ -9,7 +9,8 @@ export function Sidebar() {
     { name: "SEO Tools", icon: BarChart3, href: "/seo" },
     { name: "Content", icon: FileText, href: "/content" },
     { name: "Images", icon: Image, href: "/images" },
-     { name: "Ad Generator", icon: Megaphone, href: "/ads" }, 
+     { name: "Ad Generator", icon: Megaphone, href: "/ads" },
+     { name: "AI to Humanizer", icon: Zap, href: "/humanizer" },  
     { name: "Profile", icon: UserCircle, href: "/profile" }, 
  
   ];

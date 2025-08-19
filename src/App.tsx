@@ -24,6 +24,7 @@ import Privacy from "./pages/Privacy";
 import AdGenerator from "./pages/Ad";
 import Settings from "./pages/Settings";
 import { AuthCallback } from "./pages/Auth/AuthCallback";
+import { Humanizer } from "./pages/Humanizer";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -109,6 +110,14 @@ function AppContent() {
                 element={
                   <ProtectedRoute>
                     <AdGenerator />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/humanizer"
+                element={
+                  <ProtectedRoute>
+                    <Humanizer />
                   </ProtectedRoute>
                 }
               />
