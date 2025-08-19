@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import  { useState } from "react";
 import { generateAdStrategy, AdRequest, AdOutput } from "../lib/Ad";
 import toast from "react-hot-toast";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
