@@ -91,8 +91,8 @@ export default function SEOToolkit() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Meta Tags Generator */}
         <Card className="p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-            <Tags className="w-6 h-6 text-green-600" /> Meta Tags Generator
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
+            <Tags className="w-6 h-6 text-green-600 dark:text-white" /> Meta Tags Generator
           </h2>
 
           <div className="space-y-4">
@@ -142,8 +142,8 @@ export default function SEOToolkit() {
 
         {/* Keywords Generator */}
         <Card className="p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-            <Key className="w-6 h-6 text-green-600" /> Keywords Generator
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2 dark:text-white">
+            <Key className="w-6 h-6 text-green-600 dark:text-white" /> Keywords Generator
           </h2>
 
           {/* Short/Long toggle */}
