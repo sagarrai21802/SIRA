@@ -1,181 +1,4 @@
 
-// import React, { useState } from "react";
-// import { generateAdStrategy, AdRequest, AdOutput } from "../lib/Ad";
-// import toast from "react-hot-toast";
-// import { ModernDropdown } from "../components/UI/ModernDropdown";
-
-// export default function AdGenerator() {
-//   const [campaignObjective, setCampaignObjective] = useState("traffic");
-//   const [budget, setBudget] = useState("");
-//   const [currency, setCurrency] = useState("USD");
-//   const [startDate, setStartDate] = useState("");
-//   const [endDate, setEndDate] = useState("");
-//   const [creativeType, setCreativeType] = useState("image");
-//   const [declaration, setDeclaration] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [result, setResult] = useState<AdOutput | null>(null);
-
-//   const handleGenerate = async () => {
-//     if (!declaration) {
-//       toast.error("Please enter ad declaration/prompt!");
-//       return;
-//     }
-//     setLoading(true);
-
-//     const randomizer = Math.random().toString(36).substring(2, 8);
-
-//     const req: AdRequest = {
-//       platform: "meta",
-//       campaignObjective,
-//       budget: `${currency} ${budget}`,
-//       duration: `${startDate} to ${endDate}`,
-//       creativeType,
-//       declaration: `${declaration}\n\n(Randomizer: ${randomizer})`,
-//     };
-
-//     try {
-//       const output = await generateAdStrategy(req);
-//       setResult(output);
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("Failed to generate ads.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="max-w-5xl mx-auto py-10 px-6">
-//       <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg">
-//         <h1 className="text-3xl font-bold mb-10 text-center">Meta Ad Generator</h1>
-
-//         {/* Campaign Objective & Creative Type */}
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-//           <ModernDropdown
-//             label="Campaign Objective"
-//             options={["traffic", "leads", "engagement", "sales", "app-downloads", "app-installs"]}
-//             selected={campaignObjective}
-//             onChange={setCampaignObjective}
-//           />
-
-//           <ModernDropdown
-//             label="Creative Type"
-//             options={["image", "carousal", "video"]}
-//             selected={creativeType}
-//             onChange={setCreativeType}
-//           />
-//         </div>
-
-//         {/* Budget + Currency */}
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-//           <div>
-//             <label className="block font-medium mb-2">Budget</label>
-//             <input
-//               type="number"
-//               placeholder="e.g. 500"
-//               value={budget}
-//               onChange={(e) => setBudget(e.target.value)}
-//               className="w-full border rounded-lg p-3"
-//             />
-//           </div>
-
-//           <ModernDropdown
-//             label="Currency"
-//             options={[
-//               "USD", "EUR", "INR", "GBP", "AUD", "CAD", "JPY", "CNY", "SGD", "AED", "CHF", "NZD", "SEK", "ZAR", "BRL", "HKD"
-//             ]}
-//             selected={currency}
-//             onChange={setCurrency}
-//           />
-//         </div>
-
-//         {/* Duration */}
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-//           <div>
-//             <label className="block font-medium mb-2">Start Date</label>
-//             <input
-//               type="date"
-//               value={startDate}
-//               onChange={(e) => setStartDate(e.target.value)}
-//               className="w-full border rounded-lg p-3"
-//             />
-//           </div>
-//           <div>
-//             <label className="block font-medium mb-2">End Date</label>
-//             <input
-//               type="date"
-//               value={endDate}
-//               onChange={(e) => setEndDate(e.target.value)}
-//               className="w-full border rounded-lg p-3"
-//             />
-//           </div>
-//         </div>
-
-//         {/* Declaration */}
-//         <div className="mb-8">
-//           <label className="block font-medium mb-2">Ad Declaration / Prompt</label>
-//           <textarea
-//             value={declaration}
-//             onChange={(e) => setDeclaration(e.target.value)}
-//             placeholder="Describe your product/service and what you want to advertise..."
-//             className="w-full border rounded-lg p-3 h-28"
-//           />
-//         </div>
-
-//         {/* Generate Button */}
-//         <div className="text-center">
-//           <button
-//             onClick={handleGenerate}
-//             disabled={loading}
-//             className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 shadow-md"
-//           >
-//             {loading ? "Generating..." : "Generate Ads"}
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* Results */}
-//       {result && (
-//         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-//           {/* Ad Set Section */}
-//           <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl shadow-md">
-//             <h2 className="text-2xl font-semibold mb-4">Ad Set Suggestions</h2>
-//             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
-//               <li><strong>Audience:</strong> {result.adSet.audience}</li>
-//               <li><strong>Demographics:</strong> {result.adSet.demographics}</li>
-//               <li><strong>Targeting Type:</strong> {result.adSet.targetingType}</li>
-//               <li><strong>Placements:</strong> {result.adSet.placements}</li>
-//               {result.adSet.imageTips && (
-//                 <li><strong>Image Usage Tips:</strong> {result.adSet.imageTips}</li>
-//               )}
-//             </ul>
-//           </div>
-
-//           {/* Ad Copy Section */}
-//           <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl shadow-md">
-//             <h2 className="text-2xl font-semibold mb-4">Ad Copy Suggestions</h2>
-//             {result.adCopy.map((v, i) => (
-//               <div
-//                 key={i}
-//                 className="p-4 border rounded-lg bg-white dark:bg-gray-900 shadow-sm mb-4"
-//               >
-//                 <h4 className="font-semibold text-lg mb-2">Ad {i + 1}</h4>
-//                 <p><strong>Headline:</strong> {v.headline}</p>
-//                 <p><strong>Description:</strong> {v.description}</p>
-//                 <p><strong>CTA:</strong> {v.callToAction}</p>
-//                 {v.tagline && <p><strong>Tagline:</strong> {v.tagline}</p>}
-//                 {v.imagePlacement && (
-//                   <p><strong>Image Placement:</strong> {v.imagePlacement}</p>
-//                 )}
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
 import React, { useState } from "react";
 import { generateAdStrategy, AdRequest, AdOutput } from "../lib/Ad";
 import toast from "react-hot-toast";
@@ -224,7 +47,7 @@ export default function AdGenerator() {
   return (
     <div className="max-w-5xl mx-auto py-10 px-6">
       <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg">
-        <h1 className="text-3xl font-bold mb-10 text-center">Meta Ad Generator</h1>
+        <h1 className="text-3xl font-bold mb-10 text-center  dark:text-white">Meta Ad Generator</h1>
 
         {/* Campaign Objective & Creative Type */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -246,7 +69,7 @@ export default function AdGenerator() {
         {/* Budget + Currency */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
-            <label className="block font-medium mb-2">Budget</label>
+            <label className="block font-medium mb-2 dark:text-white">Budget</label>
             <input
               type="number"
               placeholder="e.g. 500"
@@ -269,7 +92,7 @@ export default function AdGenerator() {
         {/* Duration */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
-            <label className="block font-medium mb-2">Start Date</label>
+            <label className="block font-medium mb-2  dark:text-white">Start Date</label>
             <input
               type="date"
               value={startDate}
@@ -278,7 +101,7 @@ export default function AdGenerator() {
             />
           </div>
           <div>
-            <label className="block font-medium mb-2">End Date</label>
+            <label className="block font-medium mb-2  dark:text-white">End Date</label>
             <input
               type="date"
               value={endDate}
@@ -290,7 +113,7 @@ export default function AdGenerator() {
 
         {/* Declaration */}
         <div className="mb-8">
-          <label className="block font-medium mb-2">Ad Declaration / Prompt</label>
+          <label className="block font-medium mb-2  dark:text-white">Ad Declaration / Prompt</label>
           <textarea
             value={declaration}
             onChange={(e) => setDeclaration(e.target.value)}
@@ -317,7 +140,7 @@ export default function AdGenerator() {
           {/* Ad Set Section */}
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-xl border border-blue-200 dark:border-gray-600">
             <h2 className="text-2xl font-bold mb-6 text-blue-700 dark:text-blue-300">
-              🎯 Ad Set Suggestions
+               Ad Set Suggestions
             </h2>
             <div className="space-y-4">
               <p>
