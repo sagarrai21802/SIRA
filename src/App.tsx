@@ -22,6 +22,8 @@ import ContactUs from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import AdGenerator from "./pages/Ad";
+import Settings from "./pages/Settings";
+import { AuthCallback } from "./pages/Auth/AuthCallback";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -53,6 +55,7 @@ function AppContent() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route
                 path="/profile"
                 element={
@@ -140,6 +143,16 @@ function AppContent() {
                     < ContactUs/>
                   </ProtectedRoute>
                 }
+                
+              />
+                 <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    < Settings/>
+                  </ProtectedRoute>
+                }
+                
               />
               <Route
                 path="/privacy"

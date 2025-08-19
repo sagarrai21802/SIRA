@@ -6,6 +6,7 @@ interface AuthContextType {
   user: any;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<{ isConfirmed: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -43,8 +44,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) throw error;
   };
 
+  const signUp = async (email: string, password: string) => {
+    // Get the current domain, whether it's localhost or the deployed URL
+    const redirectBaseUrl = process.env.NODE_ENV === 'production' 
+      ? import.meta.env.VITE_APP_URL || window.location.origin
+      : window.location.origin;
+
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${redirectBaseUrl}/auth/callback`
+      }
+    });
+    if (error) throw error;
+    return { isConfirmed: data.user?.confirmed_at ? true : false };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut, signUp }}>
       {children}
     </AuthContext.Provider>
   );

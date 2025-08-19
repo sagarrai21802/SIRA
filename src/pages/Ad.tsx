@@ -5,12 +5,12 @@ import toast from "react-hot-toast";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
 
 export default function AdGenerator() {
-  const [campaignObjective, setCampaignObjective] = useState("traffic");
+  const [campaignObjective, setCampaignObjective] = useState("Traffic");
   const [budget, setBudget] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [creativeType, setCreativeType] = useState("image");
+  const [creativeType, setCreativeType] = useState("Image");
   const [declaration, setDeclaration] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdOutput | null>(null);
@@ -53,14 +53,14 @@ export default function AdGenerator() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <ModernDropdown
             label="Campaign Objective"
-            options={["traffic", "leads", "engagement", "sales", "app-downloads", "app-installs"]}
+            options={["Traffic", "Leads", "Engagement", "Sales", "App-Installs"]}
             selected={campaignObjective}
             onChange={setCampaignObjective}
           />
 
           <ModernDropdown
             label="Creative Type"
-            options={["image", "carousal", "video"]}
+            options={["Image", "Carousal", "Video"]}
             selected={creativeType}
             onChange={setCreativeType}
           />

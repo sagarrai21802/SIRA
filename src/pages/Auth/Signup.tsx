@@ -34,15 +34,26 @@ export function Signup() {
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Account created! Welcome to SIRA');
-      navigate('/dashboard');
+    try {
+      const { isConfirmed } = await signUp(email, password);
+      
+      if (isConfirmed) {
+        // User is already confirmed (rare case)
+        toast.success('Account created! Please log in.');
+        navigate('/login');
+      } else {
+        toast.success(
+          'Please check your email for confirmation link!'
+        );
+        navigate('/login', { 
+          state: { 
+            message: 'Please check your email and confirm your account before logging in.' 
+          }
+        });
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to sign up');
     }
-    
     setLoading(false);
   };
 

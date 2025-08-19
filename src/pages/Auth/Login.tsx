@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const state = location.state as { message?: string; error?: string } | null;
+    if (state?.message) {
+      setSuccessMessage(state.message);
+    }
+    if (state?.error) {
+      setError(state.error);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +31,11 @@ export default function Login() {
       await signIn(email, password);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Something went wrong!");
+      if (err.message?.toLowerCase().includes('email not confirmed')) {
+        setError('Please confirm your email address before logging in. Check your inbox for the confirmation link.');
+      } else {
+        setError(err.message || "Something went wrong!");
+      }
     } finally {
       setLoading(false);
     }
@@ -27,6 +43,11 @@ export default function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-400 to-purple-500">
+      {successMessage && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          {successMessage}
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"
