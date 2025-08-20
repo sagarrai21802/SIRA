@@ -24,7 +24,7 @@ export function Sidebar() {
     { name: "Images", icon: Image, href: "/images" },
     { name: "Ad Generator", icon: Megaphone, href: "/ads" },
     { name: "AI to Humanizer", icon: Zap, href: "/humanizer" },
-    { name: "Promp Generator", icon: Zap, href: "/promptgenerator" },
+    { name: "Prompt Generator", icon: Zap, href: "/promptgenerator" },
     { name: "Profile", icon: UserCircle, href: "/profile" },
   ];
 
