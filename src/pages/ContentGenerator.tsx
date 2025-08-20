@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { FileText, Copy, Download, Sparkles, AlertCircle, Zap } from 'lucide-react';
+import { FileText, Copy, Download, Sparkles, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
-import { Input } from '../components/UI/Input';
 import { TextArea } from '../components/UI/Input';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
@@ -35,6 +34,15 @@ export function ContentGenerator() {
     { value: 'creative', label: 'Creative', description: 'Innovative and artistic' },
   ];
 
+  // ✅ Helper: strip Markdown characters
+  const stripMarkdown = (text: string) => {
+    return text
+      .replace(/[#*_`>~-]/g, '')             // remove markdown special chars
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')    // remove links but keep text
+      .replace(/\n{3,}/g, '\n\n')            // collapse too many blank lines
+      .trim();
+  };
+
   const generateContent = async () => {
     if (!prompt.trim()) {
       toast.error('Please enter a prompt');
@@ -63,14 +71,15 @@ export function ContentGenerator() {
         toast.success('Content generated successfully!');
       }
 
-      setGeneratedContent(content);
+      // ✅ Strip Markdown before setting state
+      setGeneratedContent(stripMarkdown(content));
 
       if (user) {
         const { error } = await supabase.from('content_generations').insert({
           user_id: user.id,
           content_type: contentType,
           prompt,
-          generated_content: content,
+          generated_content: stripMarkdown(content),
           tone,
         });
 
@@ -89,7 +98,7 @@ export function ContentGenerator() {
 
   const generateSampleContent = (type: string, tone: string, prompt: string) => {
     const contentTemplates = {
-      'blog-post': `# ${prompt}\n\nThis is a sample blog post about ${prompt}. In a ${tone} tone, this article would explore the key aspects of the topic, providing valuable insights and actionable advice for readers.\n\n## Key Points\n\n- First important point about ${prompt}\n- Second crucial insight\n- Practical applications and benefits\n\n## Conclusion\n\nThis comprehensive guide to ${prompt} provides you with the foundation needed to understand and implement these concepts effectively.`,
+      'blog-post': `${prompt}\n\nThis is a sample blog post about ${prompt}. In a ${tone} tone, this article would explore the key aspects of the topic, providing valuable insights and actionable advice for readers.\n\n Key Points\n\n- First important point about ${prompt}\n- Second crucial insight\n- Practical applications and benefits\n\n Conclusion\n\nThis comprehensive guide to ${prompt} provides you with the foundation needed to understand and implement these concepts effectively.`,
       'social-media': `🚀 Exciting news about ${prompt}!\n\nDiscover how this game-changing topic can transform your approach. Here's what you need to know:\n\n✨ Key insight #1\n💡 Important tip #2\n🎯 Actionable strategy #3\n\nWhat's your experience with ${prompt}? Share below! 👇\n\n#Marketing #Innovation #Growth`,
       'email': `Subject: Unlock the Power of ${prompt}\n\nHi there!\n\nI hope this email finds you well. Today, I want to share something exciting about ${prompt} that could make a real difference for you.\n\nHere's what makes this special:\n\n• Benefit 1: Clear value proposition\n• Benefit 2: Practical application\n• Benefit 3: Long-term impact\n\nReady to get started? [Call-to-Action Button]\n\nBest regards,\nYour Marketing Team`,
       'job-description': `${prompt} - Exciting Career Opportunity\n\nWe are looking for a talented and motivated ${prompt} to join our dynamic team. In this role, you will play a key part in driving our success and contributing to impactful projects.\n\nResponsibilities:\n• Perform core duties related to ${prompt}\n• Collaborate with team members to achieve goals\n• Maintain high standards of quality and professionalism\n• Contribute innovative ideas and solutions\n\nQualifications:\n• Relevant education or experience in ${prompt}\n• Strong communication and teamwork skills\n• Ability to manage time and prioritize tasks effectively\n\nIf you’re passionate about ${prompt} and eager to grow your career, apply today!`
