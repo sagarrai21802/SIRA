@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { generateWithGemini } from '../lib/gemini';
 import toast from 'react-hot-toast';
-import { ModernDropdown } from '../components/UI/ModernDropdown'; // ✅ Import your custom dropdown
+import { ModernDropdown } from '../components/UI/ModernDropdown'; 
 
 export function ContentGenerator() {
   const { user } = useAuth();
@@ -34,12 +34,10 @@ export function ContentGenerator() {
     { value: 'creative', label: 'Creative', description: 'Innovative and artistic' },
   ];
 
-  // ✅ Helper: strip Markdown characters
   const stripMarkdown = (text: string) => {
     return text
-      .replace(/[#*_`>~-]/g, '')             // remove markdown special chars
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1')    // remove links but keep text
-      .replace(/\n{3,}/g, '\n\n')            // collapse too many blank lines
+      .replace(/[#*_`>~-]/g, '')             
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')    
       .trim();
   };
 

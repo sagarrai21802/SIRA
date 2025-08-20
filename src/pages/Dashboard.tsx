@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Image, BarChart3, Clock, TrendingUp, Layers, Megaphone, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-// import { Humanizer } from '../pages/Humanizer'; // <-- import Humanizer
+import { motion } from 'framer-motion';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -96,134 +95,166 @@ export function Dashboard() {
       description: 'Create blog posts, ads, and social media content',
       icon: FileText,
       href: '/content',
-      color: 'bg-blue-500',
+      color: 'from-blue-500 to-cyan-500',
     },
-     {
+    {
       title: 'Templates',
       description: 'Access ready-made templates for your projects',
       icon: Layers,
       href: '/template',
-      color: 'bg-orange-500',
+      color: 'from-orange-500 to-pink-500',
     },
     {
       title: 'Create Images',
       description: 'Generate AI-powered visuals and graphics',
       icon: Image,
       href: '/images',
-      color: 'bg-purple-500',
+      color: 'from-purple-500 to-indigo-500',
     },
     {
       title: 'Ad Generation',
-      description: 'Access ready-made templates for your projects',
+      description: 'Generate compelling ad copies instantly',
       icon: Megaphone,
       href: '/ads',
-      color: 'bg-orange-500',
+      color: 'from-red-500 to-yellow-500',
     },
     {
       title: 'SEO Tools',
       description: 'Optimize your content for search engines',
       icon: BarChart3,
       href: '/seo',
-      color: 'bg-green-500',
+      color: 'from-green-500 to-emerald-500',
     },
     {
       title: 'AI to Humanizer',
-      description: 'Access ready-made templates for your projects',
+      description: 'Transform AI text into natural human style',
       icon: Zap,
       href: '/humanizer',
-      color: 'bg-orange-500',
+      color: 'from-pink-500 to-violet-500',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Humanizer at the Top
-        <div className="mb-8 animate-fade-in-up">
-          <Humanizer />
-        </div> */}
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-black overflow-hidden">
+      {/* Animated background grid */}
+      <div className="absolute inset-0 opacity-20 dark:opacity-30">
+        <div className="absolute w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:40px_40px] animate-[spin_60s_linear_infinite]" />
+      </div>
 
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8 animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">
+            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">
             Here's an overview of your marketing activities.
           </p>
-        </div>
+        </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: { opacity: 0, y: 30 },
+            show: {
+              opacity: 1,
+              y: 0,
+              transition: { staggerChildren: 0.15 },
+            },
+          }}
+        >
           {[
-            { label: 'Content Generated', icon: FileText, value: animatedStats.contentCount, color: 'bg-blue-100', iconColor: 'text-blue-600' },
-            { label: 'Images Created', icon: Image, value: animatedStats.imageCount, color: 'bg-purple-100', iconColor: 'text-purple-600' },
-            { label: 'Active Projects', icon: TrendingUp, value: animatedStats.projectCount, color: 'bg-green-100', iconColor: 'text-green-600' },
+            { label: 'Content Generated', icon: FileText, value: animatedStats.contentCount, color: 'from-blue-400 to-cyan-500' },
+            { label: 'Images Created', icon: Image, value: animatedStats.imageCount, color: 'from-purple-400 to-pink-500' },
+            { label: 'Active Projects', icon: TrendingUp, value: animatedStats.projectCount, color: 'from-green-400 to-emerald-500' },
+            { label: 'Templates Used', icon: Layers, value: animatedStats.templateCount, color: 'from-orange-400 to-yellow-500' },
           ].map((stat, idx) => (
-            <Card key={idx} className="transform transition-all duration-500 hover:scale-105 hover:shadow-2xl animate-fade-in-up" style={{ animationDelay: `${0.1 * idx}s` }}>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <div className={`w-12 h-12 ${stat.color} dark:bg-opacity-30 rounded-lg flex items-center justify-center`}>
-                    <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {Math.round(stat.value)}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400">{stat.label}</p>
-                  </div>
+            <motion.div
+              key={idx}
+              className="backdrop-blur-xl bg-white/20 dark:bg-gray-800/30 rounded-2xl shadow-lg hover:shadow-2xl p-6 border border-white/20 hover:border-gradient-to-r hover:from-blue-500 hover:to-purple-500 transition-all duration-500"
+              whileHover={{ scale: 1.05, y: -5 }}
+            >
+              <div className="flex items-center">
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-md`}>
+                  <stat.icon className="w-7 h-7 text-white" />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="ml-4">
+                  <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {Math.round(stat.value)}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">{stat.label}</p>
+                </div>
+              </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 animate-fade-in-up">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="mb-8"
+        >
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🚀 Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {quickActions.map((action, index) => (
-              <Card key={index} hover className="transform transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in-up" style={{ animationDelay: `${0.1 * index}s` }}>
-                <CardContent className="p-6">
-                  <div className="flex items-start">
-                    <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center transform transition-all duration-500 group-hover:scale-110`}>
-                      <action.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="ml-4 flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{action.title}</h3>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{action.description}</p>
-                      <Button variant="outline" size="sm" className="transition-transform duration-300 hover:scale-105" asChild>
-                        <Link to={action.href}>Get Started</Link>
-                      </Button>
-                    </div>
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.05, rotate: 1 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+                className="rounded-2xl backdrop-blur-xl bg-white/20 dark:bg-gray-800/30 border border-white/10 shadow-lg hover:shadow-2xl p-6"
+              >
+                <div className="flex items-start">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center`}>
+                    <action.icon className="w-6 h-6 text-white" />
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="ml-4 flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{action.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{action.description}</p>
+                    <Button variant="outline" size="sm" className="hover:scale-105 transition-transform" asChild>
+                      <Link to={action.href}>Get Started</Link>
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Recent Activity */}
-        <Card className="transform transition-all duration-500 hover:shadow-2xl animate-fade-in-up">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
-              <Button variant="outline" size="sm" icon={Clock}>View All</Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 animate-float-slow">
-              <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin-slow" />
-              <p className="text-gray-500 dark:text-gray-400">Start creating content to see your recent activity here.</p>
-              <Button className="mt-4 transition-transform duration-300 hover:scale-105" icon={Plus} asChild>
-                <Link to="/content">Create Your First Content</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <Card className="backdrop-blur-xl bg-white/20 dark:bg-gray-800/30 border border-white/10 shadow-xl hover:shadow-2xl rounded-2xl">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">📅 Recent Activity</h2>
+                <Button variant="outline" size="sm" icon={Clock}>View All</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-10">
+                <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin-slow" />
+                <p className="text-gray-500 dark:text-gray-400">Start creating content to see your recent activity here.</p>
+                <Button className="mt-4 hover:scale-105 transition-transform" icon={Plus} asChild>
+                  <Link to="/content">Create Your First Content</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
 }
-
-
