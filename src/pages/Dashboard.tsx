@@ -132,6 +132,13 @@ export function Dashboard() {
       href: '/humanizer',
       color: 'from-pink-500 to-violet-500',
     },
+    {
+      title: 'Promp Generator',
+      description: 'Transform AI text into natural human style',
+      icon: Zap,
+      href: '/promptgenerator',
+      color: 'from-pink-500 to-violet-500',
+    },
   ];
 
   return (
@@ -204,7 +211,7 @@ export function Dashboard() {
           transition={{ duration: 0.7 }}
           className="mb-8"
         >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🚀 Quick Actions</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {quickActions.map((action, index) => (
               <motion.div
