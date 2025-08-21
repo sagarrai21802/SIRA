@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Image, BarChart3, Clock, TrendingUp, Layers, Megaphone, Zap , Sparkles} from 'lucide-react';
+import { Plus, FileText, Image, BarChart3, Clock, TrendingUp, Layers, Megaphone, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
@@ -135,7 +135,7 @@ export function Dashboard() {
     {
       title: 'Promp Generator',
       description: 'Transform AI text into natural human style',
-      icon: Sparkles,
+      icon: Zap,
       href: '/promptgenerator',
       color: 'from-pink-500 to-violet-500',
     },

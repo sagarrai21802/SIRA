@@ -1,4 +1,4 @@
-
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Sparkles, Sun, Moon, User, LogOut, Settings } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -33,7 +33,7 @@ export function Header() {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">
-              SYRA.io
+              SIRA
             </span>
           </Link>
         </div>

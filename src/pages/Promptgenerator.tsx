@@ -4,7 +4,7 @@ import { Copy, Check } from "lucide-react";
 
 export default function PromptGeneratorUI() {
   const [topic, setTopic] = useState("");
-  const [type, setType] = useState<"image" | "video">("image");
+  const [type, setType] = useState<"image" | "video" | "custom">("image");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
