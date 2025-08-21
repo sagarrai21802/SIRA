@@ -1,6 +1,3 @@
-
-
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -32,7 +29,7 @@ export function Sidebar() {
     <div className="h-screen w-64 bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col p-5 shadow-2xl">
       {/* Logo */}
       <div className="mb-10 text-3xl font-extrabold text-center bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-        SIRA
+        SYRA.io
       </div>
 
       {/* Menu */}
@@ -62,8 +59,8 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto text-center text-gray-500 dark:text-gray-400 text-sm mt-10">
-        © 2025 SIRA
+      <div className="mt-auto text-center text-gray-500 dark:text-gray-400 text-sm ">
+        © 2025 SYRA.io
       </div>
     </div>
   );
