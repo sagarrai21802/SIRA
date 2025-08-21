@@ -26,7 +26,7 @@ export function Footer() {
                 <Sparkles className="w-5 h-5 text-white animate-pulse" />
               </div>
               <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                SIRA
+                SYRA.io
               </span>
             </div>
             <p className="text-gray-700 dark:text-gray-300 max-w-xl leading-relaxed">
@@ -111,7 +111,7 @@ export function Footer() {
           className="border-t border-white/20 mt-10 pt-6 text-center"
         >
           <p className="text-gray-700 dark:text-gray-400">
-            © {new Date().getFullYear()} <span className="font-semibold text-blue-500">SIRA</span>. All rights reserved.
+            © {new Date().getFullYear()} <span className="font-semibold text-blue-500">SYRA.io</span>. All rights reserved.
           </p>
         </motion.div>
       </div>

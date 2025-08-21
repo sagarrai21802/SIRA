@@ -70,7 +70,7 @@ export function Signup() {
             Create your account
           </h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Start your marketing journey with SIRA
+            Start your marketing journey with SYRA.io
           </p>
         </div>
 

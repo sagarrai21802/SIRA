@@ -40,7 +40,7 @@
 //     username: "sagarr",
 //     email: "sagar@example.com",
 //     phone: "+91-9000000000",
-//     bio: "Aspiring iOS Developer. Building SIRA.",
+//     bio: "Aspiring iOS Developer. Building SYRA.io.",
 //     locale: "en-IN",
 //     timezone: "Asia/Kolkata",
 //   });

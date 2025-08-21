@@ -20,15 +20,15 @@ export function Home() {
   };
 
   const testimonials = [
-    { name: 'Amit Sharma', role: 'Startup Founder', feedback: 'SIRA transformed our content creation workflow! AI-generated content saved us hours each week.' },
+    { name: 'Amit Sharma', role: 'Startup Founder', feedback: 'SYRA.io transformed our content creation workflow! AI-generated content saved us hours each week.' },
     { name: 'Priya Verma', role: 'Marketing Manager', feedback: 'From SEO to social posts, everything is seamlessly integrated. Truly a one-stop marketing solution.' },
     { name: 'Rohit Singh', role: 'Freelancer', feedback: 'The AI-powered insights helped me optimize my campaigns and increase engagement by 30%.' },
   ];
 
   const faqs = [
-    { question: 'Do I need technical skills to use SIRA?', answer: 'No, SIRA is designed for non-technical users. Our AI handles all the complex parts while you focus on creativity.' },
-    { question: 'Can I customize AI-generated content?', answer: 'Yes! SIRA allows you to edit, tweak, and humanize AI-generated content before publishing.' },
-    { question: 'Does SIRA support multiple languages?', answer: 'Absolutely! You can generate content in multiple languages and localize your campaigns easily.' },
+    { question: 'Do I need technical skills to use SYRA.io?', answer: 'No, SYRA.io is designed for non-technical users. Our AI handles all the complex parts while you focus on creativity.' },
+    { question: 'Can I customize AI-generated content?', answer: 'Yes! SYRA.io allows you to edit, tweak, and humanize AI-generated content before publishing.' },
+    { question: 'Does SYRA.io support multiple languages?', answer: 'Absolutely! You can generate content in multiple languages and localize your campaigns easily.' },
   ];
 
   return (
@@ -67,7 +67,7 @@ export function Home() {
             </h1>
 
             <motion.p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 1 }}>
-              SIRA empowers solo founders, startups, and content teams with intelligent marketing tools. Generate content, create images, optimize SEO, and manage campaigns—all in one place.
+              SYRA.io empowers solo founders, startups, and content teams with intelligent marketing tools. Generate content, create images, optimize SEO, and manage campaigns—all in one place.
             </motion.p>
 
             <motion.div className="flex flex-col sm:flex-row gap-4 justify-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5, duration: 0.6 }}>
@@ -96,7 +96,7 @@ export function Home() {
               Everything you need to scale your marketing
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              From content creation to performance tracking, SIRA provides all the tools you need to build and execute successful marketing campaigns.
+              From content creation to performance tracking, SYRA.io provides all the tools you need to build and execute successful marketing campaigns.
             </p>
           </motion.div>
 
