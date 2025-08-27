@@ -44,9 +44,264 @@
   background: #64748b;
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --toast-bg: #ffffff;
+  --toast-color: #374151;
+  --toast-border: #e5e7eb;
+}
+
+.dark {
+  --toast-bg: #1f2937;
+  --toast-color: #f3f4f6;
+  --toast-border: #374151;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* Smooth transitions */
 * {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+/* React Big Calendar Overrides */
+.rbc-calendar {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+  @apply text-gray-900 dark:text-white;
+}
+
+/* Toolbar */
+.rbc-toolbar {
+  @apply flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-t-lg;
+}
+
+.rbc-btn-group {
+  @apply flex items-center space-x-2 mb-4 sm:mb-0;
+}
+
+.rbc-toolbar-label {
+  @apply text-xl font-bold text-gray-800 dark:text-white text-center mb-4 sm:mb-0;
+}
+
+/* Header (Day Names) */
+.rbc-header {
+  @apply p-2 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 1px solid var(--rbc-border-color, #e5e7eb); /* Tailwind gray-200 */
+}
+
+/* Cells */
+.rbc-day-bg {
+  @apply bg-white dark:bg-gray-800;
+}
+
+.rbc-off-range-bg {
+  @apply bg-gray-50 dark:bg-gray-700;
+}
+
+.rbc-current-time-indicator {
+  @apply bg-blue-500; /* Primary color for current time */
+}
+
+.rbc-today {
+  @apply bg-blue-100 dark:bg-blue-900; /* Highlight today */
+}
+
+.rbc-selected-cell {
+  @apply bg-blue-200 dark:bg-blue-800; /* Highlight selected cell */
+}
+
+/* Events */
+.rbc-event {
+  @apply bg-blue-600 text-white rounded-lg p-1 text-sm cursor-pointer;
+}
+
+.rbc-event.rbc-selected {
+  @apply bg-blue-700;
+}
+
+.rbc-event-content {
+  @apply truncate;
+}
+
+/* Drag and Drop */
+.rbc-addons-dnd .rbc-event-resizing {
+  @apply border-blue-500;
+}
+
+.rbc-addons-dnd .rbc-event-dragging {
+  @apply opacity-75;
+}
+
+.rbc-addons-dnd .rbc-placeholder {
+  @apply bg-blue-200 dark:bg-blue-800 border border-blue-500 dark:border-blue-400;
+}
+
+/* Month View Specifics */
+.rbc-month-view {
+  @apply border border-gray-200 dark:border-gray-700 rounded-b-lg;
+}
+
+.rbc-month-row {
+  @apply border-b border-gray-200 dark:border-gray-700;
+}
+
+.rbc-month-row:last-child {
+  border-bottom: none;
+}
+
+.rbc-date-cell {
+  @apply p-2 text-right;
+}
+
+.rbc-date-cell.rbc-current {
+  @apply font-bold;
+}
+
+.rbc-row-segment {
+  @apply p-1;
+}
+
+/* Week and Day View Specifics */
+.rbc-time-view,
+.rbc-agenda-view {
+  @apply border border-gray-200 dark:border-gray-700 rounded-b-lg;
+}
+
+.rbc-time-header {
+  @apply border-b border-gray-200 dark:border-gray-700;
+}
+
+.rbc-time-header-content {
+  @apply border-l border-gray-200 dark:border-gray-700;
+}
+
+.rbc-time-content {
+  @apply border-t border-gray-200 dark:border-gray-700;
+}
+
+.rbc-timeslot-group {
+  @apply border-b border-gray-200 dark:border-gray-700;
+}
+
+.rbc-label {
+  @apply p-2 text-gray-700 dark:text-gray-300;
+}
+
+.rbc-day-slot .rbc-event {
+  @apply mb-1;
+}
+
+.rbc-allday-cell {
+  @apply border-b border-gray-200 dark:border-gray-700;
+}
+
+.rbc-agenda-table {
+  @apply w-full border-collapse;
+}
+
+.rbc-agenda-table th,
+.rbc-agenda-table td {
+  @apply p-2 border border-gray-200 dark:border-gray-700 text-left;
+}
+
+.rbc-agenda-time-cell {
+  @apply whitespace-nowrap;
+}
+
+.rbc-agenda-date-cell {
+  @apply whitespace-nowrap;
+}
+
+.rbc-agenda-event-cell {
+  @apply w-full;
+}
+
+/* Adjustments for dark mode */
+.dark .rbc-header {
+  @apply text-gray-300;
+}
+
+.dark .rbc-day-bg {
+  @apply bg-gray-800;
+}
+
+.dark .rbc-off-range-bg {
+  @apply bg-gray-700;
+}
+
+.dark .rbc-today {
+  @apply bg-blue-900;
+}
+
+.dark .rbc-selected-cell {
+  @apply bg-blue-800;
+}
+
+.dark .rbc-event {
+  @apply bg-blue-700;
+}
+
+.dark .rbc-event.rbc-selected {
+  @apply bg-blue-800;
+}
+
+.dark .rbc-month-view,
+.dark .rbc-time-view,
+.dark .rbc-agenda-view {
+  @apply border-gray-700;
+}
+
+.dark .rbc-month-row,
+.dark .rbc-time-header,
+.dark .rbc-time-header-content,
+.dark .rbc-time-content,
+.dark .rbc-timeslot-group,
+.dark .rbc-allday-cell,
+.dark .rbc-agenda-table th,
+.dark .rbc-agenda-table td {
+  @apply border-gray-700;
+}
+
+.dark .rbc-label {
+  @apply text-gray-300;
+}
+
+.dark .rbc-header + .rbc-header {
+  border-left-color: #374151; /* dark:gray-700 */
 }

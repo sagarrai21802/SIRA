@@ -151,7 +151,8 @@ import {
   UserCircle,
   Megaphone,
   Zap,
-  Sparkles
+  Sparkles,
+  Calendar // Import the Calendar icon
 } from "lucide-react";
 
 export function Sidebar() {
@@ -159,6 +160,8 @@ export function Sidebar() {
 
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    // Add the Scheduler link
+    { name: "Scheduler", icon: Calendar, href: "/scheduler" },
     { name: "Templates", icon: Layers, href: "/template" },
     { name: "SEO Tools", icon: BarChart3, href: "/seo" },
     { name: "Content", icon: FileText, href: "/content" },
