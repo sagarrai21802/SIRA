@@ -134,6 +134,9 @@ import { AuthCallback } from "./pages/Auth/AuthCallback";
 import { Humanizer } from "./pages/Humanizer";
 import PromptGenerator from "./pages/Promptgenerator";
 import { Scheduler } from "./pages/Scheduler"; // Import the Scheduler component
+import InstagramPostGenerator from "./pages/InstagramPostGenerator";
+import FacebookPostGenerator from "./pages/facebookPostGenerator";
+import LinkedInPostGenerator from "./pages/LinkedinPostGenerator";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -187,6 +190,10 @@ function AppContent() {
               <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/privacy" element={<ProtectedRoute><Privacy /></ProtectedRoute>} />
+              <Route path="/linkedinpostgenerator" element={<ProtectedRoute><LinkedInPostGenerator /></ProtectedRoute>} />
+              <Route path="/facebookpostgenerator" element={<ProtectedRoute><FacebookPostGenerator /></ProtectedRoute>} />
+              <Route path="/instagrampotgenerator" element={<ProtectedRoute><InstagramPostGenerator /></ProtectedRoute>} />
+
               {/* Add the Scheduler route */}
               <Route path="/scheduler" element={<ProtectedRoute><Scheduler /></ProtectedRoute>} />
             </Routes>

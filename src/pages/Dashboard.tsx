@@ -98,7 +98,7 @@ export function Dashboard() {
       color: 'from-blue-500 to-cyan-500',
     },
     {
-      title: 'Templates',
+      title: 'Social Media',
       description: 'Access ready-made templates for your projects',
       icon: Layers,
       href: '/template',
