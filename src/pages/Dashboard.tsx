@@ -6,7 +6,7 @@ import { Button } from '../components/UI/Button';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
-
+//this file is for dashboard page
 export function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
