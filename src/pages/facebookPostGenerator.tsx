@@ -1,10 +1,122 @@
-import React, { useState } from "react";
+import React, { useState, Fragment } from "react";
 import { generateTemplate, TemplateResult } from "../lib/template";
 import { generateTemplateImage } from "../lib/templateImage";
 import { Button } from "../components/UI/Button";
 import { Card, CardContent } from "../components/UI/Card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, Check, AlertTriangle, Download } from "lucide-react";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
+import { Dialog, Transition } from "@headlessui/react";
+
+// Helper Component: Error Modal
+const ErrorModal = ({
+  isOpen,
+  message,
+  onRetry,
+  onClose,
+}: {
+  isOpen: boolean;
+  message: string;
+  onRetry: () => void;
+  onClose: () => void;
+}) => (
+  <Transition appear show={isOpen} as={Fragment}>
+    <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Transition.Child
+        as={Fragment}
+        enter="ease-out duration-300"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="ease-in duration-200"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <div className="fixed inset-0 bg-black bg-opacity-40" />
+      </Transition.Child>
+      <div className="fixed inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-white flex items-center">
+                <AlertTriangle className="h-6 w-6 text-red-500 mr-3" />
+                API Error
+              </Dialog.Title>
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <Button variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    onClose();
+                    onRetry();
+                  }}
+                >
+                  Retry
+                </Button>
+              </div>
+            </Dialog.Panel>
+          </Transition.Child>
+        </div>
+      </div>
+    </Dialog>
+  </Transition>
+);
+
+// Helper Component: Copyable Output
+const CopyableOutput = ({ title, body, cta }: { title: string; body: string; cta: string }) => {
+  const [copied, setCopied] = useState(false);
+  const fullText = `${title}
+
+${body}
+
+${cta}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(fullText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div className="relative">
+      <Button
+        size="sm"
+        variant="ghost"
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+        onClick={handleCopy}
+      >
+        {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+      </Button>
+      <pre className="p-4 pt-10 bg-gray-50 dark:bg-gray-900/50 rounded-xl whitespace-pre-wrap font-sans text-gray-700 dark:text-gray-300 leading-relaxed">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{title}</h2>
+        <p>{body}</p>
+        <p className="font-semibold text-blue-600 dark:text-blue-400 mt-4">{cta}</p>
+      </pre>
+    </div>
+  );
+};
+
+// Helper Component: Suggestions Sidebar
+const SuggestionsSidebar = ({ tips }: { tips: string[] }) => (
+  <Card className="shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl">
+    <CardContent className="p-6">
+      <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4">Quick Tips:</h3>
+      <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-2">
+        {tips.map((tip, idx) => <li key={idx}>{tip}</li>)}
+      </ul>
+    </CardContent>
+  </Card>
+);
 
 export default function FacebookPostGenerator() {
   const [industry, setIndustry] = useState("Select Industry");
@@ -12,28 +124,34 @@ export default function FacebookPostGenerator() {
   const [topic, setTopic] = useState("");
   const [result, setResult] = useState<TemplateResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [imgLoading, setImgLoading] = useState(false);
+  const [imageCount, setImageCount] = useState("1");
+  const [apiError, setApiError] = useState<{ message: string; onRetry: () => void } | null>(null);
 
   const industries = ["Technology", "Finance", "Healthcare", "Marketing"];
   const designations = ["Software Engineer", "Product Manager", "Marketing Head", "CEO"];
+  const imageCountOptions = ["1", "2", "3", "4"];
 
   const handleGenerate = async () => {
     setLoading(true);
     setResult(null);
-    setImage(null);
+    setImages([]);
+    setApiError(null);
 
     try {
       const template = await generateTemplate({
         title: topic,
         description: `Industry: ${industry}, Designation: ${designation}`,
-        tone: "casual", // Facebook is more friendly/casual
+        tone: "casual",
         style: "facebook-post",
       });
       setResult(template);
     } catch (err) {
-      console.error("Template generation failed:", err);
-      alert("Error generating Facebook post. Please try again.");
+      setApiError({
+        message: "Error generating Facebook post. Please check your connection or API key.",
+        onRetry: handleGenerate,
+      });
     } finally {
       setLoading(false);
     }
@@ -42,77 +160,103 @@ export default function FacebookPostGenerator() {
   const handleGenerateImage = async () => {
     if (!result) return;
     setImgLoading(true);
+    setImages([]);
+    setApiError(null);
 
     try {
-      const img = await generateTemplateImage(result.templateBody, "1200x630"); // FB recommended size
-      setImage(img);
+      const numImages = parseInt(imageCount, 10);
+      const imagePromises = Array.from({ length: numImages }, () =>
+        generateTemplateImage(result.templateBody, "1200x630")
+      );
+      const generatedImages = await Promise.all(imagePromises);
+      setImages(generatedImages.filter((img): img is string => !!img));
     } catch (err) {
-      console.error("Image generation failed:", err);
-      alert("Error generating image. Please try again.");
+      setApiError({
+        message: "Error generating images. The service may be temporarily unavailable.",
+        onRetry: handleGenerateImage,
+      });
     } finally {
       setImgLoading(false);
     }
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-8">
+    <div className="p-6 max-w-7xl mx-auto space-y-8 relative z-20">
       <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">
         Facebook Post Generator
       </h1>
 
-      {/* Form */}
-      <div className="grid gap-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md p-6 rounded-2xl shadow-lg">
-        <ModernDropdown label="Industry" options={industries} selected={industry} onChange={setIndustry} />
-        <ModernDropdown label="Designation" options={designations} selected={designation} onChange={setDesignation} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Form */}
+          <div className="grid gap-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md p-6 rounded-2xl shadow-lg">
+            <ModernDropdown label="Industry" options={industries} selected={industry} onChange={setIndustry} />
+            <ModernDropdown label="Designation" options={designations} selected={designation} onChange={setDesignation} />
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Topic</label>
+              <input
+                type="text"
+                placeholder="e.g., 'The future of AI in marketing'"
+                className="w-full p-3 rounded-xl border border-gray-300/50 dark:border-gray-700/50 bg-white/30 dark:bg-gray-900/40 shadow-inner focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+              />
+            </div>
+            <Button onClick={handleGenerate} disabled={loading} className="w-full py-3 text-lg rounded-xl">
+              {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "🚀 Generate Facebook Post"}
+            </Button>
+          </div>
 
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Topic</label>
-          <input
-            type="text"
-            placeholder="Enter Topic"
-            className="w-full p-3 rounded-xl border border-gray-300/50 dark:border-gray-700/50 bg-white/30 dark:bg-gray-900/40 shadow-inner focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-          />
+          {/* Post Preview */}
+          {result && (
+            <Card className="shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl">
+              <CardContent className="p-6 space-y-6">
+                <CopyableOutput title={result.templateTitle} body={result.templateBody} cta={result.callToAction} />
+                
+                <div className="flex items-center gap-4 pt-4">
+                  <ModernDropdown label="Number of Images" options={imageCountOptions} selected={imageCount} onChange={setImageCount} />
+                  <Button onClick={handleGenerateImage} disabled={imgLoading} className="flex-grow py-3 text-lg rounded-xl">
+                    {imgLoading ? <Loader2 className="animate-spin h-5 w-5" /> : "🖼️ Generate Image(s)"}
+                  </Button>
+                </div>
+
+                {images.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="font-medium text-gray-800 dark:text-gray-200 mb-4">Generated Facebook Images:</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {images.map((image, idx) => (
+                        <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                          <img src={image} alt={`Generated Facebook Post ${idx + 1}`} className="w-full h-full object-cover" />
+                          <a
+                            href={image}
+                            download={`syra-facebook-image-${idx + 1}.png`}
+                            className="absolute bottom-2 right-2 flex items-center justify-center w-10 h-10 bg-black bg-opacity-60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                          >
+                            <Download className="h-5 w-5" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        <Button onClick={handleGenerate} disabled={loading} className="w-full py-3 text-lg rounded-xl">
-          {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "🚀 Generate Facebook Post"}
-        </Button>
+        {/* Sidebar */}
+        <div className="lg:col-span-1">
+          {result && result.tips?.length > 0 && <SuggestionsSidebar tips={result.tips} />}
+        </div>
       </div>
 
-      {/* Post Preview */}
-      {result && (
-        <Card className="mt-6 shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl">
-          <CardContent className="p-6 space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{result.templateTitle}</h2>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">{result.templateBody}</p>
-            <p className="font-semibold text-blue-600 dark:text-blue-400">{result.callToAction}</p>
-
-            {result.tips?.length > 0 && (
-              <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-xl">
-                <h3 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">Quick Tips:</h3>
-                <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                  {result.tips.map((tip, idx) => <li key={idx}>{tip}</li>)}
-                </ul>
-              </div>
-            )}
-
-            <div className="pt-4">
-              <Button onClick={handleGenerateImage} disabled={imgLoading} className="w-full py-3 text-lg rounded-xl">
-                {imgLoading ? <Loader2 className="animate-spin h-5 w-5" /> : "🖼️ Generate Image from Content"}
-              </Button>
-            </div>
-
-            {image && (
-              <div className="mt-6">
-                <h3 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Generated Facebook Image:</h3>
-                <img src={image} alt="Generated Facebook Post" className="rounded-xl shadow-lg w-full border border-gray-200 dark:border-gray-700" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      <ErrorModal
+        isOpen={!!apiError}
+        message={apiError?.message || ""}
+        onRetry={apiError?.onRetry || (() => {})}
+        onClose={() => setApiError(null)}
+      />
     </div>
   );
 }
