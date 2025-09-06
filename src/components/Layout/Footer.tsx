@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 export function Footer() {
   return (
     <footer
-      className="relative w-full border-t border-white/20 shadow-lg overflow-hidden"
+      className="relative z-0 w-full border-t border-white/20 shadow-lg overflow-hidden"
       style={{ backgroundColor: "#000000" }}
     >
       {/* Animated gradient background */}

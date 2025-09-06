@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer, Event as BigCalendarEvent } from 'react-big-calendar';
 import withDragAndDrop, { withDragAndDropProps } from 'react-big-calendar/lib/addons/dragAndDrop';
-import format from 'date-fns/format';
-import parse from 'date-fns/parse';
-import startOfWeek from 'date-fns/startOfWeek';
-import getDay from 'date-fns/getDay';
-import enUS from 'date-fns/locale/en-US';
+// import format from 'date-fns/format';
+// import parse from 'date-fns/parse';
+// import startOfWeek from 'date-fns/startOfWeek';
+// import getDay from 'date-fns/getDay';
+import { format, parse, startOfWeek, getDay } from 'date-fns';
+// import enUS from 'date-fns/locale/en-US';
+import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 
@@ -133,7 +135,7 @@ export function ModernScheduler() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="relative z-0 p-4 sm:p-6 lg:p-8">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
         <DnDCalendar
           localizer={localizer}
