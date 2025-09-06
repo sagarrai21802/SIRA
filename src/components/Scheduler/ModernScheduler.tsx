@@ -22,7 +22,8 @@ const DnDCalendar = withDragAndDrop(Calendar);
 
 interface ScheduledPost {
   id: string;
-  caption: string;
+  content: string;
+  image_url?: string;
   scheduled_at: string;
   status: string;
   platform?: string;
@@ -50,7 +51,7 @@ export function ModernScheduler() {
     }
 
     const formattedEvents = data.map((post: ScheduledPost) => ({
-      title: post.caption,
+      title: post.content,
       start: new Date(post.scheduled_at),
       end: new Date(post.scheduled_at),
       resource: post,
@@ -60,8 +61,26 @@ export function ModernScheduler() {
   }, [user]);
 
   useEffect(() => {
-    fetchScheduledPosts();
-  }, [fetchScheduledPosts]);
+    if (user) {
+      fetchScheduledPosts();
+
+      const channel = supabase.channel('scheduled_posts_changes');
+      
+      channel
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'scheduled_posts', filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            fetchScheduledPosts();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, fetchScheduledPosts]);
 
   const handleSelectSlot = (slotInfo: { start: Date }) => {
     setSelectedDate(slotInfo.start);

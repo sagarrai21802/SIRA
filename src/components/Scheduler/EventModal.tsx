@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
+import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
 import { Event as BigCalendarEvent } from 'react-big-calendar';
 import { Button } from '../UI/Button';
@@ -21,35 +22,39 @@ const platforms = ['LinkedIn', 'Instagram', 'Twitter', 'Facebook'];
 
 export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedDate }: EventModalProps) {
   const { user } = useAuth();
-  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [start, setStart] = useState<Date | null>(null);
   const [platform, setPlatform] = useState<string>('LinkedIn');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (event) {
-      setTitle(event.title || '');
+      setContent((event.resource as any)?.content || event.title || '');
       setStart(event.start || null);
       setPlatform((event.resource as any)?.platform || 'LinkedIn');
+      setImageUrl((event.resource as any)?.image_url || null);
     } else if (selectedDate) {
-      setTitle('');
+      setContent('');
       setStart(selectedDate);
       setPlatform('LinkedIn');
+      setImageUrl(null);
     }
   }, [event, selectedDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !start || !title) return;
+    if (!user || !start || !content) return;
 
     setLoading(true);
 
     const eventData = {
       user_id: user.id,
-      caption: title,
+      content: content,
       scheduled_at: start.toISOString(),
       status: 'scheduled',
       platform,
+      image_url: imageUrl,
     };
 
     let error;
@@ -65,7 +70,9 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
 
     if (error) {
       console.error('Error saving event:', error);
+      toast.error(error.message);
     } else {
+      toast.success(`Post ${event ? 'updated' : 'created'} successfully!`);
       onSave();
     }
 
@@ -79,17 +86,21 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
         <div className="fixed inset-0 overflow-y-auto flex items-center justify-center p-4">
           <Dialog.Panel className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl">
             <Dialog.Title as="h3" className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              {event ? 'Edit Task' : 'Create Task'}
+              {event ? 'Edit Post' : 'Create Post'}
             </Dialog.Title>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <Input
-                label="Task"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="What is your task?"
-                required
+              <textarea
+                className="w-full h-32 p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                placeholder="Enter your post content here..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
               />
+              {imageUrl && (
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Image Preview</label>
+                  <img src={imageUrl} alt="Scheduled post" className="w-full h-auto rounded-lg" />
+                </div>
+              )}
               <Input
                 label="Date & Time"
                 type="datetime-local"
@@ -113,7 +124,7 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
                   Cancel
                 </Button>
                 <Button type="submit" loading={loading}>
-                  {event ? 'Save Changes' : 'Create Task'}
+                  {event ? 'Save Changes' : 'Create Post'}
                 </Button>
               </div>
             </form>

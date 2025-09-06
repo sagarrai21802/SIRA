@@ -3,12 +3,14 @@ import { generateTemplate, TemplateResult } from "../lib/template";
 import { generateTemplateImage } from "../lib/templateImage";
 import { Button } from "../components/UI/Button";
 import { Card, CardContent } from "../components/UI/Card";
-import { Loader2, Copy, Check, AlertTriangle, Download } from "lucide-react";
+import { Loader2, Copy, Check, AlertTriangle, Download, CalendarPlus } from "lucide-react";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
 import { Dialog, Transition } from "@headlessui/react";
+import { ScheduleGeneratedPostModal } from '../components/Scheduler/ScheduleGeneratedPostModal';
+import toast from 'react-hot-toast';
 
 // Helper Component: Error Modal
-const ErrorModal = ({
+const ErrorModal = ({ 
   isOpen,
   message,
   onRetry,
@@ -75,11 +77,7 @@ const ErrorModal = ({
 // Helper Component: Copyable Output
 const CopyableOutput = ({ title, body, cta }: { title: string; body: string; cta: string }) => {
   const [copied, setCopied] = useState(false);
-  const fullText = `${title}
-
-${body}
-
-${cta}`;
+  const fullText = `${title}\n\n${body}\n\n${cta}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(fullText);
@@ -128,6 +126,7 @@ export default function LinkedInPostGenerator() {
   const [imgLoading, setImgLoading] = useState(false);
   const [imageCount, setImageCount] = useState("1");
   const [apiError, setApiError] = useState<{ message: string; onRetry: () => void } | null>(null);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   const industries = ["Technology", "Finance", "Healthcare", "Marketing"];
   const designations = ["Software Engineer", "Product Manager", "Marketing Head", "CEO"];
@@ -180,6 +179,8 @@ export default function LinkedInPostGenerator() {
     }
   };
 
+  const fullPostContent = result ? `${result.templateTitle}\n\n${result.templateBody}\n\n${result.callToAction}` : '';
+
   return (
     // CHANGED: Added relative and z-20 to ensure this component's context is above the footer
     <div className="p-6 max-w-7xl mx-auto space-y-8 relative z-20">
@@ -220,6 +221,9 @@ export default function LinkedInPostGenerator() {
                   <Button onClick={handleGenerateImage} disabled={imgLoading} className="flex-grow py-3 text-lg rounded-xl">
                     {imgLoading ? <Loader2 className="animate-spin h-5 w-5" /> : "🖼️ Generate Image(s)"}
                   </Button>
+                  <Button onClick={() => setIsScheduleModalOpen(true)} variant="outline" className="flex-grow py-3 text-lg rounded-xl">
+                    <CalendarPlus className="h-5 w-5 mr-2" /> Schedule
+                  </Button>
                 </div>
 
                 {images.length > 0 && (
@@ -258,6 +262,20 @@ export default function LinkedInPostGenerator() {
         onRetry={apiError?.onRetry || (() => {})}
         onClose={() => setApiError(null)}
       />
+
+      {result && (
+        <ScheduleGeneratedPostModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          onPostScheduled={() => {
+            setIsScheduleModalOpen(false);
+            toast.success("Post scheduled! Check the Scheduler page.");
+          }}
+          content={fullPostContent}
+          imageUrl={images.length > 0 ? images[0] : null}
+          platform="LinkedIn"
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import { generateWithGemini } from '../../lib/gemini';
 import toast from 'react-hot-toast';
+import { ModernDropdown } from '../UI/ModernDropdown';
 
 interface SchedulePostModalProps {
   isOpen: boolean;
@@ -14,9 +15,12 @@ interface SchedulePostModalProps {
   onPostScheduled: () => void;
 }
 
+const platforms = ['LinkedIn', 'Instagram', 'Twitter', 'Facebook'];
+
 export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostScheduled }: SchedulePostModalProps) {
   const { user } = useAuth();
-  const [caption, setCaption] = useState('');
+  const [content, setContent] = useState('');
+  const [platform, setPlatform] = useState('LinkedIn');
   const [scheduledAt, setScheduledAt] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasBrandSnapshot, setHasBrandSnapshot] = useState(true);
@@ -48,12 +52,12 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
         throw new Error('Could not retrieve brand snapshot. Please ensure your profile is complete.');
       }
 
-      const generatedCaption = await generateWithGemini({
+      const generatedContent = await generateWithGemini({
         prompt: `Generate a social media post caption based on this brand snapshot: "${brandSnapshot}"`, contentType: 'social-media',
         tone: 'engaging',
       });
 
-      setCaption(generatedCaption);
+      setContent(generatedContent);
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate content.');
     }
@@ -62,16 +66,17 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!caption || !scheduledAt || !user) return;
+    if (!content || !scheduledAt || !user) return;
 
     setLoading(true);
     try {
       const { error } = await supabase.from('scheduled_posts').insert([
         {
           user_id: user.id,
-          caption,
+          content,
           scheduled_at: scheduledAt,
           status: 'scheduled',
+          platform,
         },
       ]);
 
@@ -119,9 +124,9 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
                 <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                   <textarea
                     className="w-full h-32 p-2 border rounded"
-                    placeholder="Enter your caption here..."
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
+                    placeholder="Enter your content here..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
                   />
                   <Input
                     label="Scheduled Date & Time"
@@ -129,6 +134,12 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
                     value={scheduledAt}
                     onChange={(e) => setScheduledAt(e.target.value)}
                     required
+                  />
+                  <ModernDropdown
+                    label="Platform"
+                    options={platforms}
+                    selected={platform}
+                    onChange={setPlatform}
                   />
                   <div className="flex justify-between">
                     <Button
@@ -143,7 +154,7 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
                       <Button type="button" onClick={onClose} variant="outline">
                         Cancel
                       </Button>
-                      <Button type="submit" loading={loading} disabled={!caption}>
+                      <Button type="submit" loading={loading} disabled={!content}>
                         Save
                       </Button>
                     </div>
