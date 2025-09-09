@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
@@ -7,12 +5,14 @@ import { motion } from 'framer-motion';
 
 export function Footer() {
   return (
-    <footer className="relative w-full backdrop-blur-2xl bg-white/10 dark:bg-black/30 border-t border-white/20 shadow-lg overflow-hidden">
+    <footer
+      className="relative z-0 w-full border-t border-white/20 shadow-lg overflow-hidden"
+      style={{ backgroundColor: "#000000" }}
+    >
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-gradient-x" />
 
-      {/* Removed max-w-7xl + mx-auto */}
-      <div className="relative z-10 w-full px-6 sm:px-8 lg:px-12 py-12">
+      <div className="relative w-full px-6 sm:px-8 lg:px-12 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <motion.div
@@ -26,14 +26,14 @@ export function Footer() {
                 <Sparkles className="w-5 h-5 text-white animate-pulse" />
               </div>
               <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                SIRA
+                SYRA.io
               </span>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 max-w-xl leading-relaxed">
+            <p className="text-gray-300 max-w-xl leading-relaxed">
               AI-powered marketing platform for{' '}
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">solo founders</span>,{' '}
-              <span className="text-purple-600 dark:text-purple-400 font-semibold">startups</span>, and{' '}
-              <span className="text-pink-600 dark:text-pink-400 font-semibold">content teams</span>.  
+              <span className="text-blue-400 font-semibold">solo founders</span>,{' '}
+              <span className="text-purple-400 font-semibold">startups</span>, and{' '}
+              <span className="text-pink-400 font-semibold">content teams</span>.  
               Generate content, optimize SEO, and manage your strategy in one futuristic workspace.
             </p>
           </motion.div>
@@ -44,7 +44,7 @@ export function Footer() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
               Product
             </h3>
             <ul className="space-y-2">
@@ -61,7 +61,7 @@ export function Footer() {
                 >
                   <Link
                     to={link.to}
-                    className="text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all"
+                    className="text-gray-400 hover:text-blue-400 transition-all"
                   >
                     {link.label}
                   </Link>
@@ -76,7 +76,7 @@ export function Footer() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
               Company
             </h3>
             <ul className="space-y-2">
@@ -93,7 +93,7 @@ export function Footer() {
                 >
                   <Link
                     to={link.to}
-                    className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 transition-all"
+                    className="text-gray-400 hover:text-purple-400 transition-all"
                   >
                     {link.label}
                   </Link>
@@ -110,8 +110,8 @@ export function Footer() {
           transition={{ delay: 0.6 }}
           className="border-t border-white/20 mt-10 pt-6 text-center"
         >
-          <p className="text-gray-700 dark:text-gray-400">
-            © {new Date().getFullYear()} <span className="font-semibold text-blue-500">SIRA</span>. All rights reserved.
+          <p className="text-gray-400">
+            © {new Date().getFullYear()} <span className="font-semibold text-blue-400">SYRA.io</span>. All rights reserved.
           </p>
         </motion.div>
       </div>

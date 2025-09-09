@@ -1,19 +1,21 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.warn('Gemini API key not found. Template generation will be disabled.');
+  console.warn("Gemini API key not found. Template generation will be disabled.");
 }
 
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-const model = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI?.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export interface TemplateParams {
   title: string;
   description?: string;
-  tone?: string;       
-  style?: string;      
+  tone?: string;
+  style?: string;
 }
 
 export interface TemplateResult {
@@ -25,13 +27,11 @@ export interface TemplateResult {
 
 export const generateTemplate = async ({
   title,
-  description = '',
-  tone = 'neutral',
-  style = 'standard',
+  description = "",
+  tone = "neutral",
+  style = "standard",
 }: TemplateParams): Promise<TemplateResult> => {
-  if (!model) {
-    throw new Error('Gemini model not initialized.');
-  }
+  if (!model) throw new Error("Gemini model not initialized.");
 
   const systemPrompt = `
 You are a professional template designer. Based on the given parameters, create a ready-to-use template.
@@ -59,24 +59,20 @@ Context:
 
   try {
     const result = await model.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: systemPrompt }],
-        },
-      ],
+      contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
     });
 
     const text = result.response.text();
 
-    // Extract only JSON part
-    const jsonStart = text.indexOf('{');
-    const jsonEnd = text.lastIndexOf('}') + 1;
+    // Extract JSON safely
+    const jsonStart = text.indexOf("{");
+    const jsonEnd = text.lastIndexOf("}") + 1;
     const jsonString = text.substring(jsonStart, jsonEnd);
 
     return JSON.parse(jsonString) as TemplateResult;
   } catch (error) {
-    console.error('Failed to generate template:', error);
-    throw new Error('Error generating template. Try again later.');
+    console.error("Failed to generate template:", error);
+    throw new Error("Error generating template. Try again later.");
   }
 };
+

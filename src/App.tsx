@@ -133,6 +133,13 @@ import Settings from "./pages/Settings";
 import { AuthCallback } from "./pages/Auth/AuthCallback";
 import { Humanizer } from "./pages/Humanizer";
 import PromptGenerator from "./pages/Promptgenerator";
+import { Scheduler } from "./pages/Scheduler"; // Import the Scheduler component
+import InstagramPostGenerator from "./pages/InstagramPostGenerator";
+import FacebookPostGenerator from "./pages/facebookPostGenerator";
+import LinkedInPostGenerator from "./pages/LinkedinPostGenerator";
+import MetaTags from "./pages/MetaTags";
+import KeywordGenerator from "./pages/Keyword";
+import SchemaGenerator from "./pages/SchemaGenerator";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -174,7 +181,7 @@ function AppContent() {
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/content" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
-              <Route path="/seo" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} />
+              {/* <Route path="/metatags" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} /> */}
               <Route path="/template" element={<ProtectedRoute><GenerateTemplate /></ProtectedRoute>} />
               <Route path="/images" element={<ProtectedRoute><ImageGenerator /></ProtectedRoute>} />
               <Route path="/ads" element={<ProtectedRoute><AdGenerator /></ProtectedRoute>} />
@@ -186,6 +193,15 @@ function AppContent() {
               <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/privacy" element={<ProtectedRoute><Privacy /></ProtectedRoute>} />
+              <Route path="/linkedinpostgenerator" element={<ProtectedRoute><LinkedInPostGenerator /></ProtectedRoute>} />
+              <Route path="/facebookpostgenerator" element={<ProtectedRoute><FacebookPostGenerator /></ProtectedRoute>} />
+              <Route path="/instagrampotgenerator" element={<ProtectedRoute><InstagramPostGenerator /></ProtectedRoute>} />
+              <Route path="/seo/metatags" element={<ProtectedRoute><MetaTags/></ProtectedRoute>} />
+              <Route path="/seo/keyword" element={<ProtectedRoute><KeywordGenerator /></ProtectedRoute>} />
+              <Route path="/seo/schemagenerator" element={<ProtectedRoute><SchemaGenerator /></ProtectedRoute>} />
+
+              {/* Add the Scheduler route */}
+              <Route path="/scheduler" element={<ProtectedRoute><Scheduler /></ProtectedRoute>} />
             </Routes>
           </main>
           <Footer />

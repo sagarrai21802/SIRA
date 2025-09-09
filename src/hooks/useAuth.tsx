@@ -2,13 +2,23 @@
 import { useEffect, useState, useContext, createContext } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+// interface AuthContextType {
+//   user: any;
+//   loading: boolean;
+//   signIn: (email: string, password: string) => Promise<void>;
+//   signUp: (email: string, password: string) => Promise<{ isConfirmed: boolean }>;
+//   signOut: () => Promise<void>;
+// }
+
+// New AuthContextType with updated signUp signature
 interface AuthContextType {
   user: any;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<{ isConfirmed: boolean }>;
+  signUp: (email: string, password: string, options?: { displayName?: string; phone?: Number }) => Promise<{ isConfirmed: boolean }>;
   signOut: () => Promise<void>;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -44,7 +54,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string) => {
+  // const signUp = async (email: string, password: string) => {
+  //   // Get the current domain, whether it's localhost or the deployed URL
+  //   const redirectBaseUrl = process.env.NODE_ENV === 'production' 
+  //     ? import.meta.env.VITE_APP_URL || window.location.origin
+  //     : window.location.origin;
+
+  //   const { data, error } = await supabase.auth.signUp({ 
+  //     email, 
+  //     password,
+  //     options: {
+  //       emailRedirectTo: `${redirectBaseUrl}/auth/callback`
+  //     }
+  //   });
+  //   if (error) throw error;
+  //   return { isConfirmed: data.user?.confirmed_at ? true : false };
+  // };
+
+  // New signUp function that handles additional user data
+  const signUp = async (email: string, password: string, options: { displayName?: string; phone?: Number } = {}) => {
     // Get the current domain, whether it's localhost or the deployed URL
     const redirectBaseUrl = process.env.NODE_ENV === 'production' 
       ? import.meta.env.VITE_APP_URL || window.location.origin
@@ -54,7 +82,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email, 
       password,
       options: {
-        emailRedirectTo: `${redirectBaseUrl}/auth/callback`
+        emailRedirectTo: `${redirectBaseUrl}/auth/callback`,
+        // Add the additional data here, which will be stored in the user's metadata
+        data: {
+          display_name: options.displayName,
+          phone: options.phone,
+        }
       }
     });
     if (error) throw error;

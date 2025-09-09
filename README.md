@@ -1,6 +1,6 @@
-# SIRA - AI-Powered Marketing Platform
+# SYRA.io - AI-Powered Marketing Platform
 
-SIRA is a comprehensive marketing platform designed for solo founders, startups, and content teams. It provides AI-powered tools for content generation, image creation, SEO optimization, and campaign management.
+SYRA.io is a comprehensive marketing platform designed for solo founders, startups, and content teams. It provides AI-powered tools for content generation, image creation, SEO optimization, and campaign management.
 
 ## Features
 
@@ -33,7 +33,7 @@ SIRA is a comprehensive marketing platform designed for solo founders, startups,
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd SIRA
+   cd SYRA.io
    ```
 
 2. **Install dependencies**
