@@ -144,7 +144,7 @@ import SchemaGenerator from "./pages/SchemaGenerator";
 function AppContent() {
   const { loading: authLoading } = useAuth();
   const [showLoading, setShowLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // ✅ default true for logged-in
+  const [sidebarOpen, setSidebarOpen] = useState(true); 
 
   const location = useLocation();
   const noSidebarRoutes = ["/", "/login", "/signup"];
