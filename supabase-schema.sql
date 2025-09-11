@@ -67,10 +67,12 @@ CREATE POLICY "Users can delete own content generations" ON content_generations
 CREATE TABLE IF NOT EXISTS scheduled_posts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  caption TEXT,
+  content TEXT,
   image_url TEXT,
+  platform TEXT,
   scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
   status TEXT NOT NULL DEFAULT 'draft', -- e.g., 'draft', 'scheduled', 'published', 'failed'
+  is_posted BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -115,3 +117,4 @@ $ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+

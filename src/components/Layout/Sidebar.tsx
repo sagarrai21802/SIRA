@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -32,6 +31,8 @@ export function Sidebar() {
         { name: "Instagram Post", href: "/instagrampotgenerator" },
       ],
     },
+    { name: "Content", icon: FileText, href: "/content" },
+    { name: "Images", icon: Image, href: "/images" },
     {
       name: "SEO Tools",
       icon: BarChart3,
@@ -42,8 +43,7 @@ export function Sidebar() {
         { name: "Schema Generator", href: "/seo/schemagenerator" },
       ],
     },
-    { name: "Content", icon: FileText, href: "/content" },
-    { name: "Images", icon: Image, href: "/images" },
+
     { name: "Ad Generator", icon: Megaphone, href: "/ads" },
     { name: "AI to Humanizer", icon: Zap, href: "/humanizer" },
     { name: "Prompt Generator", icon: Sparkles, href: "/promptgenerator" },
@@ -114,7 +114,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="mt-auto text-center text-gray-400 text-sm mt-10">
-        © 2025 SYRA.io All rights reserved.
+        ©️ 2025 SYRA.io All rights reserved.
       </div>
 
       {/* Animations */}
