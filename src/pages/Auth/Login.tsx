@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -29,7 +30,28 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(email, password);
-      navigate("/dashboard");
+      
+      // Get the current user after successful login
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Check if profile is complete
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_profile_complete')
+          .eq('id', user.id)
+          .single();
+        
+        if (profileError || !profile?.is_profile_complete) {
+          // Redirect to personalization if profile is incomplete
+          navigate("/personalization");
+        } else {
+          // Redirect to dashboard if profile is complete
+          navigate("/dashboard");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       if (err.message?.toLowerCase().includes('email not confirmed')) {
         setError('Please confirm your email address before logging in. Check your inbox for the confirmation link.');

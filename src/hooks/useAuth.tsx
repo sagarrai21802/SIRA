@@ -15,7 +15,7 @@ interface AuthContextType {
   user: any;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, options?: { displayName?: string; phone?: Number }) => Promise<{ isConfirmed: boolean }>;
+  signUp: (email: string, password: string, options?: { displayName?: string; phone?: string }) => Promise<{ isConfirmed: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // };
 
   // New signUp function that handles additional user data
-  const signUp = async (email: string, password: string, options: { displayName?: string; phone?: Number } = {}) => {
+  const signUp = async (email: string, password: string, options: { displayName?: string; phone?: string } = {}) => {
     // Get the current domain, whether it's localhost or the deployed URL
     const redirectBaseUrl = process.env.NODE_ENV === 'production' 
       ? import.meta.env.VITE_APP_URL || window.location.origin

@@ -113,6 +113,7 @@ import { Footer } from "./components/Layout/Footer";
 import { Sidebar } from "./components/Layout/Sidebar";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoadingScreen } from "./components/LoadingScreen";
+import { ProfileGuard } from "./components/ProfileGuard";
 import { Home } from "./pages/Home";
 import Login from "./pages/Auth/Login";
 import { Signup } from "./pages/Auth/Signup";
@@ -140,6 +141,7 @@ import LinkedInPostGenerator from "./pages/LinkedinPostGenerator";
 import MetaTags from "./pages/MetaTags";
 import KeywordGenerator from "./pages/Keyword";
 import SchemaGenerator from "./pages/SchemaGenerator";
+import { ProfilePersonalization } from "./pages/Auth/ProfilePersonalization";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -173,11 +175,13 @@ function AppContent() {
         {/* ✅ Main content shifted by ml-64 when sidebar is visible */}
         <div className={`flex flex-col flex-1 transition-all duration-300 ${!hideSidebar && sidebarOpen ? "ml-64" : ""}`}>
           <main className="flex-1 p-6">
-            <Routes>
+            <ProfileGuard>
+              <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/personalization" element={<ProtectedRoute><ProfilePersonalization /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/content" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
@@ -202,7 +206,8 @@ function AppContent() {
 
               {/* Add the Scheduler route */}
               <Route path="/scheduler" element={<ProtectedRoute><Scheduler /></ProtectedRoute>} />
-            </Routes>
+              </Routes>
+            </ProfileGuard>
           </main>
           <Footer />
         </div>
