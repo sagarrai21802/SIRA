@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
 import toast from 'react-hot-toast';
+import { ModernDropdown } from '../../components/UI/ModernDropdown';
 
 interface PersonalizationData {
   industry: string;
@@ -526,3 +527,4 @@ export function ProfilePersonalization() {
     </div>
   );
 }
+
