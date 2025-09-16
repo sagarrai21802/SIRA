@@ -26,8 +26,13 @@ export const ProfileGuard: React.FC<ProfileGuardProps> = ({ children }) => {
 
   const shouldSkipCheck = skipProfileCheckRoutes.includes(location.pathname);
 
+  const bypassOnce = (location.state as any)?.profileCompleted === true;
+
   useEffect(() => {
     if (!loading && user && !shouldSkipCheck && !isComplete) {
+      if (bypassOnce) {
+        return;
+      }
       // Store the current path to redirect back after profile completion
       const currentPath = location.pathname;
       if (currentPath !== '/personalization') {
@@ -37,7 +42,7 @@ export const ProfileGuard: React.FC<ProfileGuardProps> = ({ children }) => {
         });
       }
     }
-  }, [loading, user, isComplete, shouldSkipCheck, navigate, location.pathname]);
+  }, [loading, user, isComplete, shouldSkipCheck, navigate, location.pathname, bypassOnce]);
 
   // Show loading screen while checking profile status
   if (!shouldSkipCheck && user && loading) {

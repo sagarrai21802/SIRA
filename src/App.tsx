@@ -142,6 +142,7 @@ import MetaTags from "./pages/MetaTags";
 import KeywordGenerator from "./pages/Keyword";
 import SchemaGenerator from "./pages/SchemaGenerator";
 import { ProfilePersonalization } from "./pages/Auth/ProfilePersonalization";
+import LinkedInCallback from "./pages/LinkdinCallback";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -183,6 +184,7 @@ function AppContent() {
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/personalization" element={<ProtectedRoute><ProfilePersonalization /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/linkedin-callback" element={<LinkedInCallback />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/content" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
               {/* <Route path="/metatags" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} /> */}

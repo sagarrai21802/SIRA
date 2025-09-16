@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
 import { uploadImage } from "../utils/uploadImage";
-import { User, Mail, Phone, Camera, LogOut, Building2, MapPin, Users, Volume2, Target, Trophy, Edit3, Save, X, Briefcase } from "lucide-react";
+import { User, Mail, Phone, Camera, Building2, MapPin, Users, Volume2, Target, Trophy, Edit3, Save, X, Briefcase, Linkedin, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -24,6 +24,10 @@ export default function Profile() {
   const [targetAudience, setTargetAudience] = useState("");
   const [brandVoice, setBrandVoice] = useState("professional");
   const [goals, setGoals] = useState("");
+  // Social links
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
 
   // Fetch or create profile data
   useEffect(() => {
@@ -35,7 +39,8 @@ export default function Profile() {
         .select(`
           full_name, phone_number, avatar_url, email,
           company_name, industry, business_type, location,
-          company_size, target_audience, brand_voice, goals
+          company_size, target_audience, brand_voice, goals,
+          linkedin_url, instagram_url, facebook_url
         `)
         .eq("id", user.id)
         .single();
@@ -53,6 +58,9 @@ export default function Profile() {
         setTargetAudience(data.target_audience || "");
         setBrandVoice(data.brand_voice || "professional");
         setGoals(data.goals || "");
+        setLinkedinUrl(data.linkedin_url || "");
+        setInstagramUrl(data.instagram_url || "");
+        setFacebookUrl(data.facebook_url || "");
       } else {
         // Profile does not exist → create default row
         const { error: insertError } = await supabase.from("profiles").insert({
@@ -86,6 +94,9 @@ export default function Profile() {
         full_name: fullName,
         phone_number: phoneNumber,
         avatar_url: avatarUrl,
+        linkedin_url: linkedinUrl || null,
+        instagram_url: instagramUrl || null,
+        facebook_url: facebookUrl || null,
       });
 
     setLoading(false);
@@ -134,11 +145,17 @@ export default function Profile() {
     if (url) setAvatarUrl(url);
   };
 
-  // Logout and redirect to login
-  const handleLogout = async () => {
-    await logout();
-    navigate("/longin");
+
+  const handleConnectLinkedin = () => {
+    const clientId = "8689oak1ll7q1n";
+    const redirectUri = "WPL_AP1.1iXzSvo8becZXGIK.Yzsvjw=="; // This must be registered in your LinkedIn app
+    const scope = "r_liteprofile w_member_social"; // Add other scopes as needed
+    const linkedinAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(scope)}`;
+  
+    window.location.href = linkedinAuthUrl;
   };
+
+  //
 
   if (!user) return <div>No user logged in</div>;
 
@@ -218,9 +235,61 @@ export default function Profile() {
             disabled={loading}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
           >
-            {loading ? "Saving..." : "Save Basic Info"}
+            {loading ? "Saving..." : "Save Profile"}
           </button>
         </div>
+      </div>
+
+      {/* Social Links */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          Social Links
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            {/* <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <Linkedin className="w-4 h-4" /> LinkedIn URL
+            </label> */}
+<button
+  onClick={handleConnectLinkedin}
+  className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
+>
+  <Linkedin className="w-4 h-4" /> Connect LinkedIn
+</button>
+            <input
+              type="url"
+              value={linkedinUrl}
+              onChange={(e) => setLinkedinUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="https://linkedin.com/in/yourprofile"
+            />
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <Instagram className="w-4 h-4" /> Instagram URL
+            </label>
+            <input
+              type="url"
+              value={instagramUrl}
+              onChange={(e) => setInstagramUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="https://instagram.com/yourhandle"
+            />
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <Facebook className="w-4 h-4" /> Facebook URL
+            </label>
+            <input
+              type="url"
+              value={facebookUrl}
+              onChange={(e) => setFacebookUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="https://facebook.com/yourpage"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">Optional. Add your social profiles to improve content suggestions.</p>
       </div>
 
       {/* Business Personalization */}

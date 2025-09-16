@@ -16,6 +16,9 @@ interface PersonalizationData {
   brandVoice: string;
   companyName: string;
   goals: string;
+  linkedinUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
 }
 
 const INDUSTRIES = [
@@ -108,7 +111,10 @@ export function ProfilePersonalization() {
     targetAudience: '',
     brandVoice: 'professional',
     companyName: '',
-    goals: ''
+    goals: '',
+    linkedinUrl: '',
+    instagramUrl: '',
+    facebookUrl: ''
   });
 
   const { user } = useAuth();
@@ -184,8 +190,22 @@ export function ProfilePersonalization() {
 
       if (error) throw error;
 
+      // Save social links too (new columns)
+      const { error: socialsError } = await supabase
+        .from('profiles')
+        .update({
+          linkedin_url: formData.linkedinUrl || null,
+          instagram_url: formData.instagramUrl || null,
+          facebook_url: formData.facebookUrl || null,
+          is_profile_complete: true,
+          profile_completed_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (socialsError) throw socialsError;
+
       toast.success('Profile completed successfully!');
-      navigate(returnTo);
+      navigate(returnTo, { replace: true, state: { profileCompleted: true } });
     } catch (error: any) {
       toast.error('Failed to save profile: ' + error.message);
     }
@@ -205,7 +225,7 @@ export function ProfilePersonalization() {
       if (error) throw error;
 
       toast.success('You can complete your profile later from the Profile page');
-      navigate(returnTo);
+      navigate(returnTo, { replace: true, state: { profileCompleted: true } });
     } catch (error: any) {
       toast.error('Failed to skip setup: ' + error.message);
     }
@@ -389,6 +409,40 @@ export function ProfilePersonalization() {
                     {goal}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">LinkedIn URL</label>
+                <input
+                  type="url"
+                  value={formData.linkedinUrl}
+                  onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instagram URL</label>
+                <input
+                  type="url"
+                  value={formData.instagramUrl}
+                  onChange={(e) => handleInputChange('instagramUrl', e.target.value)}
+                  placeholder="https://instagram.com/yourhandle"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Facebook URL</label>
+                <input
+                  type="url"
+                  value={formData.facebookUrl}
+                  onChange={(e) => handleInputChange('facebookUrl', e.target.value)}
+                  placeholder="https://facebook.com/yourpage"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
             </div>
           </div>
