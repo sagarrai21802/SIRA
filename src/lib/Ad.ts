@@ -1,7 +1,7 @@
 
 
 import { generateWithGemini } from "../lib/gemini";
-
+//nothing
 export interface AdRequest {
   platform: "meta";
   campaignObjective: string;
