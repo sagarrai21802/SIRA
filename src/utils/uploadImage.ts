@@ -1,23 +1,10 @@
-import { supabase } from "../lib/supabaseClient";
-
-export async function uploadImage(file: File, userId: string): Promise<string | null> {
-  const fileName = `${userId}-${Date.now()}.${file.name.split(".").pop()}`;
-
-  const { data, error } = await supabase.storage
-    .from("avatars") // Storage bucket name
-    .upload(fileName, file, {
-      cacheControl: "3600",
-      upsert: true,
-    });
-
-  if (error) {
-    console.error("Image upload error:", error);
-    return null;
-  }
-
-  const { data: publicUrlData } = supabase.storage
-    .from("avatars")
-    .getPublicUrl(fileName);
-
-  return publicUrlData.publicUrl;
+export async function uploadImage(file: File, _userId: string): Promise<string | null> {
+  // Temporary: convert to data URL for preview/storage placeholder.
+  // Replace with your own upload API (e.g., S3/Cloudinary) later.
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
 }

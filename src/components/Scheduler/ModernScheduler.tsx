@@ -12,7 +12,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabaseClient';
+import { getMongoDb } from '../../lib/realm';
 import { EventModal } from './EventModal';
 import { CalendarToolbar } from './CalendarToolbar';
 import { EventItem } from './EventItem';
@@ -42,45 +42,25 @@ export function ModernScheduler() {
 
   const fetchScheduledPosts = useCallback(async () => {
     if (!user) return;
-    const { data, error } = await supabase
-      .from('scheduled_posts')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error fetching scheduled posts:', error);
-      return;
+    try {
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      const docs = await db.collection('scheduled_posts').find({ user_id: user.id }, { sort: { scheduled_at: -1 } });
+      const formattedEvents = (docs as any[]).map((post: ScheduledPost) => ({
+        title: post.content,
+        start: new Date(post.scheduled_at),
+        end: new Date(post.scheduled_at),
+        resource: post,
+      }));
+      setEvents(formattedEvents);
+    } catch (e) {
+      console.error('Error fetching scheduled posts:', e);
     }
-
-    const formattedEvents = data.map((post: ScheduledPost) => ({
-      title: post.content,
-      start: new Date(post.scheduled_at),
-      end: new Date(post.scheduled_at),
-      resource: post,
-    }));
-
-    setEvents(formattedEvents);
   }, [user]);
 
   useEffect(() => {
     if (user) {
       fetchScheduledPosts();
-
-      const channel = supabase.channel('scheduled_posts_changes');
-      
-      channel
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'scheduled_posts', filter: `user_id=eq.${user.id}` },
-          (payload) => {
-            fetchScheduledPosts();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     }
   }, [user, fetchScheduledPosts]);
 
@@ -98,18 +78,17 @@ export function ModernScheduler() {
 
   const handleEventDrop: withDragAndDropProps['onEventDrop'] = async ({ event, start }) => {
     if (!event.resource) return;
-
-    const { error } = await supabase
-      .from('scheduled_posts')
-      .update({ scheduled_at: (start as Date).toISOString() })
-      .eq('id', event.resource.id);
-
-    if (error) {
-      console.error('Error updating event:', error);
-      return;
+    try {
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('scheduled_posts').updateOne(
+        { id: (event.resource as any).id },
+        { $set: { scheduled_at: (start as Date).toISOString() } }
+      );
+      fetchScheduledPosts();
+    } catch (e) {
+      console.error('Error updating event:', e);
     }
-
-    fetchScheduledPosts();
   };
 
   const handleEventSave = () => {
@@ -119,19 +98,15 @@ export function ModernScheduler() {
 
   const handleEventDelete = async () => {
     if (!selectedEvent || !selectedEvent.resource) return;
-
-    const { error } = await supabase
-      .from('scheduled_posts')
-      .delete()
-      .eq('id', selectedEvent.resource.id);
-
-    if (error) {
-      console.error('Error deleting event:', error);
-      return;
+    try {
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('scheduled_posts').deleteOne({ id: (selectedEvent.resource as any).id });
+      setIsModalOpen(false);
+      fetchScheduledPosts();
+    } catch (e) {
+      console.error('Error deleting event:', e);
     }
-
-    setIsModalOpen(false);
-    fetchScheduledPosts();
   };
 
   return (

@@ -3,7 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabaseClient';
+import { getMongoDb } from '../../lib/realm';
 import { generateWithGemini } from '../../lib/gemini';
 import toast from 'react-hot-toast';
 import { ModernDropdown } from '../UI/ModernDropdown';
@@ -70,17 +70,16 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('scheduled_posts').insert([
-        {
-          user_id: user.id,
-          content,
-          scheduled_at: scheduledAt,
-          status: 'scheduled',
-          platform,
-        },
-      ]);
-
-      if (error) throw error;
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('scheduled_posts').insertOne({
+        id: crypto.randomUUID(),
+        user_id: user.id,
+        content,
+        scheduled_at: scheduledAt,
+        status: 'scheduled',
+        platform,
+      });
 
       toast.success('Post scheduled successfully!');
       onPostScheduled(); // Callback to refresh the calendar

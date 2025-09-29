@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { supabase } from "../lib/supabaseClient";
+import { getMongoDb } from "../lib/realm";
 import { uploadImage } from "../utils/uploadImage";
 import { User, Mail, Phone, Camera, Building2, MapPin, Users, Volume2, Target, Trophy, Edit3, Save, X, Briefcase, Linkedin, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -33,49 +33,36 @@ export default function Profile() {
   useEffect(() => {
     const fetchOrCreateProfile = async () => {
       if (!user) return;
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          full_name, phone_number, avatar_url, email,
-          company_name, industry, business_type, location,
-          company_size, target_audience, brand_voice, goals,
-          linkedin_url, instagram_url, facebook_url
-        `)
-        .eq("id", user.id)
-        .single();
-
-      if (!error && data) {
-        // Profile exists → set state
-        setFullName(data.full_name || "");
-        setPhoneNumber(data.phone_number || "");
-        setAvatarUrl(data.avatar_url || "");
-        setCompanyName(data.company_name || "");
-        setIndustry(data.industry || "");
-        setBusinessType(data.business_type || "");
-        setLocation(data.location || "");
-        setCompanySize(data.company_size || "");
-        setTargetAudience(data.target_audience || "");
-        setBrandVoice(data.brand_voice || "professional");
-        setGoals(data.goals || "");
-        setLinkedinUrl(data.linkedin_url || "");
-        setInstagramUrl(data.instagram_url || "");
-        setFacebookUrl(data.facebook_url || "");
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      const profiles = db.collection<any>('profiles');
+      const existing = await profiles.findOne({ id: user.id });
+      if (existing) {
+        setFullName(existing.full_name || "");
+        setPhoneNumber(existing.phone_number || "");
+        setAvatarUrl(existing.avatar_url || "");
+        setCompanyName(existing.company_name || "");
+        setIndustry(existing.industry || "");
+        setBusinessType(existing.business_type || "");
+        setLocation(existing.location || "");
+        setCompanySize(existing.company_size || "");
+        setTargetAudience(existing.target_audience || "");
+        setBrandVoice(existing.brand_voice || "professional");
+        setGoals(existing.goals || "");
+        setLinkedinUrl(existing.linkedin_url || "");
+        setInstagramUrl(existing.instagram_url || "");
+        setFacebookUrl(existing.facebook_url || "");
       } else {
-        // Profile does not exist → create default row
-        const { error: insertError } = await supabase.from("profiles").insert({
+        await profiles.insertOne({
           id: user.id,
-          email: user.email,
+          email: (user as any)?.profile?.email ?? user.id,
           full_name: "",
           phone_number: "",
           avatar_url: "",
-          is_profile_complete: false
+          is_profile_complete: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
-
-        if (insertError) {
-          console.error("Error creating profile:", insertError.message);
-          toast.error("Error creating profile: " + insertError.message);
-        }
       }
     };
 
@@ -86,25 +73,29 @@ export default function Profile() {
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
-
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        id: user.id,
-        full_name: fullName,
-        phone_number: phoneNumber,
-        avatar_url: avatarUrl,
-        linkedin_url: linkedinUrl || null,
-        instagram_url: instagramUrl || null,
-        facebook_url: facebookUrl || null,
-      });
-
-    setLoading(false);
-
-    if (error) {
-      toast.error("Update failed: " + error.message);
-    } else {
+    try {
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('profiles').updateOne(
+        { id: user.id },
+        {
+          $set: {
+            full_name: fullName,
+            phone_number: phoneNumber,
+            avatar_url: avatarUrl,
+            linkedin_url: linkedinUrl || null,
+            instagram_url: instagramUrl || null,
+            facebook_url: facebookUrl || null,
+            updated_at: new Date().toISOString(),
+          },
+        },
+        { upsert: true }
+      );
       toast.success("Profile updated successfully!");
+    } catch (e: any) {
+      toast.error("Update failed: " + (e?.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,28 +103,35 @@ export default function Profile() {
   const handleSavePersonalization = async () => {
     if (!user) return;
     setLoading(true);
-
     try {
-      const { error } = await supabase.rpc('complete_profile', {
-        user_id: user.id,
-        p_industry: industry,
-        p_business_type: businessType,
-        p_location: location,
-        p_company_size: companySize,
-        p_target_audience: targetAudience,
-        p_brand_voice: brandVoice,
-        p_company_name: companyName,
-        p_goals: goals
-      });
-
-      if (error) throw error;
-
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('profiles').updateOne(
+        { id: user.id },
+        {
+          $set: {
+            company_name: companyName,
+            industry,
+            business_type: businessType,
+            location,
+            company_size: companySize,
+            target_audience: targetAudience,
+            brand_voice: brandVoice,
+            goals,
+            is_profile_complete: true,
+            profile_completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        },
+        { upsert: true }
+      );
       setEditingPersonalization(false);
       toast.success('Personalization updated successfully!');
     } catch (error: any) {
-      toast.error('Failed to update personalization: ' + error.message);
+      toast.error('Failed to update personalization: ' + (error?.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
 
@@ -179,7 +177,7 @@ export default function Profile() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {fullName || "Your Name"}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
+            <p className="text-gray-600 dark:text-gray-400">{(user as any)?.profile?.email || (user as any)?.customData?.email || ''}</p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
               {companyName && industry ? `${companyName} • ${industry}` : 'Complete your profile to get started'}
             </p>
@@ -223,7 +221,7 @@ export default function Profile() {
             </label>
             <input
               type="email"
-              value={user.email}
+              value={(user as any)?.profile?.email || (user as any)?.customData?.email || ''}
               readOnly
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-600 dark:border-gray-500 text-gray-500"
             />

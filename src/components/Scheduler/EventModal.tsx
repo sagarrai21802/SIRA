@@ -5,7 +5,7 @@ import { Event as BigCalendarEvent } from 'react-big-calendar';
 import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabaseClient';
+import { getMongoDb } from '../../lib/realm';
 import { format } from 'date-fns';
 import { ModernDropdown } from '../UI/ModernDropdown';
 
@@ -57,23 +57,19 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
       image_url: imageUrl,
     };
 
-    let error;
-
-    if (event) {
-      ({ error } = await supabase
-        .from('scheduled_posts')
-        .update(eventData)
-        .eq('id', (event.resource as any).id));
-    } else {
-      ({ error } = await supabase.from('scheduled_posts').insert([eventData]));
-    }
-
-    if (error) {
-      console.error('Error saving event:', error);
-      toast.error(error.message);
-    } else {
+    try {
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      if (event) {
+        await db.collection('scheduled_posts').updateOne({ id: (event.resource as any).id }, { $set: eventData });
+      } else {
+        await db.collection('scheduled_posts').insertOne({ id: crypto.randomUUID(), ...eventData });
+      }
       toast.success(`Post ${event ? 'updated' : 'created'} successfully!`);
       onSave();
+    } catch (e: any) {
+      console.error('Error saving event:', e);
+      toast.error(e?.message || 'Failed to save event');
     }
 
     setLoading(false);

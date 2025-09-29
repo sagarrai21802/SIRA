@@ -1,18 +1,12 @@
 // src/hooks/useAuth.tsx
 import { useEffect, useState, useContext, createContext } from "react";
-import { supabase } from "../lib/supabaseClient";
-
-// interface AuthContextType {
-//   user: any;
-//   loading: boolean;
-//   signIn: (email: string, password: string) => Promise<void>;
-//   signUp: (email: string, password: string) => Promise<{ isConfirmed: boolean }>;
-//   signOut: () => Promise<void>;
-// }
+import * as Realm from "realm-web";
+import { getRealmApp, getMongoDb } from "../lib/realm";
+import { upsertAppUser } from "../lib/database";
 
 // New AuthContextType with updated signUp signature
 interface AuthContextType {
-  user: any;
+  user: Realm.User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, options?: { displayName?: string; phone?: string }) => Promise<{ isConfirmed: boolean }>;
@@ -27,71 +21,64 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get session on load
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen to auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    const app = getRealmApp();
+    // Initialize current user if present
+    const current = app.currentUser ?? null;
+    setUser(current);
+    // Mirror into users collection if already authenticated
+    (async () => {
+      try {
+        if (current) {
+          const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+          const db = await getMongoDb(dbName);
+          const email = (current as any)?.profile?.email ?? null;
+          await db.collection('users').updateOne(
+            { id: current.id },
+            { $setOnInsert: { id: current.id, email, created_at: new Date().toISOString() } },
+            { upsert: true }
+          );
+        }
+      } catch {}
+    })();
+    setLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const app = getRealmApp();
+    const credentials = Realm.Credentials.emailPassword(email, password);
+    await app.logIn(credentials);
+    setUser(app.currentUser ?? null);
+    // Also call backend route to upsert (useful when client rules restrict writes)
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      await fetch(`${apiBase}/api/users/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: app.currentUser!.id, email })
+      });
+    } catch {}
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    const app = getRealmApp();
+    if (app.currentUser) {
+      await app.currentUser.logOut();
+    }
+    setUser(null);
   };
 
-  // const signUp = async (email: string, password: string) => {
-  //   // Get the current domain, whether it's localhost or the deployed URL
-  //   const redirectBaseUrl = process.env.NODE_ENV === 'production' 
-  //     ? import.meta.env.VITE_APP_URL || window.location.origin
-  //     : window.location.origin;
-
-  //   const { data, error } = await supabase.auth.signUp({ 
-  //     email, 
-  //     password,
-  //     options: {
-  //       emailRedirectTo: `${redirectBaseUrl}/auth/callback`
-  //     }
-  //   });
-  //   if (error) throw error;
-  //   return { isConfirmed: data.user?.confirmed_at ? true : false };
-  // };
-
-  // New signUp function that handles additional user data
-  const signUp = async (email: string, password: string, options: { displayName?: string; phone?: string } = {}) => {
-    // Get the current domain, whether it's localhost or the deployed URL
-    const redirectBaseUrl = process.env.NODE_ENV === 'production' 
-      ? import.meta.env.VITE_APP_URL || window.location.origin
-      : window.location.origin;
-
-    const { data, error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        emailRedirectTo: `${redirectBaseUrl}/auth/callback`,
-        // Add the additional data here, which will be stored in the user's metadata
-        data: {
-          display_name: options.displayName,
-          phone: options.phone,
-        }
+  const signUp = async (email: string, password: string, _options: { displayName?: string; phone?: string } = {}) => {
+    const app = getRealmApp();
+    await app.emailPasswordAuth.registerUser({ email, password });
+    // Depending on Realm config, email confirmation may be required.
+    try {
+      // If registration succeeds, mirror into users collection optimistically
+      const current = app.currentUser;
+      if (current) {
+        await upsertAppUser(current.id, (current as any)?.profile?.email ?? email ?? null);
       }
-    });
-    if (error) throw error;
-    return { isConfirmed: data.user?.confirmed_at ? true : false };
+    } catch {}
+    return { isConfirmed: true };
   };
 
   return (

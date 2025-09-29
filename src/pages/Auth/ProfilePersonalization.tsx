@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Sparkles, Building2, Users, Target, Volume2, MapPin, Briefcase, Trophy, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabaseClient';
+import { getMongoDb } from '../../lib/realm';
 import toast from 'react-hot-toast';
 import { ModernDropdown } from '../../components/UI/ModernDropdown';
 
@@ -176,33 +176,30 @@ export function ProfilePersonalization() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.rpc('complete_profile', {
-        user_id: user.id,
-        p_industry: formData.industry,
-        p_business_type: formData.businessType,
-        p_location: formData.location,
-        p_company_size: formData.companySize,
-        p_target_audience: formData.targetAudience,
-        p_brand_voice: formData.brandVoice,
-        p_company_name: formData.companyName,
-        p_goals: formData.goals
-      });
-
-      if (error) throw error;
-
-      // Save social links too (new columns)
-      const { error: socialsError } = await supabase
-        .from('profiles')
-        .update({
-          linkedin_url: formData.linkedinUrl || null,
-          instagram_url: formData.instagramUrl || null,
-          facebook_url: formData.facebookUrl || null,
-          is_profile_complete: true,
-          profile_completed_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (socialsError) throw socialsError;
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('profiles').updateOne(
+        { id: user.id },
+        {
+          $set: {
+            company_name: formData.companyName,
+            industry: formData.industry,
+            business_type: formData.businessType,
+            location: formData.location,
+            company_size: formData.companySize,
+            target_audience: formData.targetAudience,
+            brand_voice: formData.brandVoice,
+            goals: formData.goals,
+            linkedin_url: formData.linkedinUrl || null,
+            instagram_url: formData.instagramUrl || null,
+            facebook_url: formData.facebookUrl || null,
+            is_profile_complete: true,
+            profile_completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        },
+        { upsert: true }
+      );
 
       toast.success('Profile completed successfully!');
       navigate(returnTo, { replace: true, state: { profileCompleted: true } });
@@ -217,12 +214,13 @@ export function ProfilePersonalization() {
 
     setIsSkipping(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_profile_complete: true, profile_completed_at: new Date().toISOString() })
-        .eq('id', user.id);
-
-      if (error) throw error;
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('profiles').updateOne(
+        { id: user.id },
+        { $set: { is_profile_complete: true, profile_completed_at: new Date().toISOString(), updated_at: new Date().toISOString() } },
+        { upsert: true }
+      );
 
       toast.success('You can complete your profile later from the Profile page');
       navigate(returnTo, { replace: true, state: { profileCompleted: true } });

@@ -1,4 +1,4 @@
-import React from "react";
+import { useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Sparkles, Sun, Moon, User, LogOut, Settings, Menu } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
@@ -8,6 +8,28 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+
+  // Stable user menu on hover
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const closeTimeoutRef = useRef<number | null>(null);
+
+  const openMenu = () => {
+    if (closeTimeoutRef.current) {
+      window.clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsMenuOpen(true);
+  };
+
+  const closeMenuWithDelay = () => {
+    if (closeTimeoutRef.current) {
+      window.clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setIsMenuOpen(false);
+      closeTimeoutRef.current = null;
+    }, 150);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -55,14 +77,28 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
           {/* Auth buttons */}
           {user ? (
-            <div className="relative group">
-              <button className="flex items-center space-x-2 p-2 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+            <div
+              className="relative"
+              onMouseEnter={openMenu}
+              onMouseLeave={closeMenuWithDelay}
+            >
+              <button
+                className="flex items-center space-x-2 p-2 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                aria-haspopup="menu"
+                aria-expanded={isMenuOpen}
+              >
                 <User className="w-5 h-5 text-gray-800 dark:text-white" />
                 <span className="hidden sm:block text-sm font-medium text-gray-900 dark:text-gray-200">
-                  {user.email}
+                  {(user as any)?.profile?.email ?? "Account"}
                 </span>
               </button>
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg border border-black/10 dark:border-white/10 py-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+              <div
+                className={
+                  "absolute right-0 top-full mt-2 w-48 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-lg shadow-lg border border-black/10 dark:border-white/10 py-1 transition-opacity " +
+                  (isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none")
+                }
+                role="menu"
+              >
                 <Link
                   to="/settings"
                   className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"

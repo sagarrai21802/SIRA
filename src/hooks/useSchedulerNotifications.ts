@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '../lib/supabaseClient';
+import { getMongoDb } from '../lib/realm';
 
 export function useSchedulerNotifications() {
   const { user } = useAuth();
@@ -13,21 +13,18 @@ export function useSchedulerNotifications() {
         const now = new Date();
         const inOneMinute = new Date(now.getTime() + 60 * 1000);
 
-        const { data, error } = await supabase
-          .from('scheduled_posts')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('scheduled_at', now.toISOString())
-          .lte('scheduled_at', inOneMinute.toISOString());
+        const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+        const db = await getMongoDb(dbName);
+        const events = await db
+          .collection('scheduled_posts')
+          .find({
+            user_id: user.id,
+            scheduled_at: { $gte: now.toISOString(), $lte: inOneMinute.toISOString() }
+          });
 
-        if (error) {
-          console.error('Error fetching upcoming events:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          data.forEach((event) => {
-            showNotification(event.caption || 'You have a scheduled post!');
+        if (Array.isArray(events) && events.length > 0) {
+          events.forEach((event: any) => {
+            showNotification(event.content || 'You have a scheduled post!');
           });
         }
       } catch (err) {

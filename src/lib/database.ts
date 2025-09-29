@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getMongoDb } from './realm';
 
 export interface Profile {
   id: string;
@@ -18,36 +18,41 @@ export interface ContentGeneration {
   created_at: string;
 }
 
+// Users
+export interface AppUserDoc {
+  id: string;
+  email: string | null;
+  created_at: string;
+}
+
+export const upsertAppUser = async (userId: string, email: string | null) => {
+  const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+  const db = await getMongoDb(dbName);
+  await db.collection('users').updateOne(
+    { id: userId },
+    { $setOnInsert: { id: userId, email, created_at: new Date().toISOString() } },
+    { upsert: true }
+  );
+};
+
 // Profile functions
 export const getProfile = async (userId: string): Promise<Profile | null> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching profile:', error);
-    return null;
-  }
-
-  return data;
+  const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+  const db = await getMongoDb(dbName);
+  const profile = await db.collection('profiles').findOne({ id: userId });
+  return (profile as Profile) ?? null;
 };
 
 export const updateProfile = async (userId: string, updates: Partial<Profile>) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating profile:', error);
-    throw error;
-  }
-
-  return data;
+  const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+  const db = await getMongoDb(dbName);
+  await db.collection('profiles').updateOne(
+    { id: userId },
+    { $set: { ...updates, updated_at: new Date().toISOString() } },
+    { upsert: true }
+  );
+  const updated = await db.collection('profiles').findOne({ id: userId });
+  return updated as Profile;
 };
 
 // Content generation functions
@@ -58,59 +63,37 @@ export const saveContentGeneration = async (
   contentType: 'text' | 'image' | 'seo',
    tone?: string // ✅ optional tone argument
 ): Promise<ContentGeneration> => {
-  const { data, error } = await supabase
-    .from('content_generations')
-    .insert({
-      user_id: userId,
-      prompt,
-      generated_content: generatedContent,
-
-      content_type: contentType,
-      ...(tone ? { tone } : {}) 
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error saving content generation:', error);
-    throw error;
-  }
-
-  return data;
+  const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+  const db = await getMongoDb(dbName);
+  const doc: any = {
+    id: crypto.randomUUID(),
+    user_id: userId,
+    prompt,
+    generated_content: generatedContent,
+    content_type: contentType,
+    created_at: new Date().toISOString(),
+  };
+  if (tone) doc.tone = tone;
+  await db.collection('content_generations').insertOne(doc);
+  return doc as ContentGeneration;
 };
 
 export const getUserContentGenerations = async (
   userId: string,
   contentType?: 'text' | 'image' | 'seo'
 ): Promise<ContentGeneration[]> => {
-  let query = supabase
-    .from('content_generations')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (contentType) {
-    query = query.eq('content_type', contentType);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching content generations:', error);
-    return [];
-  }
-
-  return data || [];
+  const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+  const db = await getMongoDb(dbName);
+  const filter: any = { user_id: userId };
+  if (contentType) filter.content_type = contentType;
+  const items = await db
+    .collection('content_generations')
+    .find(filter, { sort: { created_at: -1 } });
+  return items as ContentGeneration[];
 };
 
 export const deleteContentGeneration = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('content_generations')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Error deleting content generation:', error);
-    throw error;
-  }
+  const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+  const db = await getMongoDb(dbName);
+  await db.collection('content_generations').deleteOne({ id });
 };

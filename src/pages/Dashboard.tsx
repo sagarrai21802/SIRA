@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
+import { getMongoDb } from '../lib/realm';
 import { motion } from 'framer-motion';
 //this file is for dashboard page
 export function Dashboard() {
@@ -52,25 +52,12 @@ export function Dashboard() {
   const loadStats = async () => {
     if (!user) return;
     try {
-      const { count: contentCount } = await supabase
-        .from('content_generations')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      const { count: imageCount } = await supabase
-        .from('image_generations')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      const { count: projectCount } = await supabase
-        .from('projects')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      const { count: templateCount } = await supabase
-        .from('templates')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      const contentCount = await db.collection('content_generations').count({ user_id: user.id });
+      const imageCount = await db.collection('image_generations').count({ user_id: user.id });
+      const projectCount = await db.collection('projects').count({ user_id: user.id });
+      const templateCount = await db.collection('templates').count({ user_id: user.id });
 
       setStats({
         contentCount: contentCount || 0,
@@ -160,7 +147,7 @@ export function Dashboard() {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-4xl font-extrabold">
-            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋
+            Welcome back{(user as any)?.profile?.email ? `, ${(user as any).profile.email.split('@')[0]}` : ''} 👋
           </h1>
           <p className="mt-2 text-lg text-blue-100">
             Here's an overview of your marketing activities.

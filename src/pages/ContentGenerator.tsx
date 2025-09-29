@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { TextArea } from '../components/UI/Input';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
+import { getMongoDb } from '../lib/realm';
 import { generateWithGemini } from '../lib/gemini';
 import toast from 'react-hot-toast';
 import { ModernDropdown } from '../components/UI/ModernDropdown'; 
@@ -73,16 +73,20 @@ export function ContentGenerator() {
       setGeneratedContent(stripMarkdown(content));
 
       if (user) {
-        const { error } = await supabase.from('content_generations').insert({
-          user_id: user.id,
-          content_type: contentType,
-          prompt,
-          generated_content: stripMarkdown(content),
-          tone,
-        });
-
-        if (error) {
-          console.error('Error saving content generation:', error);
+        try {
+          const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+          const db = await getMongoDb(dbName);
+          await db.collection('content_generations').insertOne({
+            id: crypto.randomUUID(),
+            user_id: user.id,
+            content_type: contentType,
+            prompt,
+            generated_content: stripMarkdown(content),
+            tone,
+            created_at: new Date().toISOString(),
+          });
+        } catch (err) {
+          console.error('Error saving content generation:', err);
           toast.error('Content generated but failed to save to database');
         }
       }

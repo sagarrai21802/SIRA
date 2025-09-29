@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '../lib/supabaseClient';
+import { getMongoDb } from '../lib/realm';
 
 export interface ProfileStatus {
   isComplete: boolean;
@@ -25,35 +25,23 @@ export const useProfileCheck = (): ProfileStatus => {
         setLoading(true);
         setError(null);
 
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_profile_complete')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          // If profile doesn't exist, create it
-          if (error.code === 'PGRST116') {
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert({
-                id: user.id,
-                email: user.email,
-                full_name: user.user_metadata?.full_name || user.user_metadata?.display_name,
-                phone_number: user.user_metadata?.phone,
-                is_profile_complete: false
-              });
-
-            if (insertError) {
-              setError(insertError.message);
-            } else {
-              setIsComplete(false);
-            }
-          } else {
-            setError(error.message);
-          }
+        const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+        const db = await getMongoDb(dbName);
+        const profiles = db.collection<any>('profiles');
+        const existing = await profiles.findOne({ id: user.id });
+        if (!existing) {
+          await profiles.insertOne({
+            id: user.id,
+            email: user.profile?.email ?? user.id,
+            full_name: undefined,
+            phone_number: undefined,
+            is_profile_complete: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          setIsComplete(false);
         } else {
-          setIsComplete(data?.is_profile_complete || false);
+          setIsComplete(Boolean(existing.is_profile_complete));
         }
       } catch (err: any) {
         setError(err.message);

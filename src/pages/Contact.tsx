@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabaseClient"; 
+import { getMongoDb } from "../lib/realm"; 
 
 export default function ContactUs() {
   const [name, setName] = useState("");
@@ -12,15 +12,17 @@ export default function ContactUs() {
     e.preventDefault();
     setLoading(true);
 
-    // Insert feedback into Supabase
-    const { error } = await supabase.from("feedback").insert([{ name, email, message }]);
-
-    setLoading(false);
-
-    if (error) {
-      console.error("Error saving feedback:", error.message);
+    try {
+      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
+      const db = await getMongoDb(dbName);
+      await db.collection('feedback').insertOne({ id: crypto.randomUUID(), name, email, message, created_at: new Date().toISOString() });
+    } catch (error: any) {
+      setLoading(false);
+      console.error("Error saving feedback:", error?.message || error);
       return;
     }
+
+    setLoading(false);
 
     setSubmitted(true); // Show thank-you message
     setName("");

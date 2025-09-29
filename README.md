@@ -15,8 +15,8 @@ SYRA.io is a comprehensive marketing platform designed for solo founders, startu
 
 - **Frontend**: React 18, TypeScript, Vite
 - **Styling**: Tailwind CSS
-- **Authentication**: Supabase Auth
-- **Database**: Supabase PostgreSQL
+- **Authentication**: MongoDB Realm (App Services) Email/Password
+- **Database**: MongoDB Atlas (via Realm Web SDK)
 - **UI Components**: Custom components with Lucide React icons
 - **Notifications**: React Hot Toast
 
@@ -45,14 +45,14 @@ SYRA.io is a comprehensive marketing platform designed for solo founders, startu
    
    Create a `.env` file in the root directory:
    ```env
-   VITE_SUPABASE_URL=your-supabase-project-url
-   VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+   VITE_GEMINI_API_KEY=
+   VITE_MONGODB_URI=your-atlas-conn-string
+   VITE_MONGODB_DB_NAME=SyraDB
+   VITE_REALM_APP_ID=your-realm-app-id
    ```
 
-   To get these values:
-   1. Go to [Supabase](https://supabase.com) and create a new project
-   2. Navigate to Settings > API
-   3. Copy the Project URL and anon/public key
+   - Realm App ID: In MongoDB Atlas → App Services → App Settings
+   - Connection String: Atlas → Database → Connect → Compass/SRV string
 
 4. **Set up the database**
    
