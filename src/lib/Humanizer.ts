@@ -9,7 +9,7 @@
 // }
 
 // const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-// const model = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
+// const model = genAI?.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
 // export interface HumanizerParams {
 //   text: string;
@@ -80,7 +80,7 @@ if (!API_KEY) {
 }
 
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-const model = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI?.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
 export interface HumanizerParams {
   text: string;

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { useAuth } from '../hooks/useAuth';
-import { getMongoDb } from '../lib/realm';
+// import { getMongoDb } from '../lib/realm';
 import { motion } from 'framer-motion';
 //this file is for dashboard page
 export function Dashboard() {
@@ -52,18 +52,17 @@ export function Dashboard() {
   const loadStats = async () => {
     if (!user) return;
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      const contentCount = await db.collection('content_generations').count({ user_id: user.id });
-      const imageCount = await db.collection('image_generations').count({ user_id: user.id });
-      const projectCount = await db.collection('projects').count({ user_id: user.id });
-      const templateCount = await db.collection('templates').count({ user_id: user.id });
+      const apiBase = 'http://localhost:4000';
+      const params = new URLSearchParams({ user_id: user.id });
+      const resp = await fetch(`${apiBase}/api/stats/counts?${params.toString()}`);
+      if (!resp.ok) throw new Error(await resp.text());
+      const data = await resp.json();
 
       setStats({
-        contentCount: contentCount || 0,
-        imageCount: imageCount || 0,
-        projectCount: projectCount || 0,
-        templateCount: templateCount || 0,
+        contentCount: data.content || 0,
+        imageCount: data.image || 0,
+        projectCount: data.project || 0,
+        templateCount: data.template || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);

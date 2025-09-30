@@ -3,7 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { useAuth } from '../../hooks/useAuth';
-import { getMongoDb } from '../../lib/realm';
+// import { getMongoDb } from '../../lib/realm';
 import { generateWithGemini } from '../../lib/gemini';
 import toast from 'react-hot-toast';
 import { ModernDropdown } from '../UI/ModernDropdown';
@@ -36,8 +36,7 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
     // When the modal opens, check if the user has a brand snapshot.
     if (isOpen && user) {
       setIsCheckingProfile(true);
-      // Check for brand_snapshot directly in the user's metadata
-      setHasBrandSnapshot(!!user.user_metadata?.brand_snapshot);
+      setHasBrandSnapshot(!!(user as any).user_metadata?.brand_snapshot);
       setIsCheckingProfile(false);
     }
   }, [selectedDate, isOpen, user]);
@@ -47,7 +46,8 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
 
     setLoading(true);
     try {
-      const brandSnapshot = user.user_metadata?.brand_snapshot;
+  
+      const brandSnapshot = (user as any).user_metadata?.brand_snapshot;
       if (!brandSnapshot) {
         throw new Error('Could not retrieve brand snapshot. Please ensure your profile is complete.');
       }
@@ -70,20 +70,23 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
 
     setLoading(true);
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      await db.collection('scheduled_posts').insertOne({
-        id: crypto.randomUUID(),
-        user_id: user.id,
-        content,
-        scheduled_at: scheduledAt,
-        status: 'scheduled',
-        platform,
+      const apiBase = 'http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/scheduled-posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          content,
+          scheduled_at: scheduledAt,
+          status: 'scheduled',
+          platform,
+        })
       });
+      if (!resp.ok) throw new Error(await resp.text());
 
       toast.success('Post scheduled successfully!');
-      onPostScheduled(); // Callback to refresh the calendar
-      onClose(); // Close the modal
+      onPostScheduled();
+      onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to schedule post.');
     }

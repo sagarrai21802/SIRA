@@ -12,7 +12,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 
 import { useAuth } from '../../hooks/useAuth';
-import { getMongoDb } from '../../lib/realm';
+// import { getMongoDb } from '../../lib/realm';
 import { EventModal } from './EventModal';
 import { CalendarToolbar } from './CalendarToolbar';
 import { EventItem } from './EventItem';
@@ -43,10 +43,11 @@ export function ModernScheduler() {
   const fetchScheduledPosts = useCallback(async () => {
     if (!user) return;
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      const docs = await db.collection('scheduled_posts').find({ user_id: user.id }, { sort: { scheduled_at: -1 } });
-      const formattedEvents = (docs as any[]).map((post: ScheduledPost) => ({
+      const apiBase ='http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/scheduled-posts?user_id=${encodeURIComponent(user.id)}`);
+      if (!resp.ok) throw new Error(await resp.text());
+      const data = await resp.json();
+      const formattedEvents = (data.items as ScheduledPost[]).map((post: ScheduledPost) => ({
         title: post.content,
         start: new Date(post.scheduled_at),
         end: new Date(post.scheduled_at),
@@ -79,12 +80,13 @@ export function ModernScheduler() {
   const handleEventDrop: withDragAndDropProps['onEventDrop'] = async ({ event, start }) => {
     if (!event.resource) return;
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      await db.collection('scheduled_posts').updateOne(
-        { id: (event.resource as any).id },
-        { $set: { scheduled_at: (start as Date).toISOString() } }
-      );
+      const apiBase = 'http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent((event.resource as any).id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scheduled_at: (start as Date).toISOString() })
+      });
+      if (!resp.ok) throw new Error(await resp.text());
       fetchScheduledPosts();
     } catch (e) {
       console.error('Error updating event:', e);
@@ -99,9 +101,11 @@ export function ModernScheduler() {
   const handleEventDelete = async () => {
     if (!selectedEvent || !selectedEvent.resource) return;
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      await db.collection('scheduled_posts').deleteOne({ id: (selectedEvent.resource as any).id });
+      const apiBase ='http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent((selectedEvent.resource as any).id)}`, {
+        method: 'DELETE'
+      });
+      if (!resp.ok) throw new Error(await resp.text());
       setIsModalOpen(false);
       fetchScheduledPosts();
     } catch (e) {

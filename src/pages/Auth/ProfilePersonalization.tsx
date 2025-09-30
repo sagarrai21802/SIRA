@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Sparkles, Building2, Users, Volume2, Briefcase, Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getMongoDb } from '../../lib/realm';
+// import { getMongoDb } from '../../lib/realm';
 import toast from 'react-hot-toast';
 
 interface PersonalizationData {
@@ -175,61 +175,31 @@ export function ProfilePersonalization() {
 
     setLoading(true);
     try {
-      // Try direct MongoDB first, fallback to backend API if it fails
-      try {
-        const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-        const db = await getMongoDb(dbName);
-        await db.collection('profiles').updateOne(
-          { id: user.id },
-          {
-            $set: {
-              company_name: formData.companyName,
-              industry: formData.industry,
-              business_type: formData.businessType,
-              location: formData.location,
-              company_size: formData.companySize,
-              target_audience: formData.targetAudience,
-              brand_voice: formData.brandVoice,
-              goals: formData.goals,
-              linkedin_url: formData.linkedinUrl || null,
-              instagram_url: formData.instagramUrl || null,
-              facebook_url: formData.facebookUrl || null,
-              is_profile_complete: true,
-              profile_completed_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-          },
-          { upsert: true }
-        );
-      } catch (mongoError: any) {
-        // If direct MongoDB fails (e.g., 403 error), use backend API
-        console.log('Direct MongoDB failed, using backend API:', mongoError.message);
-        const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
-        const response = await fetch(`${apiBase}/api/profiles/upsert`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: user.id,
-            company_name: formData.companyName,
-            industry: formData.industry,
-            business_type: formData.businessType,
-            location: formData.location,
-            company_size: formData.companySize,
-            target_audience: formData.targetAudience,
-            brand_voice: formData.brandVoice,
-            goals: formData.goals,
-            linkedin_url: formData.linkedinUrl || null,
-            instagram_url: formData.instagramUrl || null,
-            facebook_url: formData.facebookUrl || null,
-            is_profile_complete: true,
-            profile_completed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-        });
+      const apiBase ='http://localhost:4000';
+      const response = await fetch(`${apiBase}/api/profiles/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          company_name: formData.companyName,
+          industry: formData.industry,
+          business_type: formData.businessType,
+          location: formData.location,
+          company_size: formData.companySize,
+          target_audience: formData.targetAudience,
+          brand_voice: formData.brandVoice,
+          goals: formData.goals,
+          linkedin_url: formData.linkedinUrl || null,
+          instagram_url: formData.instagramUrl || null,
+          facebook_url: formData.facebookUrl || null,
+          is_profile_complete: true,
+          profile_completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+      });
 
-        if (!response.ok) {
-          throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
-        }
+      if (!response.ok) {
+        throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
       }
 
       toast.success('Profile completed successfully!');
@@ -245,33 +215,21 @@ export function ProfilePersonalization() {
 
     setIsSkipping(true);
     try {
-      // Try direct MongoDB first, fallback to backend API if it fails
-      try {
-        const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-        const db = await getMongoDb(dbName);
-        await db.collection('profiles').updateOne(
-          { id: user.id },
-          { $set: { is_profile_complete: true, profile_completed_at: new Date().toISOString(), updated_at: new Date().toISOString() } },
-          { upsert: true }
-        );
-      } catch (mongoError: any) {
-        // If direct MongoDB fails (e.g., 403 error), use backend API
-        console.log('Direct MongoDB failed, using backend API:', mongoError.message);
-        const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
-        const response = await fetch(`${apiBase}/api/profiles/upsert`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: user.id,
-            is_profile_complete: true,
-            profile_completed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-        });
+      // Use backend API to mark profile as complete
+      const apiBase = 'http://localhost:4000';
+      const response = await fetch(`${apiBase}/api/profiles/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          is_profile_complete: true,
+          profile_completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+      });
 
-        if (!response.ok) {
-          throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
-        }
+      if (!response.ok) {
+        throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
       }
 
       toast.success('You can complete your profile later from the Profile page');

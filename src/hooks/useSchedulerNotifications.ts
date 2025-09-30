@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { getMongoDb } from '../lib/realm';
+// import { getMongoDb } from '../lib/realm';
 
 export function useSchedulerNotifications() {
   const { user } = useAuth();
@@ -13,14 +13,12 @@ export function useSchedulerNotifications() {
         const now = new Date();
         const inOneMinute = new Date(now.getTime() + 60 * 1000);
 
-        const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-        const db = await getMongoDb(dbName);
-        const events = await db
-          .collection('scheduled_posts')
-          .find({
-            user_id: user.id,
-            scheduled_at: { $gte: now.toISOString(), $lte: inOneMinute.toISOString() }
-          });
+        const apiBase = 'http://localhost:4000';
+        const params = new URLSearchParams({ user_id: user.id, from: now.toISOString(), to: inOneMinute.toISOString() });
+        const resp = await fetch(`${apiBase}/api/scheduled-posts?${params.toString()}`);
+        if (!resp.ok) throw new Error(await resp.text());
+        const data = await resp.json();
+        const events = data.items || [];
 
         if (Array.isArray(events) && events.length > 0) {
           events.forEach((event: any) => {

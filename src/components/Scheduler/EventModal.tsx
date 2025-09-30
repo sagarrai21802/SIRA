@@ -5,7 +5,7 @@ import { Event as BigCalendarEvent } from 'react-big-calendar';
 import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { useAuth } from '../../hooks/useAuth';
-import { getMongoDb } from '../../lib/realm';
+// import { getMongoDb } from '../../lib/realm';
 import { format } from 'date-fns';
 import { ModernDropdown } from '../UI/ModernDropdown';
 
@@ -58,12 +58,21 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
     };
 
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
+      const apiBase = 'http://localhost:4000';
       if (event) {
-        await db.collection('scheduled_posts').updateOne({ id: (event.resource as any).id }, { $set: eventData });
+        const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent((event.resource as any).id)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData)
+        });
+        if (!resp.ok) throw new Error(await resp.text());
       } else {
-        await db.collection('scheduled_posts').insertOne({ id: crypto.randomUUID(), ...eventData });
+        const resp = await fetch(`${apiBase}/api/scheduled-posts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData)
+        });
+        if (!resp.ok) throw new Error(await resp.text());
       }
       toast.success(`Post ${event ? 'updated' : 'created'} successfully!`);
       onSave();
@@ -112,7 +121,7 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
               />
               <div className="flex justify-end items-center space-x-4 pt-4">
                 {event && (
-                  <Button type="button" variant="danger" onClick={onDelete} loading={loading}>
+                  <Button type="button" variant="secondary" onClick={onDelete} loading={loading}>
                     Delete
                   </Button>
                 )}

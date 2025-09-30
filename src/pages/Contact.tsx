@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getMongoDb } from "../lib/realm"; 
+// import { getMongoDb } from "../lib/realm"; 
 
 export default function ContactUs() {
   const [name, setName] = useState("");
@@ -13,9 +13,13 @@ export default function ContactUs() {
     setLoading(true);
 
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      await db.collection('feedback').insertOne({ id: crypto.randomUUID(), name, email, message, created_at: new Date().toISOString() });
+      const apiBase ='http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message })
+      });
+      if (!resp.ok) throw new Error(await resp.text());
     } catch (error: any) {
       setLoading(false);
       console.error("Error saving feedback:", error?.message || error);

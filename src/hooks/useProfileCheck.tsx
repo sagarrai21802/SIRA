@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
-import { getMongoDb } from '../lib/realm';
+// import { getMongoDb } from '../lib/realm';
 
 export interface ProfileStatus {
   isComplete: boolean;
@@ -25,23 +25,14 @@ export const useProfileCheck = (): ProfileStatus => {
         setLoading(true);
         setError(null);
 
-        const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-        const db = await getMongoDb(dbName);
-        const profiles = db.collection<any>('profiles');
-        const existing = await profiles.findOne({ id: user.id });
-        if (!existing) {
-          await profiles.insertOne({
-            id: user.id,
-            email: user.profile?.email ?? user.id,
-            full_name: undefined,
-            phone_number: undefined,
-            is_profile_complete: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+        const apiBase =  'http://localhost:4000';
+        const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`);
+        if (!res.ok) {
+          // No profile yet
           setIsComplete(false);
         } else {
-          setIsComplete(Boolean(existing.is_profile_complete));
+          const data = await res.json();
+          setIsComplete(Boolean(data.profile?.is_profile_complete));
         }
       } catch (err: any) {
         setError(err.message);

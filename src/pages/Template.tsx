@@ -9,7 +9,7 @@ import {
   Download,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { getMongoDb } from "../lib/realm";
+// import { getMongoDb } from "../lib/realm";
 import toast from "react-hot-toast";
 import { generateTemplate } from "../lib/template";
 import { generateTemplateImage } from "../lib/templateImage";
@@ -64,14 +64,11 @@ export default function GenerateTemplate() {
 
   const checkDailyQuota = async () => {
     if (!user) return;
-    const today = new Date().toISOString().split("T")[0];
-    const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-    const db = await getMongoDb(dbName);
-    const count = await db.collection('template_generations').count({
-      user_id: user.id,
-      created_at: { $gte: today + "T00:00:00.000Z", $lt: today + "T23:59:59.999Z" }
-    });
-    setDailyCount((count as number) || 0);
+    const apiBase =  'http://localhost:4000';
+    const resp = await fetch(`${apiBase}/api/template-generations/daily-count?user_id=${encodeURIComponent(user.id)}`);
+    if (!resp.ok) throw new Error('failed to get count');
+    const data = await resp.json();
+    setDailyCount((data.count as number) || 0);
   };
 
   const handleGenerateContent = async () => {
@@ -116,16 +113,18 @@ export default function GenerateTemplate() {
       );
 
       if (user) {
-        const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-        const db = await getMongoDb(dbName);
-        await db.collection('template_generations').insertOne({
-          id: crypto.randomUUID(),
-          user_id: user.id,
-          platform: selectedCard,
-          prompt,
-          template_content: result.templateBody,
-          created_at: new Date().toISOString(),
+        const apiBase = 'http://localhost:4000';
+        const resp = await fetch(`${apiBase}/api/template-generations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            platform: selectedCard,
+            prompt,
+            template_content: result.templateBody
+          })
         });
+        if (!resp.ok) throw new Error(await resp.text());
         setDailyCount((prev) => prev + 1);
       }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { getMongoDb } from "../lib/realm";
+// import { getMongoDb } from "../lib/realm";
 import { uploadImage } from "../utils/uploadImage";
 import { User, Mail, Phone, Camera, Building2, MapPin, Users, Volume2, Target, Trophy, Edit3, Save, X, Briefcase, Linkedin, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -33,13 +33,12 @@ export default function Profile() {
   useEffect(() => {
     const fetchOrCreateProfile = async () => {
       if (!user) return;
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      const profiles = db.collection<any>('profiles');
-      const existing = await profiles.findOne({ id: user.id });
+      const apiBase ='http://localhost:4000';
+      const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`);
+      const existing = res.ok ? (await res.json()).profile : null;
       if (existing) {
         setFullName(existing.full_name || "");
-        setPhoneNumber(existing.phone_number || "");
+        setPhoneNumber(existing.phone || existing.phone_number || "");
         setAvatarUrl(existing.avatar_url || "");
         setCompanyName(existing.company_name || "");
         setIndustry(existing.industry || "");
@@ -52,17 +51,6 @@ export default function Profile() {
         setLinkedinUrl(existing.linkedin_url || "");
         setInstagramUrl(existing.instagram_url || "");
         setFacebookUrl(existing.facebook_url || "");
-      } else {
-        await profiles.insertOne({
-          id: user.id,
-          email: (user as any)?.profile?.email ?? user.id,
-          full_name: "",
-          phone_number: "",
-          avatar_url: "",
-          is_profile_complete: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
       }
     };
 
@@ -74,23 +62,21 @@ export default function Profile() {
     if (!user) return;
     setLoading(true);
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      await db.collection('profiles').updateOne(
-        { id: user.id },
-        {
-          $set: {
-            full_name: fullName,
-            phone_number: phoneNumber,
-            avatar_url: avatarUrl,
-            linkedin_url: linkedinUrl || null,
-            instagram_url: instagramUrl || null,
-            facebook_url: facebookUrl || null,
-            updated_at: new Date().toISOString(),
-          },
-        },
-        { upsert: true }
-      );
+      const apiBase ='http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/profiles/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          full_name: fullName,
+          phone: phoneNumber,
+          avatar_url: avatarUrl,
+          linkedin_url: linkedinUrl || null,
+          instagram_url: instagramUrl || null,
+          facebook_url: facebookUrl || null,
+        })
+      });
+      if (!resp.ok) throw new Error(await resp.text());
       toast.success("Profile updated successfully!");
     } catch (e: any) {
       toast.error("Update failed: " + (e?.message || 'Unknown error'));
@@ -104,27 +90,26 @@ export default function Profile() {
     if (!user) return;
     setLoading(true);
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      await db.collection('profiles').updateOne(
-        { id: user.id },
-        {
-          $set: {
-            company_name: companyName,
-            industry,
-            business_type: businessType,
-            location,
-            company_size: companySize,
-            target_audience: targetAudience,
-            brand_voice: brandVoice,
-            goals,
-            is_profile_complete: true,
-            profile_completed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        },
-        { upsert: true }
-      );
+      const apiBase =  'http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/profiles/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          company_name: companyName,
+          industry,
+          business_type: businessType,
+          location,
+          company_size: companySize,
+          target_audience: targetAudience,
+          brand_voice: brandVoice,
+          goals,
+          is_profile_complete: true,
+          profile_completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+      });
+      if (!resp.ok) throw new Error(await resp.text());
       setEditingPersonalization(false);
       toast.success('Personalization updated successfully!');
     } catch (error: any) {

@@ -3,7 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { useAuth } from '../../hooks/useAuth';
-import { getMongoDb } from '../../lib/realm';
+// import { getMongoDb } from '../../lib/realm';
 import toast from 'react-hot-toast';
 
 interface ScheduleGeneratedPostModalProps {
@@ -35,17 +35,20 @@ export function ScheduleGeneratedPostModal({ isOpen, onClose, onPostScheduled, c
 
     setLoading(true);
     try {
-      const dbName = import.meta.env.VITE_MONGODB_DB_NAME || 'sira';
-      const db = await getMongoDb(dbName);
-      await db.collection('scheduled_posts').insertOne({
-        id: crypto.randomUUID(),
-        user_id: user.id,
-        content,
-        image_url: imageUrl,
-        scheduled_at: scheduledAt,
-        status: 'scheduled',
-        platform,
+      const apiBase = 'http://localhost:4000';
+      const resp = await fetch(`${apiBase}/api/scheduled-posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          content,
+          image_url: imageUrl,
+          scheduled_at: scheduledAt,
+          status: 'scheduled',
+          platform,
+        })
       });
+      if (!resp.ok) throw new Error(await resp.text());
 
       toast.success('Post scheduled successfully!');
       onPostScheduled();
