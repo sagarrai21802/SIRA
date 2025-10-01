@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer, Event as BigCalendarEvent } from 'react-big-calendar';
 import withDragAndDrop, { withDragAndDropProps } from 'react-big-calendar/lib/addons/dragAndDrop';
-// import format from 'date-fns/format';
-// import parse from 'date-fns/parse';
-// import startOfWeek from 'date-fns/startOfWeek';
-// import getDay from 'date-fns/getDay';
+
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 // import enUS from 'date-fns/locale/en-US';
 import { enUS } from 'date-fns/locale';
@@ -119,13 +116,24 @@ export function ModernScheduler() {
         <DnDCalendar
           localizer={localizer}
           events={events}
-          startAccessor="start"
-          endAccessor="end"
+          startAccessor={(event: BigCalendarEvent) => event.start ?? new Date()}
+          endAccessor={(event: BigCalendarEvent) => event.end ?? new Date()}
           selectable
           onSelectSlot={handleSelectSlot}
           onSelectEvent={handleSelectEvent}
           onEventDrop={handleEventDrop}
-          components={{ toolbar: CalendarToolbar, event: EventItem }}
+          components={{ 
+            toolbar: (props: any) => (
+              <CalendarToolbar
+                label={props.label}
+                view={props.view}
+                views={props.views}
+                onNavigate={props.onNavigate}
+                onView={props.onView}
+              />
+            ),
+            event: EventItem
+          }}
           style={{ height: '85vh' }}
           className="p-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg shadow-lg"
         />

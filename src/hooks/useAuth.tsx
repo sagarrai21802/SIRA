@@ -1,105 +1,145 @@
 // src/hooks/useAuth.tsx
 import { useEffect, useState, useContext, createContext } from "react";
-import * as Realm from "realm-web";
-import { getRealmApp } from "../lib/realm";
 
-// New AuthContextType with updated signUp signature
+interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  avatar_url?: string;
+  company_name?: string;
+  industry?: string;
+  business_type?: string;
+  location?: string;
+  company_size?: string;
+  target_audience?: string;
+  brand_voice?: string;
+  goals?: string;
+  linkedin_url?: string;
+  instagram_url?: string;
+  facebook_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface AuthContextType {
-  user: Realm.User | null;
+  user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, options?: { displayName?: string; phone?: string }) => Promise<{ isConfirmed: boolean }>;
   signOut: () => Promise<void>;
 }
 
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const apiBase = 'http://localhost:4000';
+
   useEffect(() => {
-    const app = getRealmApp();
-    // Initialize current user if present
-    const current = app.currentUser ?? null;
-    setUser(current);
-    // Mirror into users via backend
-    (async () => {
+    // Check for existing session on app load
+    const checkAuth = async () => {
       try {
-        if (current) {
-          const email = (current as any)?.profile?.email ?? null;
-          const apiBase =  'http://localhost:4000';
-          await fetch(`${apiBase}/api/users/upsert`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: current.id, email })
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          const response = await fetch(`${apiBase}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData.user);
+          } else {
+            // Token is invalid, remove it
+            localStorage.removeItem('auth_token');
+          }
         }
-      } catch {}
-    })();
-    setLoading(false);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('auth_token');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const app = getRealmApp();
-    const credentials = Realm.Credentials.emailPassword(email, password);
-    await app.logIn(credentials);
-    setUser(app.currentUser ?? null);
-    // Also call backend route to upsert (useful when client rules restrict writes)
     try {
-      const apiBase = 'http://localhost:4000';
-      await fetch(`${apiBase}/api/users/upsert`, {
+      const response = await fetch(`${apiBase}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: app.currentUser!.id, email })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
       });
-    } catch {}
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Store token and user data
+      localStorage.setItem('auth_token', data.token);
+      setUser(data.user);
+    } catch (error: any) {
+      throw new Error(error.message || 'Login failed');
+    }
+  };
+
+  const signUp = async (email: string, password: string, options: { displayName?: string; phone?: string } = {}) => {
+    try {
+      const response = await fetch(`${apiBase}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          full_name: options.displayName,
+          phone: options.phone
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // For now, we'll assume registration is successful and user can log in immediately
+      // In a real app, you might want to implement email verification
+      return { isConfirmed: true };
+    } catch (error: any) {
+      throw new Error(error.message || 'Registration failed');
+    }
   };
 
   const signOut = async () => {
-    const app = getRealmApp();
-    if (app.currentUser) {
-      await app.currentUser.logOut();
-    }
-    setUser(null);
-  };
-
-  const signUp = async (email: string, password: string, _options: { displayName?: string; phone?: string } = {}) => {
-    const app = getRealmApp();
-    await app.emailPasswordAuth.registerUser({ email, password });
-    const apiBase = 'http://localhost:4000';
-    // Try to log in immediately to obtain user id for upserts.
     try {
-      const credentials = Realm.Credentials.emailPassword(email, password);
-      await app.logIn(credentials);
-      const current = app.currentUser;
-      if (current) {
-        // Upsert user record
-        await fetch(`${apiBase}/api/users/upsert`, {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        await fetch(`${apiBase}/api/auth/logout`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: current.id, email: (current as any)?.profile?.email ?? email ?? null })
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
-        // Upsert profile with extra fields
-        const profilePayload: any = {
-          id: current.id,
-          email: (current as any)?.profile?.email ?? email ?? null,
-          full_name: _options?.displayName ?? null,
-          phone: _options?.phone ?? null
-        };
-        await fetch(`${apiBase}/api/profiles/upsert`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(profilePayload)
-        });
-        // Log out to keep signup flow consistent (user will log in next)
-        await app.currentUser?.logOut();
       }
-      return { isConfirmed: true };
-    } catch (err: any) {
-      // Likely email confirmation required, can't log in yet
-      return { isConfirmed: false };
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('auth_token');
+      setUser(null);
     }
   };
 
@@ -112,8 +152,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

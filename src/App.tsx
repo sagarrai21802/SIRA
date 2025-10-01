@@ -8,6 +8,7 @@ import { Sidebar } from "./components/Layout/Sidebar";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ProfileGuard } from "./components/ProfileGuard";
+import { ThemeProvider } from "./components/Theme/ThemeProvider";
 import { Home } from "./pages/Home";
 import Login from "./pages/Auth/Login";
 import { Signup } from "./pages/Auth/Signup";
@@ -67,8 +68,8 @@ function AppContent() {
         {/* ✅ Fixed Sidebar */}
         {!hideSidebar && sidebarOpen && <Sidebar />}
 
-        {/* ✅ Main content shifted by ml-64 when sidebar is visible */}
-        <div className={`flex flex-col flex-1 transition-all duration-300 ${!hideSidebar && sidebarOpen ? "ml-64" : ""}`}>
+        {/* ✅ Main content shifted by ml-72 when sidebar is visible */}
+        <div className={`flex flex-col flex-1 transition-all duration-300 ${!hideSidebar && sidebarOpen ? "ml-72" : ""}`}>
           <main className="flex-1 p-6">
             <ProfileGuard>
               <Routes>
@@ -126,10 +127,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
