@@ -11,7 +11,9 @@ if (!API_KEY) {
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 // Default text model (supported)
-const textModel = genAI?.getGenerativeModel({ model: 'gemini-1.5-pro' });
+// gemini-1.5-pro is deprecated for v1beta generateContent in some regions.
+// Use a currently supported text model.
+const textModel = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 // ---------------- Types ----------------
 export interface ContentGenerationParams {
@@ -106,7 +108,7 @@ export async function enhancePrompt(originalPrompt: string): Promise<string> {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
