@@ -6,6 +6,7 @@ import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { useAuth } from '../../hooks/useAuth';
 // import { getMongoDb } from '../../lib/realm';
+import { generateWithGemini } from '../../lib/gemini';
 import { format } from 'date-fns';
 import { ModernDropdown } from '../UI/ModernDropdown';
 
@@ -27,6 +28,8 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
   const [start, setStart] = useState<Date | null>(null);
   const [platform, setPlatform] = useState<string>('LinkedIn');
   const [loading, setLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [hasBrandSnapshot, setHasBrandSnapshot] = useState(true);
 
   useEffect(() => {
     if (event) {
@@ -40,7 +43,41 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
       setPlatform('LinkedIn');
       setImageUrl(null);
     }
-  }, [event, selectedDate]);
+
+    // Check if user has brand snapshot when modal opens
+    if (isOpen && user) {
+      setHasBrandSnapshot(!!(user as any).user_metadata?.brand_snapshot);
+    }
+  }, [event, selectedDate, isOpen, user]);
+
+  const handleGenerateContent = async () => {
+    if (!user) return;
+
+    setIsGenerating(true);
+    try {
+      console.log('EventModal: Starting content generation...');
+      
+      const brandSnapshot = (user as any).user_metadata?.brand_snapshot;
+      if (!brandSnapshot) {
+        throw new Error('Could not retrieve brand snapshot. Please ensure your profile is complete.');
+      }
+
+      console.log('EventModal: Brand snapshot found, generating content...');
+      const generatedContent = await generateWithGemini({
+        prompt: `Generate a social media post caption for ${platform} based on this brand snapshot: "${brandSnapshot}"`, 
+        contentType: 'social-media',
+        tone: 'engaging',
+      });
+
+      console.log('EventModal: Content generated successfully, length:', generatedContent.length);
+      setContent(generatedContent);
+      toast.success('Content generated successfully!');
+    } catch (error: any) {
+      console.error('EventModal: Content generation failed:', error);
+      toast.error(error.message || 'Failed to generate content.');
+    }
+    setIsGenerating(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,12 +131,36 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
               {event ? 'Edit Post' : 'Create Post'}
             </Dialog.Title>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <textarea
-                className="w-full h-32 p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                placeholder="Enter your post content here..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Post Content
+                  </label>
+                  {!event && hasBrandSnapshot && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateContent}
+                      loading={isGenerating}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? 'Generating...' : 'Generate Content'}
+                    </Button>
+                  )}
+                </div>
+                <textarea
+                  className="w-full h-32 p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                  placeholder="Enter your post content here..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                />
+                {!hasBrandSnapshot && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    Complete your profile to enable content generation.
+                  </p>
+                )}
+              </div>
               {imageUrl && (
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Image Preview</label>

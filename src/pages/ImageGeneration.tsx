@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { generateImage } from "../lib/generateimage";
-import { Loader2, Download, Copy, Cpu } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Loader2, Download, Copy, Cpu, Trash2, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
+import { useAuth } from "../hooks/useAuth";
 
 const IMAGE_TYPES = ["Realistic", "Cartoon", "3D", "Anime", "Pixel Art"];
 const IMAGE_SIZES = [
@@ -19,7 +19,19 @@ const IMAGE_SIZES = [
 
 const IMAGE_QUALITY = ["Low", "Medium", "High"];
 
+interface GeneratedImage {
+  id: string;
+  prompt: string;
+  cloudinary_url: string;
+  image_type: string;
+  width: number;
+  height: number;
+  quality: string;
+  created_at: string;
+}
+
 export const ImageGenerator: React.FC = () => {
+  const { user } = useAuth();
   const [prompt, setPrompt] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -28,33 +40,103 @@ export const ImageGenerator: React.FC = () => {
   const [size, setSize] = useState(IMAGE_SIZES[1]);
   const [quality, setQuality] = useState(IMAGE_QUALITY[1]);
   const [loadingMessage, setLoadingMessage] = useState("Generating your image...");
+  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+
+  // Load user's generated images
+  const loadGeneratedImages = async () => {
+    if (!user) return;
+    
+    setLoadingImages(true);
+    try {
+      const response = await fetch(`http://localhost:4000/api/image-generations?user_id=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setGeneratedImages(data.items || []);
+      }
+    } catch (err) {
+      console.error('Failed to load images:', err);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
+  // Delete an image
+  const handleDeleteImage = async (imageId: string) => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/image-generations/${imageId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        setGeneratedImages(prev => prev.filter(img => img.id !== imageId));
+        toast.success("Image deleted!");
+      } else {
+        toast.error("Failed to delete image");
+      }
+    } catch (err) {
+      toast.error("Failed to delete image");
+    }
+  };
+
+  // Load images on component mount
+  useEffect(() => {
+    loadGeneratedImages();
+  }, [user]);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast.error("Please enter a prompt");
       return;
     }
+
+    if (!user) {
+      toast.error("Please log in to generate images");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setImage(null);
     setLoadingMessage("Initializing AI engine...");
 
     try {
-      const fullPrompt = `${prompt} | Style: ${type} | Size: ${size.width}x${size.height} | Quality: ${quality}`;
-
-      const messages = ["Analyzing your prompt...", "Generating visual...", "Almost there..."];
+      const messages = ["Analyzing your prompt...", "Generating visual...", "Uploading to cloud...", "Almost there..."];
       let i = 0;
       const msgInterval = setInterval(() => {
         setLoadingMessage(messages[i % messages.length]);
         i++;
       }, 1000);
 
-      const url = await generateImage(fullPrompt, size.width, size.height);
-      setImage(url);
-      toast.success("Image generated!");
+      const response = await fetch('http://localhost:4000/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          prompt,
+          image_type: type,
+          width: size.width,
+          height: size.height,
+          quality
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate image');
+      }
+
+      const data = await response.json();
+      setImage(data.image_url);
+      toast.success("Image generated and saved!");
       clearInterval(msgInterval);
-    } catch (err) {
-      setError("Failed to generate image. Check console.");
+      
+      // Refresh the images list
+      loadGeneratedImages();
+    } catch (err: any) {
+      setError(err.message || "Failed to generate image. Check console.");
       toast.error("Image generation failed!");
     } finally {
       setLoading(false);
@@ -66,7 +148,8 @@ export const ImageGenerator: React.FC = () => {
     if (!image) return;
     const link = document.createElement("a");
     link.href = image;
-    link.download = "generated-image.png";
+    link.download = `generated-image-${Date.now()}.png`;
+    link.target = "_blank";
     link.click();
   };
 
@@ -164,6 +247,88 @@ export const ImageGenerator: React.FC = () => {
               <Copy className="w-4 h-4" /> Copy URL
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Generated Images Gallery */}
+      {user && (
+        <div className="mt-12">
+          <h3 className="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-white">
+            Your Generated Images
+          </h3>
+          
+          {loadingImages ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="animate-spin w-8 h-8 text-indigo-500" />
+              <span className="ml-2 text-gray-600 dark:text-gray-300">Loading images...</span>
+            </div>
+          ) : generatedImages.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p>No images generated yet. Create your first image above!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {generatedImages.map((img) => (
+                <div
+                  key={img.id}
+                  className="bg-white/30 dark:bg-gray-900/40 backdrop-blur-xl border border-white/20 dark:border-gray-700 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group"
+                >
+                  <div className="aspect-square relative overflow-hidden">
+                    <img
+                      src={img.cloudinary_url}
+                      alt={img.prompt}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => {
+                          const link = document.createElement("a");
+                          link.href = img.cloudinary_url;
+                          link.download = `image-${img.id}.png`;
+                          link.target = "_blank";
+                          link.click();
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors"
+                        title="Download"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(img.cloudinary_url);
+                          toast.success("Image URL copied!");
+                        }}
+                        className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
+                        title="Copy URL"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteImage(img.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
+                      {img.prompt}
+                    </p>
+                    <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                      <span>{img.image_type}</span>
+                      <span>{img.width}×{img.height}</span>
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      {new Date(img.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

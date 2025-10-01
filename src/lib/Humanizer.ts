@@ -1,16 +1,11 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-
-if (!API_KEY) {
-  console.warn('Gemini API key not found. Humanizer will be disabled.');
-}
-
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-const model = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 export interface HumanizerParams {
   text: string;
+  readability?: string;
+  purpose?: string;
+  strength?: string;
+  model?: string;
 }
 
 export interface HumanizerResult {
@@ -19,52 +14,123 @@ export interface HumanizerResult {
   suggestions: string[];
 }
 
-export const humanizeText = async ({ text }: HumanizerParams): Promise<HumanizerResult> => {
-  if (!model) {
-    throw new Error('Gemini model not initialized.');
-  }
-
-  const systemPrompt = `
-You are an AI-to-Human text improver. Your job is to rewrite the input text so it feels like it was typed by a *real human*—not polished, not robotic, not like an essay generator. 
-Stick to these rules:
-
-1. **Preserve meaning.** Keep the ideas the same, don’t cut or add new stuff. 
-2. **Human vibe.** Write casually, like someone chatting or typing naturally. Use contractions, throw in shorter sentences, sometimes start with "And" or "But". Not everything has to be grammatically perfect. 
-3. **Imperfect touch.** It’s okay to have a bit of messiness: a missing comma, run-on thought, or slightly awkward phrasing—just don’t make it unreadable. 
-4. **Unpolished formatting.** Avoid lists, structured formatting, or overly neat organization. Don’t make it look like AI notes or a textbook. 
-5. **Original phrasing.** Don’t copy phrasing exactly—make it sound like something a friend or colleague would type. 
-6. **Extra help.** At the end, give 3–5 quick casual tips for how a person could make it sound even more human if they wanted to tweak it.
-
-Respond strictly in this JSON format:
-{
-  "originalText": "string",
-  "humanizedText": "string",
-  "suggestions": ["tip1", "tip2", "..."]
+export interface UserCredits {
+  baseCredits: number;
+  boostCredits: number;
+  credits: number;
 }
 
-Input: ${text}
-  `.trim();
-
+export const checkUserCredits = async (): Promise<UserCredits> => {
   try {
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: systemPrompt }],
-        },
-      ],
+    const response = await fetch(`${API_BASE}/api/humanize/credits`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
-    const responseText = result.response.text();
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch user credits');
+    }
 
-    // Extract JSON only
-    const jsonStart = responseText.indexOf('{');
-    const jsonEnd = responseText.lastIndexOf('}') + 1;
-    const jsonString = responseText.substring(jsonStart, jsonEnd);
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch credits:', error);
+    throw error;
+  }
+};
 
-    return JSON.parse(jsonString) as HumanizerResult;
+export const humanizeText = async ({ 
+  text, 
+  readability = 'High School',
+  purpose = 'General Writing',
+  strength = 'More Human',
+  model = 'v11'
+}: HumanizerParams): Promise<HumanizerResult> => {
+  try {
+    // Validate minimum length
+    if (text.length < 50) {
+      throw new Error('Text must be at least 50 characters long');
+    }
+
+    // Step 1: Submit the text to be humanized
+    const submitResponse = await fetch(`${API_BASE}/api/humanize/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        content: text,
+        readability,
+        purpose,
+        strength,
+        model
+      })
+    });
+
+    const submitData = await submitResponse.json();
+    
+    // Handle errors from the API
+    if (!submitResponse.ok) {
+      if (submitResponse.status === 400 || submitResponse.status === 402) {
+        // Payment required or insufficient credits
+        throw new Error(submitData.error || 'Insufficient credits. Please top up your account.');
+      } else if (submitResponse.status === 401) {
+        throw new Error('Invalid API key. Please check your configuration.');
+      } else {
+        throw new Error(submitData.error || 'Failed to submit text for humanization');
+      }
+    }
+    
+    if (!submitData.id) {
+      throw new Error(submitData.error || 'Failed to submit text for humanization');
+    }
+
+    const documentId = submitData.id;
+
+    // Step 2: Poll for the document result
+    const pollDocument = async (attempts = 0): Promise<HumanizerResult> => {
+      // Timeout after 60 seconds (12 attempts × 5 seconds)
+      if (attempts > 12) {
+        throw new Error('Request timeout. Processing took too long. Please try again.');
+      }
+
+      const documentResponse = await fetch(`${API_BASE}/api/humanize/document`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: documentId })
+      });
+
+      const documentData = await documentResponse.json();
+
+      // Check if processing is complete
+      if (documentData.output) {
+        return {
+          originalText: documentData.input || text,
+          humanizedText: documentData.output,
+          suggestions: [
+            'Review the humanized text for natural flow',
+            'Consider adding personal anecdotes if applicable',
+            'Check if the tone matches your intended audience',
+            'You can further adjust specific phrases to your style'
+          ]
+        };
+      } else if (documentData.error) {
+        throw new Error(documentData.error);
+      } else {
+        // Still processing, poll again after 5 seconds
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        return pollDocument(attempts + 1);
+      }
+    };
+
+    return await pollDocument();
   } catch (error) {
     console.error('Failed to humanize text:', error);
-    throw new Error('Error humanizing text. Try again later.');
+    throw error;
   }
 };

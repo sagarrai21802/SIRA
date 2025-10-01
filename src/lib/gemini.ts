@@ -1,8 +1,12 @@
-// src/lib/gemini.ts
+
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ---------------- API Setup ----------------
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+
+console.log('Environment check - VITE_GEMINI_API_KEY:', import.meta.env.VITE_GEMINI_API_KEY);
+console.log('API_KEY value:', API_KEY);
+console.log('API_KEY length:', API_KEY.length);
 
 if (!API_KEY) {
   console.warn('Gemini API key not found. Please add VITE_GEMINI_API_KEY.');
@@ -11,9 +15,8 @@ if (!API_KEY) {
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 // Default text model (supported)
-// gemini-1.5-pro is deprecated for v1beta generateContent in some regions.
-// Use a currently supported text model.
-const textModel = genAI?.getGenerativeModel({ model: 'gemini-1.5-flash' });
+// gemini-1.5-flash is not available, using gemini-2.0-flash instead
+const textModel = genAI?.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 // ---------------- Types ----------------
 export interface ContentGenerationParams {
@@ -30,7 +33,13 @@ export const generateWithGemini = async ({
   contentType,
   tone,
 }: ContentGenerationParams): Promise<string> => {
+  console.log('generateWithGemini called with:', { prompt, contentType, tone });
+  console.log('genAI available:', !!genAI);
+  console.log('textModel available:', !!textModel);
+  console.log('API_KEY available:', !!API_KEY);
+  
   if (!genAI || !textModel) {
+    console.error('Gemini AI not configured. genAI:', !!genAI, 'textModel:', !!textModel, 'API_KEY:', !!API_KEY);
     throw new Error('Gemini AI not configured. Please add VITE_GEMINI_API_KEY.');
   }
 
@@ -108,7 +117,7 @@ export async function enhancePrompt(originalPrompt: string): Promise<string> {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

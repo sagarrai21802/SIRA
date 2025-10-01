@@ -46,19 +46,25 @@ export function SchedulePostModal({ isOpen, onClose, selectedDate, onPostSchedul
 
     setLoading(true);
     try {
-  
+      console.log('SchedulePostModal: Starting content generation...');
+      
       const brandSnapshot = (user as any).user_metadata?.brand_snapshot;
       if (!brandSnapshot) {
         throw new Error('Could not retrieve brand snapshot. Please ensure your profile is complete.');
       }
 
+      console.log('SchedulePostModal: Brand snapshot found, generating content...');
       const generatedContent = await generateWithGemini({
-        prompt: `Generate a social media post caption based on this brand snapshot: "${brandSnapshot}"`, contentType: 'social-media',
+        prompt: `Generate a social media post caption based on this brand snapshot: "${brandSnapshot}"`, 
+        contentType: 'social-media',
         tone: 'engaging',
       });
 
+      console.log('SchedulePostModal: Content generated successfully, length:', generatedContent.length);
       setContent(generatedContent);
+      toast.success('Content generated successfully!');
     } catch (error: any) {
+      console.error('SchedulePostModal: Content generation failed:', error);
       toast.error(error.message || 'Failed to generate content.');
     }
     setLoading(false);

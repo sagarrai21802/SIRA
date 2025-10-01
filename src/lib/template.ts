@@ -10,7 +10,7 @@ if (!API_KEY) {
 
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 // Use a supported text model
-const model = genAI?.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI?.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export interface TemplateParams {
   title: string;
@@ -38,10 +38,12 @@ export const generateTemplate = async ({
 You are a professional template designer. Based on the given parameters, create a ready-to-use template.
 
 Include:
-1. Template Title
-2. Template Body (well-structured text)
-3. Call-to-Action phrase
-4. Tips (array of short suggestions for improving the template)
+1. Template Title (max 100 characters)
+2. Template Body (well-structured text, max 2000 characters for LinkedIn posts)
+3. Call-to-Action phrase (max 100 characters)
+4. Tips (array of 3-5 short suggestions, max 50 characters each)
+
+IMPORTANT: Keep the templateBody under 2000 characters for social media posts.
 
 Return a valid JSON object in the following format:
 {

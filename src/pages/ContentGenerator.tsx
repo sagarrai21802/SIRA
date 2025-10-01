@@ -18,6 +18,10 @@ export function ContentGenerator() {
   const [generatedContent, setGeneratedContent] = useState('');
   const [useAI, setUseAI] = useState(true);
   const [aiAvailable, setAiAvailable] = useState(!!import.meta.env.VITE_GEMINI_API_KEY);
+  
+  // Debug: Log the API key status
+  console.log('VITE_GEMINI_API_KEY available:', !!import.meta.env.VITE_GEMINI_API_KEY);
+  console.log('API Key value:', import.meta.env.VITE_GEMINI_API_KEY ? 'Found' : 'Not found');
 
   const contentTypes = [
     { value: 'blog-post', label: 'Blog Post', icon: '📝', description: 'Comprehensive articles and guides' },
@@ -53,11 +57,13 @@ export function ContentGenerator() {
 
       if (useAI && aiAvailable) {
         try {
+          console.log('Attempting AI generation with:', { prompt, contentType, tone });
           content = await generateWithGemini({
             prompt,
             contentType,
             tone
           });
+          console.log('AI generation successful, content length:', content.length);
           toast.success('AI content generated successfully!');
         } catch (aiError) {
           console.error('AI generation failed:', aiError);
@@ -65,6 +71,7 @@ export function ContentGenerator() {
           content = generateSampleContent(contentType, tone, prompt);
         }
       } else {
+        console.log('Using fallback content generation. AI available:', aiAvailable, 'Use AI:', useAI);
         content = generateSampleContent(contentType, tone, prompt);
         toast.success('Content generated successfully!');
       }
