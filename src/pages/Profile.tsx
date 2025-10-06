@@ -149,7 +149,7 @@ export default function Profile() {
         <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
           <div className="relative">
             <img
-              src={avatarUrl || `https://ui-avatars.com/api/?name=${fullName || "User"}`}
+              src={avatarUrl || `https://api.dicebear.com/7.x/personas/png?seed=${encodeURIComponent(fullName || "User")}`}
               alt="Avatar"
               className="w-24 h-24 rounded-full border-4 border-gray-300 dark:border-gray-600"
             />

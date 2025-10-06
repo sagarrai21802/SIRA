@@ -54,14 +54,16 @@ export function Dashboard() {
     seoToolsCount: 0,
   });
   const [animatedStats, setAnimatedStats] = useState<Stats>(stats);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // Profile state
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [gender, setGender] = useState('male');
   const [companyName, setCompanyName] = useState('');
   const [industry, setIndustry] = useState('');
   const [businessType, setBusinessType] = useState('');
@@ -171,6 +173,7 @@ export function Dashboard() {
         setFullName(user.full_name || "");
         setPhoneNumber(user.phone || "");
         setAvatarUrl(user.avatar_url || "");
+        setGender("male");
         setCompanyName(user.company_name || "");
         setIndustry(user.industry || "");
         setBusinessType(user.business_type || "");
@@ -193,6 +196,7 @@ export function Dashboard() {
         setFullName(existing.full_name || "");
         setPhoneNumber(existing.phone || existing.phone_number || "");
         setAvatarUrl(existing.avatar_url || "");
+        setGender(existing.gender || "male");
         setCompanyName(existing.company_name || "");
         setIndustry(existing.industry || "");
         setBusinessType(existing.business_type || "");
@@ -228,6 +232,7 @@ export function Dashboard() {
           full_name: fullName,
           phone: phoneNumber,
           avatar_url: avatarUrl,
+          gender,
           company_name: companyName,
           industry,
           business_type: businessType,
@@ -255,9 +260,30 @@ export function Dashboard() {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !user) return;
     const file = e.target.files[0];
-    const url = await uploadImage(file, user.id);
-    if (url) {
-      setAvatarUrl(url);
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+    
+    try {
+      const url = await uploadImage(file, user.id);
+      if (url) {
+        setAvatarUrl(url);
+        toast.success('Profile picture uploaded successfully!');
+      } else {
+        toast.error('Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error('Failed to upload image');
     }
   };
 
@@ -267,6 +293,14 @@ export function Dashboard() {
       fetchProfile();
     }
   }, [user]);
+
+  useEffect(() => {
+    const shouldShow = localStorage.getItem('showWelcome') === 'true';
+    if (shouldShow) {
+      setShowWelcome(true);
+      localStorage.removeItem('showWelcome');
+    }
+  }, []);
 
   // Quick Actions with enhanced design
   const quickActions = [
@@ -399,54 +433,16 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Top Navigation Bar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Dashboard
-            </h1>
-            <div className="hidden sm:block">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Settings className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center space-x-2">
-              <img
-                src={avatarUrl || `https://ui-avatars.com/api/?name=${fullName || "User"}`}
-                alt="Profile"
-                className="w-8 h-8 rounded-full"
-              />
-              <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {fullName || "User"}
-              </span>
-            </div>
-          </div>
-        </div>
-  </div>
-
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Welcome Header */}
+        {showWelcome && (
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋
+            Welcome back{fullName ? `, ${fullName}` : user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg">Here's what's happening with your content today.</p>
-      </div>
+        </div>
+        )}
 
         {/* Main Dashboard Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -455,7 +451,7 @@ export function Dashboard() {
             {/* KPI Cards Section */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Overview</h2>
+                <h2 className="text-4xl font-semibold text-gray-900 dark:text-white">Dashboard</h2>
                 <div className="flex items-center space-x-2">
                   <Button variant="outline" size="sm">
                     <RefreshCw className="w-4 h-4 mr-2" />
@@ -467,7 +463,7 @@ export function Dashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 {[
                   {
                     label: 'Content Generated',
@@ -535,7 +531,7 @@ export function Dashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className={`${stat.bgColor} rounded-xl p-4 shadow-sm border ${stat.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105`}
+                    className={`${stat.bgColor} rounded-xl p-4 shadow-sm border ${stat.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -649,43 +645,51 @@ export function Dashboard() {
           {/* Right Column - Profile and Activity */}
           <div className="xl:col-span-1 space-y-6">
             {/* Profile Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-white via-gray-50 to-blue-50 dark:from-gray-800 dark:via-gray-800 dark:to-blue-900/20 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6 backdrop-blur-sm"
+            >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Profile</h3>
+                <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Profile</h3>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setEditingProfile(!editingProfile)}
+                  className="hover:scale-105 transition-transform duration-200"
                 >
                   {editingProfile ? <X className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
                 </Button>
               </div>
 
               {/* Profile Header */}
-              <div className="text-center mb-6">
-                <div className="relative inline-block">
+              <div className="text-center mb-8">
+                <div className="relative inline-block group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
                   <img
-                    src={avatarUrl || `https://ui-avatars.com/api/?name=${fullName || "User"}`}
+                    src={avatarUrl || (gender === 'female' ? "https://randomuser.me/api/portraits/women/1.jpg" : "https://randomuser.me/api/portraits/men/1.jpg")}
                     alt="Avatar"
-                    className="w-20 h-20 rounded-full border-4 border-gray-200 dark:border-gray-600"
+                    className="relative w-24 h-24 rounded-full border-4 border-white dark:border-gray-700 shadow-xl group-hover:scale-105 transition-transform duration-300"
                   />
                   {editingProfile && (
-                    <label className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors">
-                      <Camera className="w-3 h-3" />
+                    <label className="absolute bottom-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white p-2.5 rounded-full cursor-pointer hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
+                      <Camera className="w-4 h-4" />
                       <input type="file" accept="image/*" onChange={handleImageChange} hidden />
                     </label>
                   )}
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mt-3">
+                <h4 className="text-xl font-bold text-gray-900 dark:text-white mt-4 mb-1">
                   {fullName || "Your Name"}
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   {user?.email || ''}
                 </p>
                 {companyName && (
-                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-sm font-medium text-blue-800 dark:text-blue-200">
+                    <Building2 className="w-4 h-4 mr-2" />
                     {companyName} • {industry}
-                  </p>
+                  </div>
                 )}
               </div>
 
@@ -702,6 +706,19 @@ export function Dashboard() {
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter your full name"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Gender
+                    </label>
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -757,28 +774,36 @@ export function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-6"
+                >
                   {/* Business Info */}
                   {companyName && (
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Business Information</h5>
-                      <div className="space-y-2 text-sm">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200/50 dark:border-blue-700/50">
+                      <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <Building2 className="w-4 h-4 text-blue-500 mr-2" />
+                        Business Information
+                      </h5>
+                      <div className="space-y-3 text-sm">
                         {companyName && (
-                          <div className="flex items-center">
-                            <Building2 className="w-4 h-4 text-blue-500 mr-2" />
-                            <span className="text-gray-600 dark:text-gray-400">{companyName}</span>
+                          <div className="flex items-center p-2 rounded-lg bg-white/50 dark:bg-gray-800/50 hover:bg-white/70 dark:hover:bg-gray-800/70 transition-colors">
+                            <Building2 className="w-4 h-4 text-blue-500 mr-3" />
+                            <span className="text-gray-700 dark:text-gray-300 font-medium">{companyName}</span>
                           </div>
                         )}
                         {industry && (
-                          <div className="flex items-center">
-                            <Target className="w-4 h-4 text-purple-500 mr-2" />
-                            <span className="text-gray-600 dark:text-gray-400">{industry}</span>
+                          <div className="flex items-center p-2 rounded-lg bg-white/50 dark:bg-gray-800/50 hover:bg-white/70 dark:hover:bg-gray-800/70 transition-colors">
+                            <Target className="w-4 h-4 text-purple-500 mr-3" />
+                            <span className="text-gray-700 dark:text-gray-300">{industry}</span>
                           </div>
                         )}
                         {location && (
-                          <div className="flex items-center">
-                            <MapPin className="w-4 h-4 text-green-500 mr-2" />
-                            <span className="text-gray-600 dark:text-gray-400">{location}</span>
+                          <div className="flex items-center p-2 rounded-lg bg-white/50 dark:bg-gray-800/50 hover:bg-white/70 dark:hover:bg-gray-800/70 transition-colors">
+                            <MapPin className="w-4 h-4 text-green-500 mr-3" />
+                            <span className="text-gray-700 dark:text-gray-300">{location}</span>
                           </div>
                         )}
                       </div>
@@ -786,58 +811,97 @@ export function Dashboard() {
                   )}
 
                   {/* Social Links */}
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Social Links</h5>
-                    <div className="space-y-2">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 border border-purple-200/50 dark:border-purple-700/50">
+                    <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                      <Settings className="w-4 h-4 text-purple-500 mr-2" />
+                      Social Links
+                    </h5>
+                    <div className="space-y-3">
                       {linkedinUrl && (
-                        <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                          <Linkedin className="w-4 h-4 mr-2" />
-                          LinkedIn Profile
+                        <a
+                          href={linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200 group"
+                        >
+                          <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/50 transition-colors">
+                            <Linkedin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-700 dark:group-hover:text-blue-300">LinkedIn Profile</span>
                         </a>
                       )}
                       {instagramUrl && (
-                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-pink-600 hover:text-pink-800">
-                          <Instagram className="w-4 h-4 mr-2" />
-                          Instagram Profile
+                        <a
+                          href={instagramUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 hover:bg-pink-50 dark:hover:bg-pink-900/30 transition-all duration-200 group"
+                        >
+                          <div className="p-2 rounded-lg bg-pink-100 dark:bg-pink-900/50 group-hover:bg-pink-200 dark:group-hover:bg-pink-800/50 transition-colors">
+                            <Instagram className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                          </div>
+                          <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-pink-700 dark:group-hover:text-pink-300">Instagram Profile</span>
                         </a>
                       )}
                       {facebookUrl && (
-                        <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-blue-600 hover:text-blue-800">
-                          <Facebook className="w-4 h-4 mr-2" />
-                          Facebook Page
+                        <a
+                          href={facebookUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200 group"
+                        >
+                          <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/50 transition-colors">
+                            <Facebook className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-700 dark:group-hover:text-blue-300">Facebook Page</span>
                         </a>
                       )}
                       {!linkedinUrl && !instagramUrl && !facebookUrl && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">No social links added</p>
+                        <div className="text-center py-4">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">No social links added</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingProfile(true)}
+                            className="text-xs"
+                          >
+                            Add Social Links
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {/* Quick Stats */}
-                  <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-lg p-4 text-white">
-                    <h5 className="text-sm font-medium mb-3">This Month</h5>
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl p-5 text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  >
+                    <h5 className="text-sm font-semibold mb-4 opacity-90">This Month</h5>
                     <div className="grid grid-cols-2 gap-4 text-center">
-                      <div>
+                      <div className="bg-white/10 rounded-lg p-3 hover:bg-white/20 transition-colors">
                         <p className="text-2xl font-bold">{Math.round(animatedStats.contentCount)}</p>
-                        <p className="text-xs opacity-90">Content</p>
+                        <p className="text-xs opacity-80">Content</p>
                       </div>
-                      <div>
+                      <div className="bg-white/10 rounded-lg p-3 hover:bg-white/20 transition-colors">
                         <p className="text-2xl font-bold">{Math.round(animatedStats.imageCount)}</p>
-                        <p className="text-xs opacity-90">Images</p>
+                        <p className="text-xs opacity-80">Images</p>
                       </div>
-                      <div>
+                      <div className="bg-white/10 rounded-lg p-3 hover:bg-white/20 transition-colors">
                         <p className="text-2xl font-bold">{Math.round(animatedStats.scheduledPostsCount)}</p>
-                        <p className="text-xs opacity-90">Scheduled</p>
+                        <p className="text-xs opacity-80">Scheduled</p>
                       </div>
-                      <div>
+                      <div className="bg-white/10 rounded-lg p-3 hover:bg-white/20 transition-colors">
                         <p className="text-2xl font-bold">{Math.round(animatedStats.seoToolsCount)}</p>
-                        <p className="text-xs opacity-90">SEO Tools</p>
+                        <p className="text-xs opacity-80">SEO Tools</p>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               )}
-            </div>
+            </motion.div>
 
             {/* Recent Activity Section */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">

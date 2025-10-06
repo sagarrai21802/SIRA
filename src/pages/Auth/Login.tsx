@@ -32,6 +32,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(email, password);
+      localStorage.setItem('showWelcome', 'true');
       navigate("/dashboard");
     } catch (err: any) {
       if (err.needsPasswordSetup || err.message?.toLowerCase().includes('needs password setup') || err.message?.toLowerCase().includes('account needs password setup')) {

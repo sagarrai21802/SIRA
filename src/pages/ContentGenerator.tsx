@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FileText, Copy, Download, Sparkles, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
-import { TextArea } from '../components/UI/Input';
+import { Textarea } from '../components/UI/Input';
 import { useAuth } from '../hooks/useAuth';
 // import { getMongoDb } from '../lib/realm';
 import { generateWithGemini } from '../lib/gemini';
@@ -195,7 +195,7 @@ export function ContentGenerator() {
               )}
 
               {/* Prompt */}
-              <TextArea
+              <Textarea
                 label="Content Prompt"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { useLayout } from "./LayoutContext";
 import {
   LayoutDashboard,
   Layers,
@@ -20,13 +22,54 @@ import {
   Plus,
   TrendingUp,
   Activity,
+  X,
+  Moon,
+  Sun,
+  Palette,
+  Shield,
+  Database,
+  Mail,
+  Smartphone,
+  Globe,
+  Volume2,
+  VolumeX,
+  Eye,
+  EyeOff,
+  Lock,
+  Key,
+  Download,
+  Upload,
+  RefreshCw,
+  Save,
+  AlertCircle,
+  CheckCircle,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+type MenuItem = {
+  name: string;
+  icon: any;
+  href: string;
+  badge: string | null;
+  color: string;
+  bgColor: string;
+  subItems?: { name: string; href: string; icon: string }[];
+};
+
 export function Sidebar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const { isCollapsed, setIsCollapsed } = useLayout();
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState('general');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [notifications, setNotifications] = useState(true);
+  const [emailUpdates, setEmailUpdates] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const menuItems = [
     { 
@@ -49,6 +92,7 @@ export function Sidebar() {
       name: "Social Media",
       icon: Layers,
       href: "/linkedinpostgenerator",
+      badge: null,
       color: "text-pink-600",
       bgColor: "bg-pink-50 dark:bg-pink-900/20",
       subItems: [
@@ -75,6 +119,7 @@ export function Sidebar() {
       name: "SEO Tools",
       icon: BarChart3,
       href: "/seo/metatags",
+      badge: null,
       color: "text-indigo-600",
       bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
       subItems: [
@@ -104,12 +149,21 @@ export function Sidebar() {
       color: "text-cyan-600",
       bgColor: "bg-cyan-50 dark:bg-cyan-900/20"
     },
-    { 
-      name: "Analytics", 
-      icon: TrendingUp, 
+    {
+      name: "Analytics",
+      icon: TrendingUp,
       href: "/analytics",
+      badge: null,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50 dark:bg-emerald-900/20"
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      href: "/settings",
+      badge: null,
+      color: "text-gray-600",
+      bgColor: "bg-gray-50 dark:bg-gray-900/20"
     },
   ];
 
@@ -123,39 +177,57 @@ export function Sidebar() {
 
   const isMenuExpanded = (menuName: string) => expandedMenus.includes(menuName);
 
+  const settingsTabs = [
+    { id: 'general', name: 'General', icon: Settings },
+    { id: 'appearance', name: 'Appearance', icon: Palette },
+    { id: 'notifications', name: 'Notifications', icon: Bell },
+    { id: 'privacy', name: 'Privacy', icon: Shield },
+    { id: 'account', name: 'Account', icon: UserCircle },
+    { id: 'billing', name: 'Billing', icon: Database },
+  ];
+
+  const filteredMenuItems = menuItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.subItems && item.subItems.some(sub => sub.name.toLowerCase().includes(searchQuery.toLowerCase())))
+  );
+
   return (
-    <div className="fixed top-0 left-0 h-screen w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col z-30">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">S</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">SYRA.io</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Marketing Suite</p>
-          </div>
-        </div>
+    <div className={`fixed top-16 left-0 h-[calc(100vh-4rem)] ${isCollapsed ? 'w-16' : 'w-72'} bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-30 shadow-xl backdrop-blur-sm transition-all duration-300`}>
+      {/* Logo */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h1 className={`text-xl font-bold text-gray-900 dark:text-white ${isCollapsed ? 'hidden' : ''}`}>SIRA</h1>
       </div>
 
       {/* Search */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-          />
+      {!isCollapsed && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {menuItems.map((item, index) => {
+      <nav className={`flex-1 ${isCollapsed ? 'p-2' : 'p-4'} space-y-2 overflow-y-auto`}>
+        {filteredMenuItems.map((item, index) => {
           const isActive = location.pathname.startsWith(item.href);
           const isHovered = hoveredMenu === item.name;
-          const isExpanded = isMenuExpanded(item.name);
+          const isExpanded = isCollapsed ? isHovered : isMenuExpanded(item.name);
 
           return (
             <div key={index} className="relative">
@@ -163,43 +235,58 @@ export function Sidebar() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Link
-                  to={item.href}
-                  className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 group ${
-                    isActive
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
-                  }`}
-                  onMouseEnter={() => setHoveredMenu(item.name)}
-                  onMouseLeave={() => setHoveredMenu(null)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${isActive ? item.bgColor : 'bg-gray-100 dark:bg-gray-700'}`}>
-                      <item.icon className={`w-5 h-5 ${isActive ? item.color : 'text-gray-600 dark:text-gray-400'}`} />
-                    </div>
-                    <span className="font-medium">{item.name}</span>
-                    {item.badge && (
-                      <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full">
-                        {item.badge}
+                {item.subItems ? (
+                  <button
+                    onClick={() => !isCollapsed && toggleExpanded(item.name)}
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-3 rounded-xl transition-all duration-200 group w-full ${
+                      isActive
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    }`}
+                    onMouseEnter={() => setHoveredMenu(item.name)}
+                    onMouseLeave={() => setHoveredMenu(null)}
+                    title={isCollapsed ? item.name : ''}
+                  >
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+                      <div className={`p-2 rounded-lg ${isActive ? item.bgColor : 'bg-gray-100 dark:bg-gray-700'}`}>
+                        <item.icon className={`w-5 h-5 ${isActive ? item.color : 'text-gray-600 dark:text-gray-400'}`} />
+                      </div>
+                      <span className={`font-medium ${isCollapsed ? 'hidden' : ''}`}>{item.name}</span>
+                      <span className={`px-2 py-1 text-xs bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full ${item.badge ? '' : 'hidden'} ${isCollapsed ? 'hidden' : ''}`}>
+                        {item.badge || ''}
                       </span>
-                    )}
-                  </div>
-                  {item.subItems && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toggleExpanded(item.name);
-                      }}
-                      className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <ChevronRight 
+                    </div>
+                    {!isCollapsed && (
+                      <ChevronRight
                         className={`w-4 h-4 transition-transform duration-200 ${
                           isExpanded ? 'rotate-90' : ''
-                        }`} 
+                        }`}
                       />
-                    </button>
-                  )}
-                </Link>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    to={item.href}
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-3 rounded-xl transition-all duration-200 group ${
+                      isActive
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    }`}
+                    onMouseEnter={() => setHoveredMenu(item.name)}
+                    onMouseLeave={() => setHoveredMenu(null)}
+                    title={isCollapsed ? item.name : ''}
+                  >
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+                      <div className={`p-2 rounded-lg ${isActive ? item.bgColor : 'bg-gray-100 dark:bg-gray-700'}`}>
+                        <item.icon className={`w-5 h-5 ${isActive ? item.color : 'text-gray-600 dark:text-gray-400'}`} />
+                      </div>
+                      <span className={`font-medium ${isCollapsed ? 'hidden' : ''}`}>{item.name}</span>
+                      <span className={`px-2 py-1 text-xs bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full ${item.badge ? '' : 'hidden'} ${isCollapsed ? 'hidden' : ''}`}>
+                        {item.badge || ''}
+                      </span>
+                    </div>
+                  </Link>
+                )}
               </motion.div>
 
               {/* Submenu */}
@@ -210,20 +297,22 @@ export function Sidebar() {
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="ml-4 mt-2 space-y-1 overflow-hidden"
+                    className={`${isCollapsed ? 'absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 z-40' : 'ml-4 mt-2'} space-y-1 overflow-hidden`}
                   >
-                    {item.subItems.map((sub, subIndex) => (
-                      <Link
-                        key={subIndex}
-                        to={sub.href}
-                        className="flex items-center space-x-3 px-3 py-2 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-                      >
-                        <span className="text-lg">{sub.icon}</span>
-                        <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">
-                          {sub.name}
-                        </span>
-                      </Link>
-                    ))}
+                    {item.subItems
+                      .filter(sub => !searchQuery || sub.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map((sub, subIndex) => (
+                        <Link
+                          key={subIndex}
+                          to={sub.href}
+                          className={`flex items-center ${isCollapsed ? 'justify-start space-x-2' : 'space-x-3'} px-3 py-2 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group`}
+                        >
+                          <span className="text-lg">{sub.icon}</span>
+                          <span className={`text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white ${isCollapsed ? '' : ''}`}>
+                            {sub.name}
+                          </span>
+                        </Link>
+                      ))}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -233,24 +322,24 @@ export function Sidebar() {
       </nav>
 
       {/* Quick Actions */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t border-gray-200 dark:border-gray-700`}>
         <div className="space-y-2">
-          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+          <h3 className={`text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 ${isCollapsed ? 'hidden' : ''}`}>
             Quick Actions
           </h3>
-          <Link to="/new-project" className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+          <Link to="/new-project" className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group`} title={isCollapsed ? 'New Project' : ''}>
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
               <Plus className="w-4 h-4 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+            <span className={`text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white ${isCollapsed ? 'hidden' : ''}`}>
               New Project
             </span>
           </Link>
-          <Link to="/analytics" className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+          <Link to="/analytics" className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group`} title={isCollapsed ? 'Analytics' : ''}>
             <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20">
               <TrendingUp className="w-4 h-4 text-green-600" />
             </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+            <span className={`text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white ${isCollapsed ? 'hidden' : ''}`}>
               Analytics
             </span>
           </Link>
@@ -258,20 +347,40 @@ export function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-medium text-sm">U</span>
+      <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t border-gray-200 dark:border-gray-700`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group`}>
+          {user?.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt="Profile"
+              className={`w-8 h-8 rounded-full object-cover ${isCollapsed ? 'w-6 h-6' : ''}`}
+            />
+          ) : (
+            <div className={`bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center ${isCollapsed ? 'w-6 h-6' : 'w-8 h-8'}`}>
+              <span className={`text-white font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>U</span>
+            </div>
+          )}
+          <div className={`flex-1 min-w-0 ${isCollapsed ? 'hidden' : ''}`}>
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+              {user?.full_name || "User Name"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {user?.email || "user@example.com"}
+            </p>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">User Name</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">user@example.com</p>
-          </div>
-          <div className="flex space-x-1">
-            <button className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+          <div className={`flex space-x-1 ${isCollapsed ? 'hidden' : ''}`}>
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Settings"
+            >
               <Settings className="w-4 h-4 text-gray-500" />
             </button>
-            <button className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <button
+              onClick={signOut}
+              className="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              title="Logout"
+            >
               <LogOut className="w-4 h-4 text-gray-500" />
             </button>
           </div>

@@ -50,6 +50,8 @@ const profileSchema = new mongoose.Schema({
   email: { type: String },
   full_name: { type: String },
   phone: { type: String },
+  avatar_url: { type: String },
+  gender: { type: String },
   company_name: { type: String },
   industry: { type: String },
   business_type: { type: String },
@@ -840,6 +842,48 @@ app.post('/api/humanize/document', async (req, res) => {
 
     res.json(data);
   } catch (err) {
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// ---- Upload Profile Picture ----
+app.post('/api/upload-profile-picture', async (req, res) => {
+  try {
+    const { image, filename, mimetype } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: 'No image data provided' });
+    }
+
+    // Convert base64 to buffer
+    const imageBuffer = Buffer.from(image, 'base64');
+
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'sira-profile-pictures',
+          public_id: `profile_${Date.now()}_${randomUUID().slice(0, 8)}`,
+          transformation: [
+            { width: 256, height: 256, crop: 'fill' }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(imageBuffer);
+    });
+
+    res.json({
+      ok: true,
+      image_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id
+    });
+
+  } catch (err) {
+    console.error('Profile picture upload error:', err);
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
   }
 });

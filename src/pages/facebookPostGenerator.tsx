@@ -73,31 +73,45 @@ const CopyableOutput = ({ title, body, cta }: { title: string; body: string; cta
   };
 
   return (
-    <div className="relative rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-gray-900 dark:to-gray-800 p-6 shadow-lg font-inter">
-      {/* Copy button */}
+    <div className="relative bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900/30 rounded-2xl p-6 shadow-inner border border-slate-200/50 dark:border-slate-700/50 font-inter">
       <Button
         size="sm"
         variant="ghost"
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+        className="absolute top-4 right-4 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-white/80 dark:bg-slate-800/80 rounded-full p-2 shadow-sm hover:shadow-md transition-all duration-200"
         onClick={handleCopy}
       >
-        {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+        {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
       </Button>
-
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{title}</h2>
-      <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-4">{body}</p>
-      <p className="text-lg font-semibold text-blue-600 dark:text-blue-400 italic">{cta}</p>
+      <div className="pr-12">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">{title}</h2>
+        <div className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-medium mb-4">
+          {body}
+        </div>
+        <div className="bg-blue-600 text-white px-4 py-3 rounded-xl font-semibold text-center shadow-md">
+          {cta}
+        </div>
+      </div>
     </div>
   );
 };
 
 // Suggestions Sidebar
 const SuggestionsSidebar = ({ tips }: { tips: string[] }) => (
-  <Card className="shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl font-inter">
+  <Card className="shadow-xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl overflow-hidden font-inter">
     <CardContent className="p-6">
-      <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4">Quick Tips:</h3>
-      <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-2">
-        {tips.map((tip, idx) => <li key={idx}>{tip}</li>)}
+      <div className="flex items-center mb-4">
+        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mr-3">
+          💡
+        </div>
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Quick Tips</h3>
+      </div>
+      <ul className="space-y-3">
+        {tips.map((tip, idx) => (
+          <li key={idx} className="flex items-start">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+            <span className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{tip}</span>
+          </li>
+        ))}
       </ul>
     </CardContent>
   </Card>
@@ -174,100 +188,166 @@ export default function FacebookPostGenerator() {
   const fullPostContent = result ? `${result.templateTitle}\n\n${result.templateBody}\n\n${result.callToAction}` : '';
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 relative z-20 font-inter bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 min-h-screen">
-      <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">
-        Facebook Post Generator
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950 p-6 font-inter">
+      <div className="max-w-7xl mx-auto space-y-10 relative z-20">
+        <div className="text-center py-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-700 bg-clip-text text-transparent mb-2">
+            Facebook Post Generator
+          </h1>
+          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            Create engaging Facebook posts that connect with your audience and drive interaction.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Post Form */}
-          <div className="grid gap-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md p-6 rounded-2xl shadow-lg">
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Topic</label>
-              <input
-                type="text"
-                placeholder="e.g., 'The future of AI in marketing'"
-                className="w-full p-3 rounded-xl border border-gray-300/50 dark:border-gray-700/50 bg-white/30 dark:bg-gray-900/40 shadow-inner focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-            </div>
-
-            {/* ✅ Description Box */}
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-              <textarea
-                placeholder="Add extra context for your Facebook post..."
-                className="w-full p-3 rounded-xl border border-gray-300/50 dark:border-gray-700/50 bg-white/30 dark:bg-gray-900/40 shadow-inner focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-
-            <Button onClick={handleGenerate} disabled={loading} className="w-full py-3 text-lg rounded-xl">
-              {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "🚀 Generate Facebook Post"}
-            </Button>
-          </div>
-
-          {/* Post Preview */}
-          {result && (
-            <Card className="shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl">
-              <CardContent className="p-6 space-y-6">
-                <CopyableOutput title={result.templateTitle} body={result.templateBody} cta={result.callToAction} />
-
-                {/* Image Controls */}
-                <div className="flex flex-col gap-4 pt-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <ModernDropdown
-                      label="Image Style"
-                      options={imageStyles}
-                      selected={imageStyle}
-                      onChange={setImageStyle}
-                    />
-                    <ModernDropdown
-                      label="Image Size"
-                      options={imageSizes.map(s => s.label)}
-                      selected={imageSizes.find(s => s.value === imageSize)?.label || "Post (1200x630)"}
-                      onChange={(label) =>
-                        setImageSize(imageSizes.find(s => s.label === label)?.value || "1200x630")
-                      }
-                    />
-                    <ModernDropdown
-                      label="Number of Images"
-                      options={imageCountOptions}
-                      selected={imageCount}
-                      onChange={setImageCount}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <Button onClick={handleGenerateImage} disabled={imgLoading} className="flex-grow py-3 text-lg rounded-xl">
-                      {imgLoading ? <Loader2 className="animate-spin h-5 w-5" /> : "🖼️ Generate Image(s)"}
-                    </Button>
-                    <Button onClick={() => setIsScheduleModalOpen(true)} variant="outline" className="flex-grow py-3 text-lg rounded-xl">
-                      <CalendarPlus className="h-5 w-5 mr-2" /> Schedule
-                    </Button>
-                  </div>
+        {!result ? (
+          <div className="max-w-4xl mx-auto">
+            {/* Post Form - Full Width */}
+            <Card className="shadow-xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl overflow-hidden">
+              <CardContent className="p-8">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-200 mb-2">Post Details</h2>
+                  <p className="text-slate-600 dark:text-slate-400">Fill in the information to generate your engaging Facebook post.</p>
                 </div>
+                <div className="grid gap-6">
+                  <div>
+                    <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Topic</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 'The future of AI in marketing'"
+                      className="w-full p-4 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                    />
+                  </div>
+
+                  {/* ✅ Description Box */}
+                  <div>
+                    <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Additional Context</label>
+                    <textarea
+                      placeholder="Add extra context for your Facebook post..."
+                      className="w-full p-4 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 hover:shadow-md min-h-[120px] resize-none"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <Button onClick={handleGenerate} disabled={loading} className="w-full py-4 text-lg rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]">
+                    {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "🚀 Generate Facebook Post"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto space-y-8">
+            {/* Top Row: Form + Enhanced Sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Post Form - Shrunk */}
+              <Card className="lg:col-span-2 shadow-xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">Post Details</h2>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm">Edit your inputs and regenerate.</p>
+                  </div>
+                  <div className="grid gap-4">
+                    <div>
+                      <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Topic</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 'The future of AI in marketing'"
+                        className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                      />
+                    </div>
+
+                    {/* ✅ Description Box */}
+                    <div>
+                      <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Additional Context</label>
+                      <textarea
+                        placeholder="Add extra context for your Facebook post..."
+                        className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 hover:shadow-md min-h-[100px] resize-none"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                    </div>
+
+                    <Button onClick={handleGenerate} disabled={loading} className="w-full py-3 text-base rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
+                      {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "🔄 Regenerate"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sidebar with Image Controls */}
+              <Card className="shadow-2xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-blue-900/20 dark:via-slate-800 dark:to-cyan-900/20 backdrop-blur-xl overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="space-y-6">
+                    <div className="flex items-center mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                        <span className="text-lg">⚙️</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Image Settings</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">Configure your visuals</p>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Image Style" options={imageStyles} selected={imageStyle} onChange={setImageStyle} />
+                      </div>
+                      <div className="relative z-[100]">
+                        <ModernDropdown
+                          label="Image Size"
+                          options={imageSizes.map(s => s.label)}
+                          selected={imageSizes.find(s => s.value === imageSize)?.label || "Post (1200x630)"}
+                          onChange={(label) =>
+                            setImageSize(imageSizes.find(s => s.label === label)?.value || "1200x630")
+                          }
+                        />
+                      </div>
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Number of Images" options={imageCountOptions} selected={imageCount} onChange={setImageCount} />
+                      </div>
+                      <Button onClick={handleGenerateImage} disabled={imgLoading} className="w-full py-3 text-sm rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                        {imgLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "🖼️ Generate Image(s)"}
+                      </Button>
+                      <Button onClick={() => setIsScheduleModalOpen(true)} variant="outline" className="w-full py-3 text-sm rounded-xl border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200">
+                        <CalendarPlus className="h-4 w-4 mr-2" /> Schedule Post
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Bottom: Generated Content */}
+            <Card className="shadow-2xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl overflow-hidden">
+              <CardContent className="p-8 space-y-8">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4">🚀 Generated Facebook Post</h3>
+                  <CopyableOutput title={result.templateTitle} body={result.templateBody} cta={result.callToAction} />
+                </div>
+
 
                 {/* Generated Images */}
                 {images.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-medium text-gray-800 dark:text-gray-200 mb-4">Generated Facebook Images:</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+                    <h4 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-4">📸 Generated Images</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {images.map((image, idx) => (
-                        <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                          <img src={image} alt={`Generated Facebook Post ${idx + 1}`} className="w-full h-full object-cover" />
-                          <a
-                            href={image}
-                            download={`sira-facebook-image-${idx + 1}.png`}
-                            className="absolute bottom-2 right-2 flex items-center justify-center w-10 h-10 bg-black bg-opacity-60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                          >
-                            <Download className="h-5 w-5" />
-                          </a>
+                        <div key={idx} className="relative group rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                          <img src={image} alt={`Generated Facebook Post ${idx + 1}`} className="w-full h-48 object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                            <a
+                              href={image}
+                              download={`sira-facebook-image-${idx + 1}.png`}
+                              className="inline-flex items-center justify-center w-full py-2 px-4 bg-white/90 hover:bg-white text-slate-800 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                            >
+                              <Download className="h-4 w-4 mr-2" /> Download
+                            </a>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -275,14 +355,8 @@ export default function FacebookPostGenerator() {
                 )}
               </CardContent>
             </Card>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          {result && result.tips?.length > 0 && <SuggestionsSidebar tips={result.tips} />}
-        </div>
-      </div>
+          </div>
+        )}
 
       <ErrorModal
         isOpen={!!apiError}
@@ -304,7 +378,8 @@ export default function FacebookPostGenerator() {
           platform="Facebook"
         />
       )}
+      </div>
     </div>
   );
 }
-// FackbookPost Generator.tsx*
+// FacebookPost Generator.tsx

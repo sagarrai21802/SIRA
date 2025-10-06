@@ -32,8 +32,8 @@ export function Footer() {
       <div className="relative z-10">
         {/* Top section */}
         <div className="border-b border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Brand section */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -41,55 +41,55 @@ export function Footer() {
                 transition={{ duration: 0.6 }}
                 className="lg:col-span-1"
               >
-                <div className="flex items-center space-x-3 mb-6">
+                <div className="flex items-center space-x-2 mb-3">
                   <div className="relative">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                      <Sparkles className="w-6 h-6 text-white" />
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+                      <Sparkles className="w-4 h-4 text-white" />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
                   </div>
                   <div>
-                    <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                       SYRA.io
                     </span>
-                    <p className="text-sm text-gray-400 font-medium">AI Marketing Platform</p>
+                    <p className="text-xs text-gray-400 font-medium">AI Marketing Platform</p>
                   </div>
                 </div>
                 
-                <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-md">
+                <p className="text-gray-300 text-base leading-relaxed mb-4 max-w-md">
                   The future of content marketing is here. Create, optimize, and scale your content strategy with AI-powered tools designed for modern teams.
                 </p>
 
                 {/* Contact info */}
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 text-gray-400 hover:text-blue-400 transition-colors">
-                    <Mail className="w-4 h-4" />
-                    <span className="text-sm">hello@syra.io</span>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition-colors">
+                    <Mail className="w-3 h-3" />
+                    <span className="text-xs">hello@syra.io</span>
                   </div>
-                  <div className="flex items-center space-x-3 text-gray-400 hover:text-purple-400 transition-colors">
-                    <Phone className="w-4 h-4" />
-                    <span className="text-sm">+1 (555) 123-4567</span>
+                  <div className="flex items-center space-x-2 text-gray-400 hover:text-purple-400 transition-colors">
+                    <Phone className="w-3 h-3" />
+                    <span className="text-xs">+1 (555) 123-4567</span>
                   </div>
-                  <div className="flex items-center space-x-3 text-gray-400 hover:text-pink-400 transition-colors">
-                    <MapPin className="w-4 h-4" />
-                    <span className="text-sm">San Francisco, CA</span>
+                  <div className="flex items-center space-x-2 text-gray-400 hover:text-pink-400 transition-colors">
+                    <MapPin className="w-3 h-3" />
+                    <span className="text-xs">San Francisco, CA</span>
                   </div>
                 </div>
               </motion.div>
 
               {/* Links sections */}
-              <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Product */}
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.6 }}
                 >
-                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center">
-                    <Zap className="w-5 h-5 mr-2 text-blue-400" />
+                  <h3 className="text-base font-semibold text-white mb-4 flex items-center">
+                    <Zap className="w-4 h-4 mr-2 text-blue-400" />
                     Product
                   </h3>
-                  <ul className="space-y-4">
+                  <ul className="space-y-2">
                     {[
                       { to: '/content-generator', label: 'Content Generator' },
                       { to: '/image-generation', label: 'AI Images' },
@@ -121,11 +121,11 @@ export function Footer() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.6 }}
                 >
-                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center">
-                    <Globe className="w-5 h-5 mr-2 text-purple-400" />
+                  <h3 className="text-base font-semibold text-white mb-4 flex items-center">
+                    <Globe className="w-4 h-4 mr-2 text-purple-400" />
                     Company
                   </h3>
-                  <ul className="space-y-4">
+                  <ul className="space-y-2">
                     {[
                       { to: '/about', label: 'About Us' },
                       { to: '/careers', label: 'Careers' },
@@ -157,11 +157,11 @@ export function Footer() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.6 }}
                 >
-                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center">
-                    <Star className="w-5 h-5 mr-2 text-pink-400" />
+                  <h3 className="text-base font-semibold text-white mb-4 flex items-center">
+                    <Star className="w-4 h-4 mr-2 text-pink-400" />
                     Resources
                   </h3>
-                  <ul className="space-y-4">
+                  <ul className="space-y-2">
                     {[
                       { to: '/help', label: 'Help Center' },
                       { to: '/docs', label: 'Documentation' },
@@ -193,11 +193,11 @@ export function Footer() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center">
-                    <Shield className="w-5 h-5 mr-2 text-green-400" />
+                  <h3 className="text-base font-semibold text-white mb-4 flex items-center">
+                    <Shield className="w-4 h-4 mr-2 text-green-400" />
                     Legal
                   </h3>
-                  <ul className="space-y-4">
+                  <ul className="space-y-2">
                     {[
                       { to: '/privacy', label: 'Privacy Policy' },
                       { to: '/terms', label: 'Terms of Service' },
@@ -229,17 +229,17 @@ export function Footer() {
 
         {/* Newsletter section */}
         <div className="border-b border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="text-center"
             >
-              <h3 className="text-2xl font-bold text-white mb-4">
+              <h3 className="text-lg font-bold text-white mb-2">
                 Stay ahead of the curve
               </h3>
-              <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
+              <p className="text-gray-400 mb-3 max-w-2xl mx-auto text-xs">
                 Get the latest AI marketing insights, product updates, and exclusive content delivered to your inbox.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
@@ -261,7 +261,7 @@ export function Footer() {
         </div>
 
         {/* Bottom section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col md:flex-row items-center justify-between">
             {/* Copyright */}
             <motion.div
@@ -299,18 +299,6 @@ export function Footer() {
               ))}
             </motion.div>
           </div>
-
-          {/* Made with love */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-center mt-6 pt-6 border-t border-gray-700/30"
-          >
-            <p className="text-gray-500 text-sm flex items-center justify-center">
-              Made with <Heart className="w-4 h-4 mx-1 text-red-500 animate-pulse" /> by the SYRA team
-            </p>
-          </motion.div>
         </div>
       </div>
     </footer>

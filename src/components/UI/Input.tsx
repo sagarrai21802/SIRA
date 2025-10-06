@@ -37,7 +37,7 @@ export function Input({ label, error, className = '', ...props }: InputProps) {
   );
 }
 
-export function TextArea({ label, error, className = '', ...props }: TextAreaProps) {
+export function Textarea({ label, error, className = '', ...props }: TextAreaProps) {
   return (
     <div>
       {label && (

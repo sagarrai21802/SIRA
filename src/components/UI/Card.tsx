@@ -38,6 +38,14 @@ export function CardContent({ children, className = '' }: { children: React.Reac
   );
 }
 
+export function CardTitle({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <h3 className={`text-lg font-semibold text-gray-900 dark:text-white ${className}`}>
+      {children}
+    </h3>
+  );
+}
+
 export function CardFooter({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-lg ${className}`}>

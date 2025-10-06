@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, Users, Star } from 'lucide-react';
 import { Button } from '../UI/Button';
 import { Link } from 'react-router-dom';
+import { EventModal } from './EventModal';
 
 interface ScheduledPost {
   id: string;
@@ -20,12 +21,14 @@ interface BeautifulCalendarProps {
 }
 
 export function BeautifulCalendar({ className = '', isMini = false }: BeautifulCalendarProps) {
-  const { user } = useAuth();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+   const { user } = useAuth();
+   const [currentDate, setCurrentDate] = useState(new Date());
+   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
+   const [loading, setLoading] = useState(false);
+   const [error, setError] = useState<string | null>(null);
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [selectedPost, setSelectedPost] = useState<ScheduledPost | null>(null);
 
   const fetchScheduledPosts = useCallback(async () => {
     if (!user) return;
@@ -55,6 +58,37 @@ export function BeautifulCalendar({ className = '', isMini = false }: BeautifulC
       fetchScheduledPosts();
     }
   }, [user, fetchScheduledPosts]);
+
+  const handlePostClick = (post: ScheduledPost) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
+  const handleEventSave = () => {
+    setIsModalOpen(false);
+    setSelectedPost(null);
+    fetchScheduledPosts();
+  };
+
+  const handleEventDelete = async () => {
+    if (!selectedPost) return;
+    try {
+      const apiBase = 'http://localhost:4000';
+      const token = localStorage.getItem('auth_token');
+      const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent(selectedPost.id)}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      setIsModalOpen(false);
+      setSelectedPost(null);
+      fetchScheduledPosts();
+    } catch (e) {
+      console.error('Error deleting post:', e);
+    }
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -103,13 +137,14 @@ export function BeautifulCalendar({ className = '', isMini = false }: BeautifulC
                 <div
                   key={index}
                   className={`
-                    text-xs px-2 py-1 rounded-full truncate
+                    text-xs px-2 py-1 rounded-full truncate cursor-pointer
                     ${index === 0 ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' : ''}
                     ${index === 1 ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white' : ''}
                     ${index === 2 ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white' : ''}
-                    shadow-sm
+                    shadow-sm hover:shadow-md transition-shadow
                   `}
                   title={post.content}
+                  onClick={() => handlePostClick(post)}
                 >
                   {post.content.length > (isMini ? 8 : 12) ? `${post.content.substring(0, isMini ? 8 : 12)}...` : post.content}
                 </div>
@@ -350,6 +385,23 @@ export function BeautifulCalendar({ className = '', isMini = false }: BeautifulC
           </Button>
         </div>
       )}
+
+      <EventModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedPost(null);
+        }}
+        onSave={handleEventSave}
+        onDelete={handleEventDelete}
+        event={selectedPost ? {
+          title: selectedPost.content,
+          start: new Date(selectedPost.scheduled_at),
+          end: new Date(selectedPost.scheduled_at),
+          resource: selectedPost
+        } : null}
+        selectedDate={null}
+      />
     </div>
   );
 }
