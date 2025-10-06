@@ -104,6 +104,13 @@ export function Sidebar() {
       color: "text-cyan-600",
       bgColor: "bg-cyan-50 dark:bg-cyan-900/20"
     },
+    { 
+      name: "Analytics", 
+      icon: TrendingUp, 
+      href: "/analytics",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/20"
+    },
   ];
 
   const toggleExpanded = (menuName: string) => {
@@ -231,22 +238,22 @@ export function Sidebar() {
           <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
             Quick Actions
           </h3>
-          <button className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+          <Link to="/new-project" className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
               <Plus className="w-4 h-4 text-blue-600" />
             </div>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
               New Project
             </span>
-          </button>
-          <button className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+          </Link>
+          <Link to="/analytics" className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
             <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20">
               <TrendingUp className="w-4 h-4 text-green-600" />
             </div>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
               Analytics
             </span>
-          </button>
+          </Link>
         </div>
       </div>
 

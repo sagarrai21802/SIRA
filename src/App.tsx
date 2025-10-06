@@ -38,6 +38,8 @@ import KeywordGenerator from "./pages/Keyword";
 import SchemaGenerator from "./pages/SchemaGenerator";
 import { ProfilePersonalization } from "./pages/Auth/ProfilePersonalization";
 import LinkedInCallback from "./pages/LinkdinCallback";
+import { Analytics } from "./pages/Analytics";
+import { NewProject } from "./pages/NewProject";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -103,6 +105,10 @@ function AppContent() {
 
               {/* Add the Scheduler route */}
               <Route path="/scheduler" element={<ProtectedRoute><Scheduler /></ProtectedRoute>} />
+              {/* Add the Analytics route */}
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              {/* Add the New Project route */}
+              <Route path="/new-project" element={<ProtectedRoute><NewProject /></ProtectedRoute>} />
               </Routes>
             </ProfileGuard>
           </main>
