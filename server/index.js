@@ -77,6 +77,11 @@ const profileSchema = new mongoose.Schema({
   linkedin_url: { type: String },
   instagram_url: { type: String },
   facebook_url: { type: String },
+  // LinkedIn OAuth tokens and member URN for posting
+  linkedin_access_token: { type: String },
+  linkedin_refresh_token: { type: String },
+  linkedin_expires_at: { type: Date },
+  linkedin_member_urn: { type: String },
   is_profile_complete: { type: Boolean, default: false },
   profile_completed_at: { type: String },
   created_at: { type: String },
@@ -267,6 +272,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
         linkedin_url: profile?.linkedin_url || null,
         instagram_url: profile?.instagram_url || null,
         facebook_url: profile?.facebook_url || null,
+        linkedin_connected: Boolean(profile?.linkedin_access_token && profile?.linkedin_member_urn),
         created_at: user.createdAt.toISOString(),
         updated_at: profile?.updated_at || user.createdAt.toISOString()
       }
@@ -750,6 +756,229 @@ app.delete('/api/image-generations/:id', async (req, res) => {
     
     res.json({ ok: true });
   } catch (err) {
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// ---- LinkedIn OAuth & Posting ----
+app.post('/api/linkedin/exchange-code', authenticateToken, async (req, res) => {
+  try {
+    const { code, redirect_uri: providedRedirect } = req.body || {};
+    if (!code) {
+      return res.status(400).json({ error: 'code required' });
+    }
+
+    const clientId = process.env.LINKEDIN_CLIENT_ID;
+    const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+    const configuredRedirect = process.env.LINKEDIN_REDIRECT_URI;
+    if (!configuredRedirect) {
+      return res.status(500).json({ error: 'Server missing LINKEDIN_REDIRECT_URI' });
+    }
+    const tokenUrl = 'https://www.linkedin.com/oauth/v2/accessToken';
+
+    const tokenResp = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: configuredRedirect,
+        client_id: clientId,
+        client_secret: clientSecret
+      })
+    });
+
+    const tokenData = await tokenResp.json();
+    if (!tokenResp.ok) {
+      return res.status(tokenResp.status).json(tokenData);
+    }
+
+    const accessToken = tokenData.access_token;
+    const expiresIn = tokenData.expires_in; // seconds
+    const refreshToken = tokenData.refresh_token || null;
+
+    // Prefer OIDC userinfo when openid is used; fallback to /v2/me if available
+    let memberId = null;
+    let userinfoResp = await fetch('https://api.linkedin.com/v2/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (userinfoResp.ok) {
+      const ui = await userinfoResp.json();
+      memberId = ui && (ui.sub || ui.user_id || null);
+    } else {
+      const meResp = await fetch('https://api.linkedin.com/v2/me', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (meResp.ok) {
+        const meData = await meResp.json();
+        memberId = meData && meData.id;
+      } else {
+        const errData = await meResp.json().catch(() => ({}));
+        return res.status(meResp.status).json(errData);
+      }
+    }
+
+    if (!memberId) {
+      return res.status(400).json({ error: 'Failed to determine LinkedIn member id' });
+    }
+    const memberUrn = `urn:li:person:${memberId}`;
+
+    const expiresAt = new Date(Date.now() + (expiresIn || 0) * 1000);
+
+    await Profile.updateOne(
+      { id: req.user.userId },
+      {
+        $set: {
+          linkedin_access_token: accessToken,
+          linkedin_refresh_token: refreshToken,
+          linkedin_expires_at: expiresAt,
+          linkedin_member_urn: memberUrn,
+          updated_at: new Date().toISOString()
+        }
+      },
+      { upsert: true }
+    );
+
+    res.json({ ok: true, member_urn: memberUrn });
+  } catch (err) {
+    console.error('LinkedIn exchange error:', err);
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+app.get('/api/linkedin/status', authenticateToken, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ id: req.user.userId }).lean();
+    res.json({
+      connected: Boolean(profile?.linkedin_access_token && profile?.linkedin_member_urn),
+      member_urn: profile?.linkedin_member_urn || null,
+      expires_at: profile?.linkedin_expires_at || null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+app.post('/api/linkedin/post', authenticateToken, async (req, res) => {
+  try {
+    const { content, image_url } = req.body || {};
+    if (!content) return res.status(400).json({ error: 'content required' });
+
+    const profile = await Profile.findOne({ id: req.user.userId }).lean();
+    if (!profile || !profile.linkedin_access_token || !profile.linkedin_member_urn) {
+      return res.status(400).json({ error: 'LinkedIn not connected' });
+    }
+
+    let mediaAssetUrn = null;
+
+    if (image_url) {
+      // 1) Register upload with LinkedIn to obtain upload URL and asset URN
+      const registerBody = {
+        registerUploadRequest: {
+          recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+          owner: profile.linkedin_member_urn,
+          serviceRelationships: [
+            { relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" }
+          ]
+        }
+      };
+
+      const registerResp = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${profile.linkedin_access_token}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0'
+        },
+        body: JSON.stringify(registerBody)
+      });
+      const registerData = await registerResp.json();
+      if (!registerResp.ok) {
+        return res.status(registerResp.status).json(registerData);
+      }
+
+      mediaAssetUrn = registerData?.value?.asset;
+      const uploadUrl = registerData?.value?.uploadMechanism?.
+        ["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]?.uploadUrl;
+      if (!mediaAssetUrn || !uploadUrl) {
+        return res.status(500).json({ error: 'Failed to get LinkedIn upload URL' });
+      }
+
+      // 2) Download image data from image_url
+      const imageResp = await fetch(image_url);
+      if (!imageResp.ok) {
+        return res.status(400).json({ error: 'Failed to fetch image from provided URL' });
+      }
+      const contentType = imageResp.headers.get('content-type') || 'image/jpeg';
+      const arrayBuffer = await imageResp.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // 3) Upload image binary to LinkedIn upload URL
+      const uploadResp = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': contentType,
+          'Content-Length': String(buffer.length)
+        },
+        body: buffer
+      });
+      if (!uploadResp.ok) {
+        const errText = await uploadResp.text();
+        return res.status(uploadResp.status).json({ error: 'LinkedIn image upload failed', details: errText });
+      }
+    }
+
+    // 4) Create UGC post with or without the uploaded image
+    const ugcBody = mediaAssetUrn ? {
+      author: profile.linkedin_member_urn,
+      lifecycleState: 'PUBLISHED',
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text: content },
+          shareMediaCategory: 'IMAGE',
+          media: [
+            {
+              status: 'READY',
+              media: mediaAssetUrn
+            }
+          ]
+        }
+      },
+      visibility: {
+        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+      }
+    } : {
+      author: profile.linkedin_member_urn,
+      lifecycleState: 'PUBLISHED',
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text: content },
+          shareMediaCategory: 'NONE'
+        }
+      },
+      visibility: {
+        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+      }
+    };
+
+    const postResp = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${profile.linkedin_access_token}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0'
+      },
+      body: JSON.stringify(ugcBody)
+    });
+
+    const postData = await postResp.json().catch(() => ({}));
+    if (!postResp.ok) {
+      return res.status(postResp.status).json(postData);
+    }
+
+    res.json({ ok: true, data: postData });
+  } catch (err) {
+    console.error('LinkedIn post error:', err);
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
   }
 });
