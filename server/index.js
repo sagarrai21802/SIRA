@@ -191,43 +191,54 @@ app.post('/api/auth/register', async (req, res) => {
 // Login endpoint
 app.post('/api/auth/login', async (req, res) => {
   try {
+    console.log('JWT_SECRET present:', !!process.env.JWT_SECRET);
+    console.log('MONGODB_URI present:', !!process.env.MONGODB_URI);
     const { email, password } = req.body;
+    console.log('Login attempt for email:', email);
 
     if (!email || !password) {
+      console.log('Missing email or password');
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+    console.log('User found:', user.id);
 
     // Check if user has a password set (for existing users who might not have one)
     if (!user.password) {
-      return res.status(400).json({ 
+      console.log('User has no password set:', user.id);
+      return res.status(400).json({
         error: 'Account needs password setup. Please register a new account or contact support.',
-        needsPasswordSetup: true 
+        needsPasswordSetup: true
       });
     }
-    
+
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
+      console.log('Invalid password for user:', user.id);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+    console.log('Password valid for user:', user.id);
 
     // Get user profile
     const profile = await Profile.findOne({ id: user.id });
-    
+    console.log('Profile found:', !!profile, 'for user:', user.id);
+
     // Create JWT token
     const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email 
+      {
+        userId: user.id,
+        email: user.email
       },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
+    console.log('JWT token created for user:', user.id);
 
     res.json({
       token,
@@ -252,6 +263,7 @@ app.post('/api/auth/login', async (req, res) => {
         updated_at: profile?.updated_at || user.createdAt.toISOString()
       }
     });
+    console.log('Login successful for user:', user.id);
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: err.message || 'Login failed' });
