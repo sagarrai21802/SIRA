@@ -38,12 +38,19 @@ export const API_ENDPOINTS = {
   IMAGE_GENERATIONS: '/api/image-generations',
   IMAGE_GENERATIONS_GET: (id: string) => `/api/image-generations/${id}`,
   GENERATE_IMAGE: '/api/generate-image',
+  EDIT_IMAGE: '/api/edit-image',
+  ENHANCE_IMAGE_PROMPT: '/api/enhance-image-prompt',
   UPLOAD_PROFILE_PICTURE: '/api/upload-profile-picture',
   
   // Humanizer
   HUMANIZE_CREDITS: '/api/humanize/credits',
   HUMANIZE_SUBMIT: '/api/humanize/submit',
   HUMANIZE_DOCUMENT: '/api/humanize/document',
+  
+  // LinkedIn
+  LINKEDIN_EXCHANGE_CODE: '/api/linkedin/exchange-code',
+  LINKEDIN_STATUS: '/api/linkedin/status',
+  LINKEDIN_POST: '/api/linkedin/post',
   
   // Other
   FEEDBACK: '/api/feedback',

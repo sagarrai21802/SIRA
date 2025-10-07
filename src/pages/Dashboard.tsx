@@ -653,14 +653,19 @@ export function Dashboard() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Profile</h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditingProfile(!editingProfile)}
-                  className="hover:scale-105 transition-transform duration-200"
-                >
-                  {editingProfile ? <X className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingProfile(!editingProfile)}
+                    className="hover:scale-105 transition-transform duration-200"
+                  >
+                    {editingProfile ? <X className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/profile">Go to Profile</Link>
+                  </Button>
+                </div>
               </div>
 
               {/* Profile Header */}

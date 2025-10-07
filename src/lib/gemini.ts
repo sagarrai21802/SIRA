@@ -191,3 +191,60 @@ For Google Ads: follow Google’s limits but keep it natural. For Meta: more soc
 
   return `${baseInstructions}\n\n${specificInstructions}\n\nTone: ${tone}\nContent Type: ${contentType}`;
 };
+
+// ---------------- LinkedIn Post Editor ----------------
+export interface LinkedInPostParts {
+  title: string;
+  body: string;
+  cta: string;
+}
+
+export async function editLinkedInPostWithGemini(
+  current: LinkedInPostParts,
+  instruction: string,
+  tone: string = 'professional'
+): Promise<LinkedInPostParts> {
+  if (!genAI || !textModel) {
+    throw new Error('Gemini AI not configured. Please add VITE_GEMINI_API_KEY.');
+  }
+
+  const systemInstruction = [
+    'You are an expert LinkedIn content editor.',
+    `Rewrite the provided post according to the user's edit instruction while keeping a ${tone} tone and preserving factual details unless explicitly asked to change.`,
+    'Return ONLY strict JSON with keys: "title", "body", "cta". No markdown fences, no commentary.',
+    'Make the body concise and engaging for LinkedIn (roughly 80-220 words).'
+  ].join(' ');
+
+  const userPrompt = `Current Post:\nTitle: ${current.title}\nBody: ${current.body}\nCTA: ${current.cta}\n\nEdit Instruction: ${instruction}\n\nOutput: JSON with keys {"title","body","cta"} and nothing else.`;
+
+  const res = await textModel.generateContent(`${systemInstruction}\n\n${userPrompt}`);
+  const raw = res.response.text();
+
+  const parsed = safeParseLinkedInJson(raw);
+  if (!parsed) {
+    throw new Error('AI returned an invalid response. Please try a clearer instruction.');
+  }
+  return parsed;
+}
+
+function safeParseLinkedInJson(text: string): LinkedInPostParts | null {
+  if (!text) return null;
+  // Strip common code fences if present
+  const fencedMatch = text.match(/```(?:json)?([\s\S]*?)```/i);
+  const candidate = fencedMatch ? fencedMatch[1] : text;
+
+  // Find the first JSON object
+  const objMatch = candidate.match(/\{[\s\S]*\}/);
+  const jsonStr = objMatch ? objMatch[0] : candidate;
+
+  try {
+    const obj = JSON.parse(jsonStr);
+    const title = String(obj.title ?? '').trim();
+    const body = String(obj.body ?? '').trim();
+    const cta = String(obj.cta ?? '').trim();
+    if (!title && !body && !cta) return null;
+    return { title: title || '', body: body || '', cta: cta || '' };
+  } catch {
+    return null;
+  }
+}

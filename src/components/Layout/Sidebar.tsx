@@ -158,6 +158,14 @@ export function Sidebar() {
       bgColor: "bg-emerald-50 dark:bg-emerald-900/20"
     },
     {
+      name: "Profile",
+      icon: UserCircle,
+      href: "/profile",
+      badge: null,
+      color: "text-gray-600",
+      bgColor: "bg-gray-50 dark:bg-gray-900/20"
+    },
+    {
       name: "Settings",
       icon: Settings,
       href: "/settings",
@@ -194,9 +202,7 @@ export function Sidebar() {
   return (
     <div className={`fixed top-16 left-0 h-[calc(100vh-4rem)] ${isCollapsed ? 'w-16' : 'w-72'} bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-30 shadow-xl backdrop-blur-sm transition-all duration-300`}>
       {/* Logo */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h1 className={`text-xl font-bold text-gray-900 dark:text-white ${isCollapsed ? 'hidden' : ''}`}>SIRA</h1>
-      </div>
+      
 
       {/* Search */}
       {!isCollapsed && (

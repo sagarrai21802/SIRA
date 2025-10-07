@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
+import { API_BASE, API_ENDPOINTS } from "../../lib/api";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -34,6 +36,52 @@ export default function Login() {
       await signIn(email, password);
       localStorage.setItem('showWelcome', 'true');
       navigate("/dashboard");
+
+      // Auto-resume LinkedIn connect if a code was stored
+      const pendingCode = localStorage.getItem('li_pending_code');
+      if (pendingCode) {
+        try {
+          toast.loading('Finishing LinkedIn connection...', { id: 'li-connect' });
+          const token = localStorage.getItem('auth_token');
+          const redirectUri = import.meta.env.VITE_LINKEDIN_REDIRECT_URI || `${window.location.origin}/linkedin-callback`;
+          const resp = await fetch(`${API_BASE}${API_ENDPOINTS.LINKEDIN_EXCHANGE_CODE}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ code: pendingCode, redirect_uri: redirectUri })
+          });
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Failed to connect LinkedIn');
+          toast.success('LinkedIn connected!', { id: 'li-connect' });
+          localStorage.removeItem('li_pending_code');
+
+          // If there is a pending post, publish it
+          const pendingRaw = localStorage.getItem('li_pending_post');
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw);
+            if (pending?.content) {
+              toast.loading('Posting to LinkedIn...', { id: 'li-post' });
+              const postResp = await fetch(`${API_BASE}${API_ENDPOINTS.LINKEDIN_POST}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ content: pending.content, image_url: pending.image_url || null })
+              });
+              const postData = await postResp.json();
+              if (!postResp.ok) throw new Error(postData.error || 'Failed to post to LinkedIn');
+              toast.success('Posted to LinkedIn!', { id: 'li-post' });
+            }
+            localStorage.removeItem('li_pending_post');
+            navigate('/linkedinpostgenerator');
+          }
+        } catch (ex: any) {
+          toast.error(ex?.message || 'Failed to finish LinkedIn connection', { id: 'li-connect' });
+        }
+      }
     } catch (err: any) {
       if (err.needsPasswordSetup || err.message?.toLowerCase().includes('needs password setup') || err.message?.toLowerCase().includes('account needs password setup')) {
         setNeedsPasswordSetup(true);
