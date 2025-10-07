@@ -25,7 +25,7 @@ export const useProfileCheck = (): ProfileStatus => {
         setLoading(true);
         setError(null);
 
-        const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+        const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
         const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`);
         if (!res.ok) {
           // No profile yet

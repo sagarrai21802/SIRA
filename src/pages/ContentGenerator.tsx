@@ -81,7 +81,7 @@ export function ContentGenerator() {
 
       if (user) {
         try {
-          const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+          const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
           const resp = await fetch(`${apiBase}/api/content-generations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

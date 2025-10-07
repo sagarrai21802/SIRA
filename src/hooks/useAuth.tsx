@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+  const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
 
   useEffect(() => {
     // Check for existing session on app load

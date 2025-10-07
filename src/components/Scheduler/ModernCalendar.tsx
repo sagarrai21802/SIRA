@@ -33,7 +33,7 @@ export function ModernCalendar({ className = '', isMini = false }: ModernCalenda
     setLoading(true);
     setError(null);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
       const resp = await fetch(`${apiBase}/api/scheduled-posts?user_id=${encodeURIComponent(user.id)}`);
       if (!resp.ok) throw new Error(await resp.text());
       const data = await resp.json();

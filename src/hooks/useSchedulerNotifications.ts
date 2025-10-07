@@ -13,7 +13,7 @@ export function useSchedulerNotifications() {
         const now = new Date();
         const inOneMinute = new Date(now.getTime() + 60 * 1000);
 
-        const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+        const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
         const params = new URLSearchParams({ user_id: user.id, from: now.toISOString(), to: inOneMinute.toISOString() });
         const resp = await fetch(`${apiBase}/api/scheduled-posts?${params.toString()}`);
         if (!resp.ok) throw new Error(await resp.text());

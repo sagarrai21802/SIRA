@@ -40,7 +40,7 @@ export function ModernScheduler() {
   const fetchScheduledPosts = useCallback(async () => {
     if (!user) return;
     try {
-      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
       const resp = await fetch(`${apiBase}/api/scheduled-posts?user_id=${encodeURIComponent(user.id)}`);
       if (!resp.ok) throw new Error(await resp.text());
       const data = await resp.json();
@@ -77,7 +77,7 @@ export function ModernScheduler() {
   const handleEventDrop: withDragAndDropProps['onEventDrop'] = async ({ event, start }) => {
     if (!event.resource) return;
     try {
-      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
       const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent((event.resource as any).id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -98,7 +98,7 @@ export function ModernScheduler() {
   const handleEventDelete = async () => {
     if (!selectedEvent || !selectedEvent.resource) return;
     try {
-      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
       const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent((selectedEvent.resource as any).id)}`, {
         method: 'DELETE'
       });

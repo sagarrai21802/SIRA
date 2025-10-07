@@ -35,7 +35,7 @@ export function ScheduleGeneratedPostModal({ isOpen, onClose, onPostScheduled, c
 
     setLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
       const resp = await fetch(`${apiBase}/api/scheduled-posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
