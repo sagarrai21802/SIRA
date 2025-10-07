@@ -11,14 +11,28 @@ dotenv.config();
 
 const app = express();
 
-// Configure CORS to allow requests from Vercel domains and localhost
+// Configure CORS to allow requests from Vercel subdomains and localhost variants
+const allowedOrigins = new Set([
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  process.env.FRONTEND_URL || 'http://localhost:3000'
+]);
+
+const vercelSubdomainRegex = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://*.vercel.app',
-    process.env.FRONTEND_URL || 'http://localhost:3000'
-  ],
+  origin: (origin, callback) => {
+    // Allow non-browser or same-origin requests with no Origin header
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin) || vercelSubdomainRegex.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
