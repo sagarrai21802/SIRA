@@ -723,6 +723,142 @@ app.post('/api/generate-image', async (req, res) => {
   }
 });
 
+// Edit an existing image using Gemini by providing the original image and an edit prompt
+app.post('/api/edit-image', async (req, res) => {
+  try {
+    const { image_url, prompt } = req.body || {};
+    if (!image_url || !prompt) {
+      return res.status(400).json({ error: 'image_url and prompt required' });
+    }
+
+    // Fetch the original image and convert to base64
+    const originalResp = await fetch(image_url);
+    if (!originalResp.ok) {
+      return res.status(400).json({ error: 'Failed to fetch original image' });
+    }
+    const contentType = originalResp.headers.get('content-type') || 'image/png';
+    const originalArrayBuffer = await originalResp.arrayBuffer();
+    const originalBuffer = Buffer.from(originalArrayBuffer);
+    const base64Image = originalBuffer.toString('base64');
+
+    // Call Gemini image model with prompt + inline image
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: String(prompt) },
+                {
+                  inlineData: {
+                    mimeType: contentType,
+                    data: base64Image
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"]
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return res.status(response.status).json(errorData);
+    }
+
+    const data = await response.json();
+    if (!data.candidates || data.candidates.length === 0) {
+      return res.status(500).json({ error: 'No candidate returned from Gemini' });
+    }
+
+    // Extract the generated image inlineData
+    const candidate = data.candidates[0];
+    const imagePart = candidate.content?.parts?.find(p => p.inlineData?.data);
+    if (!imagePart) {
+      return res.status(500).json({ error: 'No image returned from Gemini' });
+    }
+
+    const editedBase64 = imagePart.inlineData.data;
+    const editedMimeType = imagePart.inlineData.mimeType || 'image/png';
+    const editedBuffer = Buffer.from(editedBase64, 'base64');
+
+    // Upload edited image to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'sira-generated-images',
+          public_id: `image_edit_${Date.now()}_${randomUUID().slice(0, 8)}`,
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(editedBuffer);
+    });
+
+    res.json({
+      ok: true,
+      image_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+      content_type: editedMimeType
+    });
+  } catch (err) {
+    console.error('Image edit error:', err);
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// Enhance an image edit prompt into a single optimized paragraph (no lists, no bullets)
+app.post('/api/enhance-image-prompt', async (req, res) => {
+  try {
+    const { prompt } = req.body || {};
+    if (!prompt || !String(prompt).trim()) {
+      return res.status(400).json({ error: 'prompt required' });
+    }
+
+    const systemInstruction = `Rewrite the user's image edit request into ONE optimized paragraph that will guide an image-editing model to produce a high-quality, realistic result. Requirements:\n- No bullet points or numbering.\n- No preface or commentary. Output ONLY the paragraph.\n- Preserve subject identity and key details.\n- Keep lighting, perspective, and composition coherent unless explicitly changed.\n- Avoid artifacts, banding, halos, or over-smoothing.\n- Use concise, direct language; include style cues only if relevant.`;
+
+    const merged = `${systemInstruction}\n\nUser request: ${String(prompt)}`;
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            { parts: [{ text: merged }] }
+          ]
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      return res.status(response.status).json(errData);
+    }
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join(' ');
+    if (!text) return res.status(500).json({ error: 'No text returned' });
+
+    // Normalize whitespace, ensure single paragraph
+    const paragraph = String(text).replace(/\s+/g, ' ').trim();
+    res.json({ ok: true, prompt: paragraph });
+  } catch (err) {
+    console.error('Enhance prompt error:', err);
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
 // Get user's generated images
 app.get('/api/image-generations', async (req, res) => {
   try {
@@ -861,7 +997,7 @@ app.get('/api/linkedin/status', authenticateToken, async (req, res) => {
 
 app.post('/api/linkedin/post', authenticateToken, async (req, res) => {
   try {
-    const { content, image_url } = req.body || {};
+    const { content, image_url, image_urls } = req.body || {};
     if (!content) return res.status(400).json({ error: 'content required' });
 
     const profile = await Profile.findOne({ id: req.user.userId }).lean();
@@ -869,9 +1005,10 @@ app.post('/api/linkedin/post', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'LinkedIn not connected' });
     }
 
-    let mediaAssetUrn = null;
+    const inputImageUrls = Array.isArray(image_urls) ? image_urls.filter(Boolean) : (image_url ? [image_url] : []);
+    const mediaAssetUrns = [];
 
-    if (image_url) {
+    for (const url of inputImageUrls) {
       // 1) Register upload with LinkedIn to obtain upload URL and asset URN
       const registerBody = {
         registerUploadRequest: {
@@ -897,15 +1034,15 @@ app.post('/api/linkedin/post', authenticateToken, async (req, res) => {
         return res.status(registerResp.status).json(registerData);
       }
 
-      mediaAssetUrn = registerData?.value?.asset;
+      const mediaAssetUrn = registerData?.value?.asset;
       const uploadUrl = registerData?.value?.uploadMechanism?.
         ["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]?.uploadUrl;
       if (!mediaAssetUrn || !uploadUrl) {
         return res.status(500).json({ error: 'Failed to get LinkedIn upload URL' });
       }
 
-      // 2) Download image data from image_url
-      const imageResp = await fetch(image_url);
+      // 2) Download image data from the provided URL
+      const imageResp = await fetch(url);
       if (!imageResp.ok) {
         return res.status(400).json({ error: 'Failed to fetch image from provided URL' });
       }
@@ -926,22 +1063,20 @@ app.post('/api/linkedin/post', authenticateToken, async (req, res) => {
         const errText = await uploadResp.text();
         return res.status(uploadResp.status).json({ error: 'LinkedIn image upload failed', details: errText });
       }
+
+      mediaAssetUrns.push(mediaAssetUrn);
     }
 
-    // 4) Create UGC post with or without the uploaded image
-    const ugcBody = mediaAssetUrn ? {
+    // 4) Create UGC post with or without uploaded images
+    const hasImages = mediaAssetUrns.length > 0;
+    const ugcBody = hasImages ? {
       author: profile.linkedin_member_urn,
       lifecycleState: 'PUBLISHED',
       specificContent: {
         'com.linkedin.ugc.ShareContent': {
           shareCommentary: { text: content },
           shareMediaCategory: 'IMAGE',
-          media: [
-            {
-              status: 'READY',
-              media: mediaAssetUrn
-            }
-          ]
+          media: mediaAssetUrns.map((urn) => ({ status: 'READY', media: urn }))
         }
       },
       visibility: {
