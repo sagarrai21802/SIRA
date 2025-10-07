@@ -64,7 +64,7 @@ export default function GenerateTemplate() {
 
   const checkDailyQuota = async () => {
     if (!user) return;
-    const apiBase =  'http://localhost:4000';
+    const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
     const resp = await fetch(`${apiBase}/api/template-generations/daily-count?user_id=${encodeURIComponent(user.id)}`);
     if (!resp.ok) throw new Error('failed to get count');
     const data = await resp.json();
@@ -113,7 +113,7 @@ export default function GenerateTemplate() {
       );
 
       if (user) {
-        const apiBase = 'http://localhost:4000';
+        const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
         const resp = await fetch(`${apiBase}/api/template-generations`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -95,7 +95,7 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event, selectedD
     };
 
     try {
-      const apiBase = 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       if (event) {
         const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent((event.resource as any).id)}`, {
           method: 'PATCH',

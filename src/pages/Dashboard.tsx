@@ -107,7 +107,7 @@ export function Dashboard() {
   const loadStats = async () => {
     if (!user) return;
     try {
-      const apiBase = 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const token = localStorage.getItem('auth_token');
       const params = new URLSearchParams({ user_id: user.id });
       const resp = await fetch(`${apiBase}/api/stats/counts?${params.toString()}`, {
@@ -189,7 +189,7 @@ export function Dashboard() {
       }
 
       // Fallback to API call if needed
-      const apiBase = 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`);
       const existing = res.ok ? (await res.json()).profile : null;
       if (existing) {
@@ -218,7 +218,7 @@ export function Dashboard() {
     if (!user) return;
     setProfileLoading(true);
     try {
-      const apiBase = 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const token = localStorage.getItem('auth_token');
       
       const resp = await fetch(`${apiBase}/api/profiles/upsert`, {

@@ -25,7 +25,7 @@ export async function uploadImage(file: File, userId: string): Promise<string | 
       throw new Error('Failed to convert file to base64');
     }
 
-    const response = await fetch('http://localhost:4000/api/upload-profile-picture', {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:4000'}/api/upload-profile-picture`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

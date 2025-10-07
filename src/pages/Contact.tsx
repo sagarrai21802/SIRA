@@ -13,7 +13,7 @@ export default function ContactUs() {
     setLoading(true);
 
     try {
-      const apiBase ='http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const resp = await fetch(`${apiBase}/api/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

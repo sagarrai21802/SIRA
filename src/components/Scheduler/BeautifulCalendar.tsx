@@ -35,7 +35,7 @@ export function BeautifulCalendar({ className = '', isMini = false }: BeautifulC
     setLoading(true);
     setError(null);
     try {
-      const apiBase = 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const token = localStorage.getItem('auth_token');
       const resp = await fetch(`${apiBase}/api/scheduled-posts?user_id=${encodeURIComponent(user.id)}`, {
         headers: {
@@ -73,7 +73,7 @@ export function BeautifulCalendar({ className = '', isMini = false }: BeautifulC
   const handleEventDelete = async () => {
     if (!selectedPost) return;
     try {
-      const apiBase = 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const token = localStorage.getItem('auth_token');
       const resp = await fetch(`${apiBase}/api/scheduled-posts/${encodeURIComponent(selectedPost.id)}`, {
         method: 'DELETE',

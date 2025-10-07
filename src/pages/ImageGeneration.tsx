@@ -49,7 +49,7 @@ export const ImageGenerator: React.FC = () => {
     
     setLoadingImages(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/image-generations?user_id=${user.id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:4000'}/api/image-generations?user_id=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setGeneratedImages(data.items || []);
@@ -64,7 +64,7 @@ export const ImageGenerator: React.FC = () => {
   // Delete an image
   const handleDeleteImage = async (imageId: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/image-generations/${imageId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:4000'}/api/image-generations/${imageId}`, {
         method: 'DELETE'
       });
       
@@ -108,7 +108,7 @@ export const ImageGenerator: React.FC = () => {
         i++;
       }, 1000);
 
-      const response = await fetch('http://localhost:4000/api/generate-image', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:4000'}/api/generate-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

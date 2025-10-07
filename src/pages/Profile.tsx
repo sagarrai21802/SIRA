@@ -33,7 +33,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchOrCreateProfile = async () => {
       if (!user) return;
-      const apiBase ='http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`);
       const existing = res.ok ? (await res.json()).profile : null;
       if (existing) {
@@ -62,7 +62,7 @@ export default function Profile() {
     if (!user) return;
     setLoading(true);
     try {
-      const apiBase ='http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const resp = await fetch(`${apiBase}/api/profiles/upsert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -90,7 +90,7 @@ export default function Profile() {
     if (!user) return;
     setLoading(true);
     try {
-      const apiBase =  'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const resp = await fetch(`${apiBase}/api/profiles/upsert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

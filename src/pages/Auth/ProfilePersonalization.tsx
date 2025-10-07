@@ -175,7 +175,7 @@ export function ProfilePersonalization() {
 
     setLoading(true);
     try {
-      const apiBase ='http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const response = await fetch(`${apiBase}/api/profiles/upsert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -216,7 +216,7 @@ export function ProfilePersonalization() {
     setIsSkipping(true);
     try {
       // Use backend API to mark profile as complete
-      const apiBase = 'http://localhost:4000';
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
       const response = await fetch(`${apiBase}/api/profiles/upsert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

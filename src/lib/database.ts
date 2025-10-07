@@ -27,7 +27,7 @@ export interface AppUserDoc {
 }
 
 export const upsertAppUser = async (userId: string, email: string | null) => {
-  const apiBase = 'http://localhost:4000';
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   await fetch(`${apiBase}/api/users/upsert`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,7 @@ export const upsertAppUser = async (userId: string, email: string | null) => {
 
 // Profile functions
 export const getProfile = async (userId: string): Promise<Profile | null> => {
-  const apiBase =  'http://localhost:4000';
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(userId)}`);
   if (!res.ok) return null;
   const data = await res.json();
@@ -45,7 +45,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 };
 
 export const updateProfile = async (userId: string, updates: Partial<Profile>) => {
-  const apiBase =  'http://localhost:4000';
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   const res = await fetch(`${apiBase}/api/profiles/upsert`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -63,7 +63,7 @@ export const saveContentGeneration = async (
   contentType: 'text' | 'image' | 'seo',
    tone?: string // ✅ optional tone argument
 ): Promise<ContentGeneration> => {
-  const apiBase = 'http://localhost:4000';
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   const doc: any = {
     id: crypto.randomUUID(),
     user_id: userId,
@@ -85,7 +85,7 @@ export const getUserContentGenerations = async (
   userId: string,
   contentType?: 'text' | 'image' | 'seo'
 ): Promise<ContentGeneration[]> => {
-  const apiBase = 'http://localhost:4000';
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   const params = new URLSearchParams({ user_id: userId });
   if (contentType) params.set('content_type', contentType);
   const res = await fetch(`${apiBase}/api/content-generations?${params.toString()}`);
@@ -95,6 +95,6 @@ export const getUserContentGenerations = async (
 };
 
 export const deleteContentGeneration = async (id: string): Promise<void> => {
-  const apiBase = 'http://localhost:4000';
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   await fetch(`${apiBase}/api/content-generations/${encodeURIComponent(id)}`, { method: 'DELETE' });
 };
