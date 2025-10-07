@@ -55,5 +55,30 @@ export const API_ENDPOINTS = {
   // Other
   FEEDBACK: '/api/feedback',
   STATS_COUNTS: '/api/stats/counts',
-  HEALTH: '/health'
+  HEALTH: '/health',
+
+  // Complaints
+  DELETION_COMPLAINTS: '/api/deletion-complaints'
 } as const;
+
+export type DeletionComplaintPayload = {
+  name: string;
+  email: string;
+  content_url?: string | null;
+  content_type: 'text' | 'image' | 'post' | 'other';
+  reason: 'inaccurate' | 'harmful' | 'copyright' | 'privacy' | 'other';
+  details: string;
+};
+
+export async function submitDeletionComplaint(payload: DeletionComplaintPayload) {
+  const resp = await fetch(getApiUrl(API_ENDPOINTS.DELETION_COMPLAINTS), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    throw new Error(data?.error || 'Failed to submit complaint');
+  }
+  return data;
+}

@@ -619,6 +619,47 @@ app.post('/api/feedback', async (req, res) => {
   }
 });
 
+// ---- Deletion/Complaint Requests ----
+const deletionComplaintSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  content_url: { type: String },
+  content_type: { type: String, enum: ['text', 'image', 'post', 'other'], required: true },
+  reason: { type: String, enum: ['inaccurate', 'harmful', 'copyright', 'privacy', 'other'], required: true },
+  details: { type: String, required: true },
+  created_at: { type: String, required: true },
+  status: { type: String, enum: ['received', 'in_review', 'resolved'], default: 'received' }
+});
+const DeletionComplaint = mongoose.model('DeletionComplaint', deletionComplaintSchema);
+
+app.post('/api/deletion-complaints', async (req, res) => {
+  try {
+    const { name, email, content_url, content_type, reason, details } = req.body || {};
+    if (!name || !email || !content_type || !reason || !details) {
+      return res.status(400).json({ error: 'name, email, content_type, reason, details required' });
+    }
+    if (String(details).trim().length < 20) {
+      return res.status(400).json({ error: 'details must be at least 20 characters' });
+    }
+    const doc = {
+      id: randomUUID(),
+      name: String(name).trim(),
+      email: String(email).trim(),
+      content_url: content_url ? String(content_url).trim() : null,
+      content_type: String(content_type),
+      reason: String(reason),
+      details: String(details).trim(),
+      created_at: new Date().toISOString(),
+      status: 'received'
+    };
+    await DeletionComplaint.create(doc);
+    res.json({ ok: true, id: doc.id });
+  } catch (err) {
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
 // ---- Image Generation ----
 app.post('/api/generate-image', async (req, res) => {
   try {

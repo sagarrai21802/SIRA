@@ -21,7 +21,8 @@ export const ProfileGuard: React.FC<ProfileGuardProps> = ({ children }) => {
     '/login',
     '/signup',
     '/auth/callback',
-    '/'
+    '/',
+    '/complaint-deletion'
   ];
 
   const shouldSkipCheck = skipProfileCheckRoutes.includes(location.pathname);

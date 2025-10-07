@@ -56,6 +56,7 @@ import Cookies from "./pages/Cookies";
 import GDPR from "./pages/GDPR";
 import Security from "./pages/Security";
 import Compliance from "./pages/Compliance";
+import ComplaintDeletion from "./pages/ComplaintDeletion";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -63,7 +64,7 @@ function AppContent() {
   const [showLoading, setShowLoading] = useState(true);
 
   const location = useLocation();
-  const noSidebarRoutes = ["/", "/login", "/signup"];
+  const noSidebarRoutes = ["/", "/login", "/signup", "/complaint-deletion"];
   const hideSidebar = noSidebarRoutes.includes(location.pathname);
 
   useEffect(() => {
@@ -143,6 +144,8 @@ function AppContent() {
               <Route path="/gdpr" element={<ProtectedRoute><GDPR /></ProtectedRoute>} />
               <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
               <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
+              {/* Public complaints/deletion page */}
+              <Route path="/complaint-deletion" element={<ComplaintDeletion />} />
               </Routes>
             </ProfileGuard>
           </main>

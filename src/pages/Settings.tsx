@@ -13,6 +13,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from ".
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/UI/Tabs";
 import { Textarea } from "../components/UI/Input";
 import { Separator } from "../components/UI/Separator";
+import { Link } from "react-router-dom";
 
 // Utility: simple section wrapper
 const Section: React.FC<React.PropsWithChildren<{ title: string; icon?: React.ReactNode; description?: string; }>> = ({ title, icon, description, children }) => (
@@ -274,6 +275,22 @@ export default function SettingsPage() {
               </div>
             </div>
           </Section>
+
+          <Card className="border-blue-300/60">
+            <CardHeader>
+              <CardTitle className="text-blue-600 flex items-center gap-2"><Trash2 className="w-5 h-5"/> Report or request deletion of generated content</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                If our system generated content that you believe is inaccurate, harmful, or violates rights, you can submit a complaint for review.
+              </p>
+              <Link to="/complaint-deletion">
+                <Button variant="outline" className="gap-2">
+                  Go to complaint form
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
 
           <Section title="Connected apps" icon={<LinkIcon className="w-5 h-5"/>} description="Manage third‑party integrations.">
             <div className="space-y-3">
