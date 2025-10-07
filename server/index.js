@@ -970,13 +970,12 @@ app.post('/api/linkedin/exchange-code', authenticateToken, async (req, res) => {
     if (!code) {
       return res.status(400).json({ error: 'code required' });
     }
+    if (!providedRedirect) {
+      return res.status(400).json({ error: 'redirect_uri required' });
+    }
 
     const clientId = process.env.LINKEDIN_CLIENT_ID;
     const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
-    const configuredRedirect = process.env.LINKEDIN_REDIRECT_URI;
-    if (!configuredRedirect) {
-      return res.status(500).json({ error: 'Server missing LINKEDIN_REDIRECT_URI' });
-    }
     const tokenUrl = 'https://www.linkedin.com/oauth/v2/accessToken';
 
     const tokenResp = await fetch(tokenUrl, {
@@ -985,7 +984,7 @@ app.post('/api/linkedin/exchange-code', authenticateToken, async (req, res) => {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: configuredRedirect,
+        redirect_uri: providedRedirect,
         client_id: clientId,
         client_secret: clientSecret
       })
