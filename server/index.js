@@ -2,12 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import path from 'path';
 import { randomUUID } from 'crypto';
 import { v2 as cloudinary } from 'cloudinary';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
@@ -116,14 +117,22 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log('Auth header:', authHeader);
+  console.log('Token:', token ? 'present' : 'missing');
+  console.log('JWT_SECRET present:', !!process.env.JWT_SECRET);
+  console.log('JWT_SECRET value:', process.env.JWT_SECRET);
+
   if (!token) {
+    console.log('No token provided');
     return res.status(401).json({ error: 'Access token required' });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
+      console.log('JWT verify error:', err.message);
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
+    console.log('JWT verified for user:', user.userId);
     req.user = user;
     next();
   });
@@ -1066,9 +1075,65 @@ app.post('/api/linkedin/post', authenticateToken, async (req, res) => {
     const { content, image_url, image_urls } = req.body || {};
     if (!content) return res.status(400).json({ error: 'content required' });
 
-    const profile = await Profile.findOne({ id: req.user.userId }).lean();
+    let profile = await Profile.findOne({ id: req.user.userId }).lean();
     if (!profile || !profile.linkedin_access_token || !profile.linkedin_member_urn) {
       return res.status(400).json({ error: 'LinkedIn not connected' });
+    }
+
+    // Check if access token is expired and refresh if possible
+    const now = new Date();
+    if (profile.linkedin_expires_at && now > new Date(profile.linkedin_expires_at) && profile.linkedin_refresh_token) {
+      const clientId = process.env.LINKEDIN_CLIENT_ID;
+      const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+      const tokenUrl = 'https://www.linkedin.com/oauth/v2/accessToken';
+
+      const refreshResp = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: profile.linkedin_refresh_token,
+          client_id: clientId,
+          client_secret: clientSecret
+        })
+      });
+
+      const refreshData = await refreshResp.json();
+      if (refreshResp.ok) {
+        const newAccessToken = refreshData.access_token;
+        const newExpiresIn = refreshData.expires_in;
+        const newRefreshToken = refreshData.refresh_token || profile.linkedin_refresh_token;
+        const newExpiresAt = new Date(Date.now() + (newExpiresIn || 0) * 1000);
+
+        await Profile.updateOne(
+          { id: req.user.userId },
+          {
+            $set: {
+              linkedin_access_token: newAccessToken,
+              linkedin_refresh_token: newRefreshToken,
+              linkedin_expires_at: newExpiresAt,
+              updated_at: new Date().toISOString()
+            }
+          }
+        );
+
+        // Update the profile object for use below
+        profile.linkedin_access_token = newAccessToken;
+      } else {
+        // Refresh failed, clear tokens
+        await Profile.updateOne(
+          { id: req.user.userId },
+          {
+            $unset: {
+              linkedin_access_token: 1,
+              linkedin_refresh_token: 1,
+              linkedin_expires_at: 1,
+              linkedin_member_urn: 1
+            }
+          }
+        );
+        return res.status(400).json({ error: 'LinkedIn token expired and refresh failed. Please reconnect.' });
+      }
     }
 
     const inputImageUrls = Array.isArray(image_urls) ? image_urls.filter(Boolean) : (image_url ? [image_url] : []);
