@@ -67,7 +67,7 @@ export const generateWithGemini = async ({
 };
 
 // ---------------- Humanization Layer ----------------
-async function humanizeContent(text: string, tone: string): Promise<string> {
+export async function humanizeContent(text: string, tone: string = 'casual'): Promise<string> {
   // Pass 1: Make it sound less polished, more like a person typing
   text = await runGeminiPass(
     `Rewrite this text so it doesn’t sound like AI-polished content. 

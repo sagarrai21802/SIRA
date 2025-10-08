@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { humanizeText, HumanizerResult, checkUserCredits, UserCredits } from '../lib/Humanizer';
+import { useState } from 'react';
+import { humanizeText, HumanizerResult } from '../lib/Humanizer';
 import { Button } from '../components/UI/Button';
 import { Card, CardContent, CardHeader } from '../components/UI/Card';
 import { motion } from 'framer-motion';
@@ -8,23 +8,7 @@ export function Humanizer() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState<HumanizerResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [credits, setCredits] = useState<UserCredits | null>(null);
   const [error, setError] = useState<string>('');
-
-  useEffect(() => {
-    fetchCredits();
-  }, []);
-
-  const fetchCredits = async () => {
-    try {
-      const userCredits = await checkUserCredits();
-      setCredits(userCredits);
-    } catch (err) {
-      console.error('Failed to fetch credits:', err);
-      // Don't show error to user, just fail silently for credits
-      // The humanizer will still work, just won't show credit count
-    }
-  };
 
   const handleHumanize = async () => {
     if (!input.trim()) {
@@ -44,8 +28,6 @@ export function Humanizer() {
     try {
       const res = await humanizeText({ text: input });
       setResult(res);
-      // Refresh credits after successful humanization
-      await fetchCredits();
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to humanize text. Try again later.';
@@ -100,19 +82,7 @@ export function Humanizer() {
       >
         <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-2xl">
           <CardHeader className="text-center">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">AI to Humanizer</h2>
-              {credits && credits.credits !== undefined && (
-                <div className="bg-purple-100 dark:bg-purple-900 px-4 py-2 rounded-lg">
-                  <p className="text-sm font-semibold text-purple-800 dark:text-purple-200">
-                    Credits: {credits.credits?.toLocaleString() ?? '0'}
-                  </p>
-                  <p className="text-xs text-purple-600 dark:text-purple-300">
-                    Base: {credits.baseCredits?.toLocaleString() ?? '0'} | Boost: {credits.boostCredits?.toLocaleString() ?? '0'}
-                  </p>
-                </div>
-              )}
-            </div>
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">AI to Humanizer</h2>
             <p className="text-gray-500 dark:text-gray-400 mt-1">Transform AI text into natural, human-friendly content ✨</p>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -123,28 +93,13 @@ export function Humanizer() {
                 className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl p-4"
               >
                 <p className="text-red-800 dark:text-red-200 font-medium">⚠️ {error}</p>
-                {error.includes('Insufficient credits') && (
-                  <a
-                    href="https://undetectable.ai/developer"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-red-600 dark:text-red-400 underline text-sm mt-2 inline-block hover:text-red-700 dark:hover:text-red-300"
-                  >
-                    Top up your credits here →
-                  </a>
-                )}
               </motion.div>
             )}
             
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Your Text (minimum 50 characters)
-                </label>
-                <span className={`text-sm ${input.length < 50 ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                  {input.length} / 50 characters
-                </span>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Your Text (minimum 50 characters)
+              </label>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -166,7 +121,7 @@ export function Humanizer() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Processing... (This may take up to 60 seconds)
+                  Processing...
                 </span>
               ) : (
                 'Humanize Text'

@@ -33,7 +33,6 @@ CLOUDINARY_API_KEY=your-cloudinary-api-key
 CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 VITE_GEMINI_API_KEY=your-gemini-api-key
 UNDETECTABLE_API_KEY=your-undetectable-api-key
-FRONTEND_URL=https://your-app-name.vercel.app
 ```
 
 ## Deployment Steps

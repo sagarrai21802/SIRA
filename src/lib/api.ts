@@ -1,5 +1,17 @@
 // Centralized API configuration
-export const API_BASE = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+const inferDefaultApiBase = () => {
+  // Prefer localhost server in dev if env not provided
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:4000';
+    }
+  }
+  // Fallback to production API
+  return 'https://sira-msb1.onrender.com';
+};
+
+export const API_BASE = (import.meta.env.VITE_API_BASE && String(import.meta.env.VITE_API_BASE).trim()) || inferDefaultApiBase();
 
 // Helper function to get full API URL
 export const getApiUrl = (endpoint: string) => {

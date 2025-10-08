@@ -1,5 +1,6 @@
 // src/hooks/useAuth.tsx
 import { useEffect, useState, useContext, createContext } from "react";
+import { API_BASE, API_ENDPOINTS } from "../lib/api";
 
 interface User {
   id: string;
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+  const apiBase = API_BASE;
 
   useEffect(() => {
     // Check for existing session on app load
@@ -72,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${apiBase}/api/auth/login`, {
+      const response = await fetch(`${apiBase}${API_ENDPOINTS.LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -83,7 +84,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        // Preserve special flags like needsPasswordSetup when present
+        const error: any = new Error(data.error || 'Login failed');
+        if (data && typeof data === 'object' && 'needsPasswordSetup' in data) {
+          error.needsPasswordSetup = Boolean(data.needsPasswordSetup);
+        }
+        throw error;
       }
 
       // Store token and user data

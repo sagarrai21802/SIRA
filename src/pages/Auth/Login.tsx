@@ -112,7 +112,7 @@ export default function Login() {
     
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com'}/api/auth/set-password`, {
+      const response = await fetch(`${API_BASE}${API_ENDPOINTS.SET_PASSWORD}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

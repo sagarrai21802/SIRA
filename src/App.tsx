@@ -69,8 +69,7 @@ function AppContent() {
 
   useEffect(() => {
     if (!authLoading) {
-      const timer = setTimeout(() => setShowLoading(false), 1000);
-      return () => clearTimeout(timer);
+      setShowLoading(false);
     }
   }, [authLoading]);
 

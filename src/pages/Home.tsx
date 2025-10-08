@@ -38,13 +38,13 @@ export function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900">
         <div className="absolute inset-0 pointer-events-none">
-          {[...Array(30)].map((_, i) => (
+          {[...Array(10)].map((_, i) => (
             <motion.div
               key={i}
               className="w-2 h-2 bg-blue-400 rounded-full absolute"
               initial={{ opacity: 0 }}
               animate={{ opacity: [0.2, 1, 0.2], y: [0, -25, 0] }}
-              transition={{ duration: 6, repeat: Infinity, delay: i * 0.1 }}
+              transition={{ duration: 8, repeat: Infinity, delay: i * 0.2 }}
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
