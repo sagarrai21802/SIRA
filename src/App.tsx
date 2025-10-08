@@ -107,7 +107,7 @@ function AppContent() {
               <Route path="/humanizer" element={<ProtectedRoute><Humanizer /></ProtectedRoute>} />
               <Route path="/promptgenerator" element={<ProtectedRoute><PromptGenerator /></ProtectedRoute>} />
               <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
-              <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+              <Route path="/about" element={<About />} />
               <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
               <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

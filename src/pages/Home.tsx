@@ -82,8 +82,8 @@ export function Home() {
                   <Link to="/signup">Get Started Free</Link>
                 </Button>
               )}
-              <Button variant="outline" size="lg" className="hover:scale-105 transition-all duration-300" onClick={scrollToAbout}>
-                Learn More
+              <Button variant="outline" size="lg" className="hover:scale-105 transition-all duration-300" asChild>
+                <Link to="/about">Learn More</Link>
               </Button>
             </motion.div>
           </motion.div>
