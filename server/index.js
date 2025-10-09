@@ -3,12 +3,28 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import { v2 as cloudinary } from 'cloudinary';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Support __filename/__dirname in ESM and load env from server/.env or repo root .env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const envServerPath = path.join(__dirname, '.env');
+const envRootPath = path.join(__dirname, '..', '.env');
+const resolvedEnvPath = fs.existsSync(envServerPath)
+  ? envServerPath
+  : (fs.existsSync(envRootPath) ? envRootPath : undefined);
+
+if (resolvedEnvPath) {
+  dotenv.config({ path: resolvedEnvPath });
+} else {
+  dotenv.config();
+}
 
 const app = express();
 
