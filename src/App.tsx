@@ -88,8 +88,8 @@ function AppContent() {
         {/* ✅ Fixed Sidebar */}
         {!hideSidebar && !isCollapsed && <Sidebar />}
 
-        {/* ✅ Main content shifted by ml-72 when sidebar is visible */}
-        <div className={`flex flex-col flex-1 transition-all duration-300 ${!hideSidebar && !isCollapsed ? "ml-72" : isCollapsed ? "ml-8" : ""}`}>
+        {/* ✅ Main content shifted by responsive margin when sidebar is visible */}
+        <div className={`flex flex-col flex-1 transition-all duration-300 ${!hideSidebar && !isCollapsed ? "ml-56 sm:ml-64 md:ml-72" : isCollapsed ? "ml-8" : ""}`}>
           <main className={`flex-1 ${isCollapsed ? 'py-4' : 'p-6'}`}>
             <ProfileGuard>
               <Routes>

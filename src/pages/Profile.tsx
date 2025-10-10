@@ -24,6 +24,9 @@ export default function Profile() {
   const [targetAudience, setTargetAudience] = useState("");
   const [brandVoice, setBrandVoice] = useState("professional");
   const [goals, setGoals] = useState("");
+  const [brandAbout, setBrandAbout] = useState("");
+  const [brandMotto, setBrandMotto] = useState("");
+  const [brandMission, setBrandMission] = useState("");
   // Social links
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
@@ -48,6 +51,9 @@ export default function Profile() {
         setTargetAudience(existing.target_audience || "");
         setBrandVoice(existing.brand_voice || "professional");
         setGoals(existing.goals || "");
+        setBrandAbout(existing.brand_about || "");
+        setBrandMotto(existing.brand_motto || "");
+        setBrandMission(existing.brand_mission || "");
         setLinkedinUrl(existing.linkedin_url || "");
         setInstagramUrl(existing.instagram_url || "");
         setFacebookUrl(existing.facebook_url || "");
@@ -104,6 +110,9 @@ export default function Profile() {
           target_audience: targetAudience,
           brand_voice: brandVoice,
           goals,
+          brand_about: brandAbout,
+          brand_motto: brandMotto,
+          brand_mission: brandMission,
           is_profile_complete: true,
           profile_completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -231,15 +240,9 @@ export default function Profile() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            {/* <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Linkedin className="w-4 h-4" /> LinkedIn URL
-            </label> */}
-<button
-  onClick={handleConnectLinkedin}
-  className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
->
-  <Linkedin className="w-4 h-4" /> Connect LinkedIn
-</button>
+            </label>
             <input
               type="url"
               value={linkedinUrl}
@@ -397,6 +400,44 @@ export default function Profile() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="What are your main business goals?"
               />
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                About your brand/company
+              </label>
+              <textarea
+                value={brandAbout}
+                onChange={(e) => setBrandAbout(e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Share more details for better personalization"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Brand Motto (short)
+                </label>
+                <input
+                  type="text"
+                  value={brandMotto}
+                  onChange={(e) => setBrandMotto(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Empowering growth through creativity"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Brand Mission
+                </label>
+                <input
+                  type="text"
+                  value={brandMission}
+                  onChange={(e) => setBrandMission(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Our mission is..."
+                />
+              </div>
             </div>
             <div className="flex gap-3">
               <button

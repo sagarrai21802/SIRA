@@ -18,6 +18,13 @@ interface PersonalizationData {
   linkedinUrl?: string;
   instagramUrl?: string;
   facebookUrl?: string;
+  primaryBrandColor?: string;
+  brandMotto?: string;
+  brandMission?: string;
+  brandAbout?: string;
+  includeBrandLogoByDefault?: boolean;
+  brandLogoUrl?: string;
+  brandLogoPublicId?: string;
 }
 
 const INDUSTRIES = [
@@ -113,7 +120,14 @@ export function ProfilePersonalization() {
     goals: '',
     linkedinUrl: '',
     instagramUrl: '',
-    facebookUrl: ''
+    facebookUrl: '',
+    primaryBrandColor: '#0033FF',
+    brandMotto: '',
+    brandMission: '',
+    brandAbout: '',
+    includeBrandLogoByDefault: false,
+    brandLogoUrl: '',
+    brandLogoPublicId: ''
   });
 
   const { user } = useAuth();
@@ -147,6 +161,12 @@ export function ProfilePersonalization() {
       fields: ['brandVoice']
     },
     {
+      id: 'brand',
+      title: 'Brand identity (color, motto, mission)',
+      icon: Sparkles,
+      fields: []
+    },
+    {
       id: 'goals',
       title: 'What are your goals?',
       icon: Trophy,
@@ -156,6 +176,41 @@ export function ProfilePersonalization() {
 
   const handleInputChange = (field: keyof PersonalizationData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBrandLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    // Convert to base64
+    const toBase64 = (f: File) => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.split(',')[1] || '';
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    });
+    try {
+      const dataUrl = await toBase64(file);
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+      const resp = await fetch(`${apiBase}/api/upload-brand-logo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) throw new Error(data?.error || 'Upload failed');
+      setFormData(prev => ({
+        ...prev,
+        brandLogoUrl: data.image_url,
+        brandLogoPublicId: data.public_id
+      }));
+      toast.success('Brand logo uploaded');
+    } catch (err: any) {
+      toast.error('Failed to upload brand logo: ' + (err?.message || 'Unknown error'));
+    }
   };
 
   const nextStep = () => {
@@ -192,6 +247,16 @@ export function ProfilePersonalization() {
           linkedin_url: formData.linkedinUrl || null,
           instagram_url: formData.instagramUrl || null,
           facebook_url: formData.facebookUrl || null,
+          primary_brand_color: formData.primaryBrandColor || null,
+          brand_motto: formData.brandMotto || null,
+          brand_mission: formData.brandMission || null,
+          brand_about: formData.brandAbout || null,
+          brand_logo_url: formData.brandLogoUrl || null,
+          brand_logo_public_id: formData.brandLogoPublicId || null,
+          image_prefs: {
+            include_brand_logo_by_default: Boolean(formData.includeBrandLogoByDefault),
+            apply_brand_theme_by_default: true
+          },
           is_profile_complete: true,
           profile_completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -203,6 +268,8 @@ export function ProfilePersonalization() {
       }
 
       toast.success('Profile completed successfully!');
+      // Clear skip flag if it was set previously for this user
+      try { if (user?.id) localStorage.removeItem(`skip_personalization_${user.id}`); } catch {}
       navigate(returnTo, { replace: true, state: { profileCompleted: true } });
     } catch (error: any) {
       toast.error('Failed to save profile: ' + error.message);
@@ -233,6 +300,8 @@ export function ProfilePersonalization() {
       }
 
       toast.success('You can complete your profile later from the Profile page');
+      // Persist skip intent so guard will not re-open this flow on next navigation/login
+      try { if (user?.id) localStorage.setItem(`skip_personalization_${user.id}`, 'true'); } catch {}
       navigate(returnTo, { replace: true, state: { profileCompleted: true } });
     } catch (error: any) {
       toast.error('Failed to skip setup: ' + error.message);
@@ -391,6 +460,87 @@ export function ProfilePersonalization() {
                   </label>
                 ))}
               </div>
+            </div>
+          </div>
+        );
+
+      case 'brand':
+        return (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Primary Brand Color
+              </label>
+              <input
+                type="color"
+                value={formData.primaryBrandColor}
+                onChange={(e) => handleInputChange('primaryBrandColor', e.target.value)}
+                className="h-10 w-24 p-1 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Brand Motto (short)
+              </label>
+              <input
+                type="text"
+                value={formData.brandMotto}
+                onChange={(e) => handleInputChange('brandMotto', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., Empowering growth through creativity"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Brand Mission
+              </label>
+              <textarea
+                rows={3}
+                value={formData.brandMission}
+                onChange={(e) => handleInputChange('brandMission', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Describe your mission"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                About your brand/company
+              </label>
+              <textarea
+                rows={4}
+                value={formData.brandAbout}
+                onChange={(e) => handleInputChange('brandAbout', e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Anything else we should know to personalize content?"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Brand Logo (optional)
+              </label>
+              <div className="flex items-center space-x-4">
+                {formData.brandLogoUrl ? (
+                  <img src={formData.brandLogoUrl} className="w-16 h-16 rounded border border-gray-300 dark:border-gray-600 object-contain" alt="Brand logo" />
+                ) : (
+                  <div className="w-16 h-16 rounded border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs text-gray-500">No logo</div>
+                )}
+                <label className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 cursor-pointer">
+                  Upload Logo
+                  <input type="file" accept="image/*" hidden onChange={handleBrandLogoSelect} />
+                </label>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                id="includeBrandLogoByDefault"
+                type="checkbox"
+                checked={!!formData.includeBrandLogoByDefault}
+                onChange={(e) => handleInputChange('includeBrandLogoByDefault', e.target.checked ? 'true' : '')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="includeBrandLogoByDefault" className="text-sm text-gray-700 dark:text-gray-300">
+                Include my company logo on generated images by default (premium only)
+              </label>
             </div>
           </div>
         );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   User, Bell, Shield, Palette, Wallet, Link as LinkIcon, Trash2, Save, Mail, Phone, Globe,
@@ -14,6 +14,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/UI/Tabs"
 import { Textarea } from "../components/UI/Input";
 import { Separator } from "../components/UI/Separator";
 import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import toast from "react-hot-toast";
 
 // Utility: simple section wrapper
 const Section: React.FC<React.PropsWithChildren<{ title: string; icon?: React.ReactNode; description?: string; }>> = ({ title, icon, description, children }) => (
@@ -34,6 +36,7 @@ const Section: React.FC<React.PropsWithChildren<{ title: string; icon?: React.Re
 );
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   // Basic profile state
   const [profile, setProfile] = useState({
     name: "Sagar Rai",
@@ -67,6 +70,128 @@ export default function SettingsPage() {
     loginAlerts: true,
     sessionTimeout: "30",
   });
+
+  // Business & brand fields (mirror Profile page)
+  const [companyName, setCompanyName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [businessType, setBusinessType] = useState("");
+  const [location, setLocation] = useState("");
+  const [companySize, setCompanySize] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
+  const [brandVoice, setBrandVoice] = useState("professional");
+  const [goals, setGoals] = useState("");
+  const [primaryBrandColor, setPrimaryBrandColor] = useState<string>("#0033FF");
+  const [brandMotto, setBrandMotto] = useState("");
+  const [brandMission, setBrandMission] = useState("");
+  const [brandAbout, setBrandAbout] = useState("");
+  const [brandLogoUrl, setBrandLogoUrl] = useState<string>("");
+  const [brandLogoPublicId, setBrandLogoPublicId] = useState<string>("");
+  const [includeLogoDefault, setIncludeLogoDefault] = useState<boolean>(false);
+  const [savingBusiness, setSavingBusiness] = useState(false);
+
+  // Load current profile
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (!user) return;
+        // Prefill from auth when present
+        setProfile(prev => ({
+          ...prev,
+          name: user.full_name || prev.name,
+          email: user.email || prev.email,
+          phone: user.phone || prev.phone,
+        }));
+        const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+        const resp = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const p = data?.profile || {};
+        setCompanyName(p.company_name || "");
+        setIndustry(p.industry || "");
+        setBusinessType(p.business_type || "");
+        setLocation(p.location || "");
+        setCompanySize(p.company_size || "");
+        setTargetAudience(p.target_audience || "");
+        setBrandVoice(p.brand_voice || "professional");
+        setGoals(p.goals || "");
+        setPrimaryBrandColor(p.primary_brand_color || "#0033FF");
+        setBrandMotto(p.brand_motto || "");
+        setBrandMission(p.brand_mission || "");
+        setBrandAbout(p.brand_about || "");
+        setBrandLogoUrl(p.brand_logo_url || "");
+        setBrandLogoPublicId(p.brand_logo_public_id || "");
+        setIncludeLogoDefault(Boolean(p.image_prefs?.include_brand_logo_by_default));
+      } catch (e) {
+        // ignore
+      }
+    };
+    load();
+  }, [user]);
+
+  const handleUploadBrandLogo = async (file: File) => {
+    const toDataUrl = (f: File) => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    });
+    try {
+      const dataUrl = await toDataUrl(file);
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+      const resp = await fetch(`${apiBase}/api/upload-brand-logo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) throw new Error(data?.error || 'Upload failed');
+      setBrandLogoUrl(data.image_url);
+      setBrandLogoPublicId(data.public_id);
+      toast.success('Brand logo uploaded');
+    } catch (e: any) {
+      toast.error('Failed to upload brand logo: ' + (e?.message || 'Unknown error'));
+    }
+  };
+
+  const saveBusinessAndBrand = async () => {
+    if (!user) return;
+    setSavingBusiness(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+      const resp = await fetch(`${apiBase}/api/profiles/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          company_name: companyName,
+          industry,
+          business_type: businessType,
+          location,
+          company_size: companySize,
+          target_audience: targetAudience,
+          brand_voice: brandVoice,
+          goals,
+          primary_brand_color: primaryBrandColor,
+          brand_motto: brandMotto,
+          brand_mission: brandMission,
+          brand_about: brandAbout,
+          brand_logo_url: brandLogoUrl || null,
+          brand_logo_public_id: brandLogoPublicId || null,
+          image_prefs: {
+            include_brand_logo_by_default: includeLogoDefault,
+            apply_brand_theme_by_default: true
+          },
+          updated_at: new Date().toISOString(),
+        })
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      toast.success('Business & brand updated');
+    } catch (e: any) {
+      toast.error('Update failed: ' + (e?.message || 'Unknown error'));
+    } finally {
+      setSavingBusiness(false);
+    }
+  };
 
   const onSaveAll = () => {
     // TODO: integrate with your API
@@ -149,6 +274,83 @@ export default function SettingsPage() {
                   </Select>
                 </div>
               </div>
+            </div>
+          </Section>
+
+          <Section title="Business & Brand" icon={<Palette className="w-5 h-5"/>} description="These details personalize your generated content.">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Company name</Label>
+                <Input value={companyName} onChange={e=>setCompanyName(e.target.value)} placeholder="Your company"/>
+              </div>
+              <div className="space-y-2">
+                <Label>Industry</Label>
+                <Input value={industry} onChange={e=>setIndustry(e.target.value)} placeholder="e.g., Technology"/>
+              </div>
+              <div className="space-y-2">
+                <Label>Business type</Label>
+                <Input value={businessType} onChange={e=>setBusinessType(e.target.value)} placeholder="Startup, SMB, Agency..."/>
+              </div>
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="City, Country"/>
+              </div>
+              <div className="space-y-2">
+                <Label>Company size</Label>
+                <Input value={companySize} onChange={e=>setCompanySize(e.target.value)} placeholder="e.g., 1-10"/>
+              </div>
+              <div className="space-y-2">
+                <Label>Target audience</Label>
+                <Input value={targetAudience} onChange={e=>setTargetAudience(e.target.value)} placeholder="e.g., Small business owners"/>
+              </div>
+              <div className="space-y-2">
+                <Label>Brand voice</Label>
+                <Input value={brandVoice} onChange={e=>setBrandVoice(e.target.value)} placeholder="Professional, Friendly, ..."/>
+              </div>
+              <div className="space-y-2">
+                <Label>Primary brand color</Label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={primaryBrandColor} onChange={e=>setPrimaryBrandColor(e.target.value)} className="h-10 w-20 rounded"/>
+                  <Input value={primaryBrandColor} onChange={e=>setPrimaryBrandColor(e.target.value)} placeholder="#0033FF"/>
+                </div>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Goals</Label>
+                <Textarea value={goals} onChange={e=>setGoals(e.target.value)} placeholder="What are your main goals?"/>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>About your brand/company</Label>
+                <Textarea value={brandAbout} onChange={e=>setBrandAbout(e.target.value)} placeholder="Share more details for better personalization"/>
+              </div>
+              <div className="space-y-2">
+                <Label>Brand motto</Label>
+                <Input value={brandMotto} onChange={e=>setBrandMotto(e.target.value)} placeholder="Empowering growth through creativity"/>
+              </div>
+              <div className="space-y-2">
+                <Label>Brand mission</Label>
+                <Input value={brandMission} onChange={e=>setBrandMission(e.target.value)} placeholder="Our mission is..."/>
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <Label>Brand logo</Label>
+              <div className="flex items-center gap-4">
+                {brandLogoUrl ? (
+                  <img src={brandLogoUrl} className="w-16 h-16 rounded border object-contain" alt="Brand logo"/>
+                ) : (
+                  <div className="w-16 h-16 rounded border border-dashed flex items-center justify-center text-xs text-gray-500">No logo</div>
+                )}
+                <label className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 cursor-pointer">
+                  Upload Logo
+                  <input type="file" accept="image/*" hidden onChange={(e)=>{ if (e.target.files && e.target.files[0]) handleUploadBrandLogo(e.target.files[0]); }} />
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={includeLogoDefault} onChange={(e)=>setIncludeLogoDefault(e.target.checked)} className="h-4 w-4"/>
+                  Include company logo on generated images by default (premium only)
+                </label>
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button onClick={saveBusinessAndBrand} disabled={savingBusiness}>{savingBusiness ? 'Saving...' : 'Save business & brand'}</Button>
             </div>
           </Section>
         </TabsContent>

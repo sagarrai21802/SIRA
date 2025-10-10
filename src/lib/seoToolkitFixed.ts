@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { API_ENDPOINTS, getApiUrl } from './api';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -14,6 +15,7 @@ export interface SEOContentParams {
   industry?: string;
   targetAudience?: string;
   contentType?: 'meta' | 'keywords' | 'readability' | 'schema';
+  brandVoice?: string;
 }
 
 export interface SEOContentResult {
@@ -26,12 +28,37 @@ export interface SEOContentResult {
 }
 
 // Meta Tags
+async function resolveBrandSeoDefaults(input: Partial<SEOContentParams>): Promise<{ industry: string; targetAudience: string; brandVoice: string; }> {
+  const defaults = { industry: 'general', targetAudience: 'online readers', brandVoice: 'neutral' };
+  if (input.industry && input.targetAudience && input.brandVoice) return input as any;
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const resp = await fetch(getApiUrl(API_ENDPOINTS.ME), {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+    });
+    if (!resp.ok) return defaults;
+    const data = await resp.json();
+    const u = data?.user || {};
+    return {
+      industry: input.industry || u.industry || defaults.industry,
+      targetAudience: input.targetAudience || u.target_audience || defaults.targetAudience,
+      brandVoice: input.brandVoice || u.brand_voice || defaults.brandVoice
+    };
+  } catch {
+    return defaults;
+  }
+}
+
 export const generateMetaTags = async ({
   topic,
   industry = 'general',
   targetAudience = 'online readers',
+  brandVoice = 'neutral',
 }: Omit<SEOContentParams, 'contentType'>): Promise<Pick<SEOContentResult, 'metaTitle' | 'metaDescription' | 'slug'>> => {
   if (!model) throw new Error('Gemini model not initialized.');
+
+  // Enrich defaults from profile when missing
+  const resolved = await resolveBrandSeoDefaults({ industry, targetAudience, brandVoice });
 
   const systemPrompt = `
 You are an SEO expert. Generate ONLY meta tags for the given topic.
@@ -44,8 +71,9 @@ Return as JSON:
 }
 
 Topic: ${topic}
-Industry: ${industry}
-Target Audience: ${targetAudience}
+Industry: ${resolved.industry}
+Target Audience: ${resolved.targetAudience}
+Brand Voice: ${resolved.brandVoice}
   `.trim();
 
   try {

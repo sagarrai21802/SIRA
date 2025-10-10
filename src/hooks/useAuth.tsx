@@ -19,6 +19,17 @@ interface User {
   linkedin_url?: string;
   instagram_url?: string;
   facebook_url?: string;
+  primary_brand_color?: string;
+  brand_logo_url?: string;
+  brand_logo_public_id?: string;
+  brand_motto?: string;
+  brand_mission?: string;
+  brand_about?: string;
+  is_premium?: boolean;
+  image_prefs?: {
+    include_brand_logo_by_default?: boolean;
+    apply_brand_theme_by_default?: boolean;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -39,18 +50,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const apiBase = API_BASE;
 
+  const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(input, { ...init, signal: controller.signal });
+    } finally {
+      clearTimeout(id);
+    }
+  };
+
   useEffect(() => {
     // Check for existing session on app load
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token');
         if (token) {
-          const response = await fetch(`${apiBase}/api/auth/me`, {
+          const response = await fetchWithTimeout(`${apiBase}/api/auth/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          });
+          }, 8000);
           
           if (response.ok) {
             const userData = await response.json();

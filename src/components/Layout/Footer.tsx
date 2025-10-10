@@ -227,38 +227,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Newsletter section */}
-        <div className="border-b border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center"
-            >
-              <h3 className="text-lg font-bold text-white mb-2">
-                Stay ahead of the curve
-              </h3>
-              <p className="text-gray-400 mb-3 max-w-2xl mx-auto text-xs">
-                Get the latest AI marketing insights, product updates, and exclusive content delivered to your inbox.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg shadow-blue-500/25"
-                >
-                  Subscribe
-                </motion.button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+        {/* Newsletter section removed per request */}
 
         {/* Bottom section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">

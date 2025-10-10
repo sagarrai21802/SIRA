@@ -108,6 +108,18 @@ const profileSchema = new mongoose.Schema({
   linkedin_url: { type: String },
   instagram_url: { type: String },
   facebook_url: { type: String },
+  // Brand personalization fields
+  primary_brand_color: { type: String },
+  brand_logo_url: { type: String },
+  brand_logo_public_id: { type: String },
+  brand_motto: { type: String },
+  brand_mission: { type: String },
+  brand_about: { type: String },
+  is_premium: { type: Boolean, default: false },
+  image_prefs: {
+    include_brand_logo_by_default: { type: Boolean, default: false },
+    apply_brand_theme_by_default: { type: Boolean, default: true }
+  },
   // LinkedIn OAuth tokens and member URN for posting
   linkedin_access_token: { type: String },
   linkedin_refresh_token: { type: String },
@@ -323,6 +335,14 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
         linkedin_url: profile?.linkedin_url || null,
         instagram_url: profile?.instagram_url || null,
         facebook_url: profile?.facebook_url || null,
+        primary_brand_color: profile?.primary_brand_color || null,
+        brand_logo_url: profile?.brand_logo_url || null,
+        brand_logo_public_id: profile?.brand_logo_public_id || null,
+        brand_motto: profile?.brand_motto || null,
+        brand_mission: profile?.brand_mission || null,
+        brand_about: profile?.brand_about || null,
+        is_premium: Boolean(profile?.is_premium),
+        image_prefs: profile?.image_prefs || { include_brand_logo_by_default: false, apply_brand_theme_by_default: true },
         linkedin_connected: Boolean(profile?.linkedin_access_token && profile?.linkedin_member_urn),
         created_at: user.createdAt.toISOString(),
         updated_at: profile?.updated_at || user.createdAt.toISOString()
@@ -406,6 +426,30 @@ app.post('/api/profiles/upsert', async (req, res) => {
 
     // Set timestamps
     const now = new Date().toISOString();
+    // Sanitize and validate brand fields
+    if (profileData.primary_brand_color) {
+      const color = String(profileData.primary_brand_color).trim();
+      const hexRegex = /^#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/;
+      if (!hexRegex.test(color)) {
+        return res.status(400).json({ error: 'primary_brand_color must be hex like #AABBCC or #ABC' });
+      }
+      profileData.primary_brand_color = color.startsWith('#') ? color : `#${color}`;
+    }
+    if (typeof profileData.brand_motto === 'string') {
+      profileData.brand_motto = profileData.brand_motto.trim().slice(0, 300);
+    }
+    if (typeof profileData.brand_mission === 'string') {
+      profileData.brand_mission = profileData.brand_mission.trim().slice(0, 2000);
+    }
+    if (typeof profileData.brand_about === 'string') {
+      profileData.brand_about = profileData.brand_about.trim().slice(0, 4000);
+    }
+    if (profileData.image_prefs && typeof profileData.image_prefs === 'object') {
+      profileData.image_prefs = {
+        include_brand_logo_by_default: Boolean(profileData.image_prefs.include_brand_logo_by_default),
+        apply_brand_theme_by_default: profileData.image_prefs.apply_brand_theme_by_default === false ? false : true
+      };
+    }
     const updateData = {
       ...profileData,
       updated_at: now,
@@ -720,8 +764,18 @@ app.post('/api/generate-image', async (req, res) => {
       return res.status(400).json({ error: 'user_id, prompt, image_type, width, height, quality required' });
     }
 
+    // Load user profile for brand context and overlays
+    const profile = await Profile.findOne({ id: String(user_id) }).lean();
+
+    // Build brand-aware prompt
+    let brandPromptPrefix = '';
+    const shouldApplyBrandTheme = profile?.image_prefs?.apply_brand_theme_by_default !== false;
+    if (shouldApplyBrandTheme && profile?.primary_brand_color) {
+      brandPromptPrefix = `Use the primary brand color ${profile.primary_brand_color} with a harmonious palette. `;
+    }
+
     // Generate image using Gemini REST API
-    const fullPrompt = `${prompt} | Style: ${image_type} | Size: ${width}x${height} | Quality: ${quality}`;
+    const fullPrompt = `${brandPromptPrefix}${prompt} | Style: ${image_type} | Size: ${width}x${height} | Quality: ${quality}`;
     
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
@@ -768,16 +822,40 @@ app.post('/api/generate-image', async (req, res) => {
     const mimeType = imagePart.inlineData.mimeType;
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary with overlay rules
+    const transformations = [ { width: width, height: height, crop: 'fill' } ];
+    let appliedOverlay = null;
+    const isPremium = Boolean(profile?.is_premium);
+    if (!isPremium) {
+      // Apply SIRA watermark for non-premium users
+      if (process.env.CLOUDINARY_WATERMARK_PUBLIC_ID) {
+        transformations.push({
+          overlay: process.env.CLOUDINARY_WATERMARK_PUBLIC_ID,
+          gravity: 'south_east',
+          opacity: 35,
+          width: Math.floor(Number(width) * 0.15),
+          crop: 'scale'
+        });
+        appliedOverlay = 'watermark';
+      }
+    } else if (profile?.image_prefs?.include_brand_logo_by_default && profile?.brand_logo_public_id) {
+      transformations.push({
+        overlay: profile.brand_logo_public_id,
+        gravity: 'south_east',
+        opacity: 85,
+        width: Math.floor(Number(width) * 0.15),
+        crop: 'scale'
+      });
+      appliedOverlay = 'brand_logo';
+    }
+
     const uploadResult = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           resource_type: 'image',
           folder: 'sira-generated-images',
           public_id: `image_${Date.now()}_${randomUUID().slice(0, 8)}`,
-          transformation: [
-            { width: width, height: height, crop: 'fill' }
-          ]
+          transformation: transformations
         },
         (error, result) => {
           if (error) reject(error);
@@ -797,7 +875,8 @@ app.post('/api/generate-image', async (req, res) => {
       width: parseInt(width),
       height: parseInt(height),
       quality,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      applied_overlay: appliedOverlay
     };
 
     await ImageGeneration.create(doc);
@@ -1409,6 +1488,60 @@ app.post('/api/upload-profile-picture', async (req, res) => {
 
   } catch (err) {
     console.error('Profile picture upload error:', err);
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// ---- Upload Brand Logo ----
+app.post('/api/upload-brand-logo', async (req, res) => {
+  try {
+    const { image, dataUrl } = req.body || {};
+    const input = typeof image === 'string' && image.trim() ? image.trim() : (typeof dataUrl === 'string' ? dataUrl.trim() : '');
+    if (!input) {
+      return res.status(400).json({ error: 'No image data provided' });
+    }
+
+    // Normalize to base64 buffer
+    let base64Data = '';
+    if (input.startsWith('data:')) {
+      const match = input.match(/^data:(.*?);base64,(.*)$/);
+      if (!match || !match[2]) {
+        return res.status(400).json({ error: 'Invalid data URL format' });
+      }
+      base64Data = match[2];
+    } else {
+      base64Data = input;
+    }
+
+    if (!base64Data) {
+      return res.status(400).json({ error: 'Empty image payload' });
+    }
+
+    let imageBuffer;
+    try {
+      imageBuffer = Buffer.from(base64Data, 'base64');
+    } catch {
+      return res.status(400).json({ error: 'Invalid base64 data' });
+    }
+
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'sira-brand-logos',
+          public_id: `brand_${Date.now()}_${randomUUID().slice(0, 8)}`,
+          transformation: [{ width: 512, height: 512, crop: 'limit' }]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(imageBuffer);
+    });
+
+    res.json({ ok: true, image_url: uploadResult.secure_url, public_id: uploadResult.public_id });
+  } catch (err) {
+    console.error('Brand logo upload error:', err);
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
   }
 });

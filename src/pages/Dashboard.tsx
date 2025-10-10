@@ -78,6 +78,13 @@ export function Dashboard() {
   const [instagramUrl, setInstagramUrl] = useState('');
   const [facebookUrl, setFacebookUrl] = useState('');
 
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    const fields = [fullName, phoneNumber, avatarUrl, gender, companyName, industry, businessType, location, companySize, targetAudience, brandVoice, goals, linkedinUrl, instagramUrl, facebookUrl];
+    const filled = fields.filter(field => field && field.trim() !== '').length;
+    return Math.round((filled / fields.length) * 100);
+  };
+
   // Animation for stats
   useEffect(() => {
     const intervalTime = 50;
@@ -674,6 +681,27 @@ export function Dashboard() {
               <div className="text-center mb-8">
                 <div className="relative inline-block group">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+                  <svg
+                    className="absolute inset-0 w-24 h-24 transform -rotate-90"
+                    viewBox="0 0 36 36"
+                  >
+                    <path
+                      d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+                      fill="none"
+                      stroke="#d1d5db"
+                      strokeWidth="4"
+                      className="dark:stroke-gray-600"
+                    />
+                    <path
+                      d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="4"
+                      strokeDasharray={`${calculateProfileCompletion()}, 100`}
+                      className="dark:stroke-blue-400"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                   <img
                     src={avatarUrl || (gender === 'female' ? "https://randomuser.me/api/portraits/women/1.jpg" : "https://randomuser.me/api/portraits/men/1.jpg")}
                     alt="Avatar"
@@ -686,6 +714,9 @@ export function Dashboard() {
                     </label>
                   )}
                 </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Profile {calculateProfileCompletion()}% complete
+                </p>
                 <h4 className="text-xl font-bold text-gray-900 dark:text-white mt-4 mb-1">
                   {fullName || "Your Name"}
                 </h4>

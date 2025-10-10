@@ -25,8 +25,26 @@ export const useProfileCheck = (): ProfileStatus => {
         setLoading(true);
         setError(null);
 
+        // If the user explicitly skipped personalization, bypass redirects
+        const skipKey = `skip_personalization_${user.id}`;
+        const skippedPersonalization = localStorage.getItem(skipKey) === 'true';
+        if (skippedPersonalization) {
+          setIsComplete(true);
+          setLoading(false);
+          return;
+        }
+
         const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
-        const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`);
+        const authToken = localStorage.getItem('auth_token');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${apiBase}/api/profiles/${encodeURIComponent(user.id)}`, {
+          headers: {
+            ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+          },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         if (!res.ok) {
           // No profile yet
           setIsComplete(false);
@@ -35,7 +53,9 @@ export const useProfileCheck = (): ProfileStatus => {
           setIsComplete(Boolean(data.profile?.is_profile_complete));
         }
       } catch (err: any) {
+        // If network fails or times out, don't block the app — treat as complete to avoid loops
         setError(err.message);
+        setIsComplete(true);
       } finally {
         setLoading(false);
       }
