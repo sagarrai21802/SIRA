@@ -63,6 +63,16 @@ export const API_ENDPOINTS = {
   LINKEDIN_EXCHANGE_CODE: '/api/linkedin/exchange-code',
   LINKEDIN_STATUS: '/api/linkedin/status',
   LINKEDIN_POST: '/api/linkedin/post',
+
+  // Facebook (Pages) — backend endpoints to implement
+  FACEBOOK_EXCHANGE_CODE: '/api/facebook/exchange-code',
+  FACEBOOK_STATUS: '/api/facebook/status',
+  FACEBOOK_POST: '/api/facebook/post',
+
+  // Instagram (Business/Creator via IG Graph) — backend endpoints to implement
+  INSTAGRAM_EXCHANGE_CODE: '/api/instagram/exchange-code',
+  INSTAGRAM_STATUS: '/api/instagram/status',
+  INSTAGRAM_POST: '/api/instagram/post',
   
   // Other
   FEEDBACK: '/api/feedback',

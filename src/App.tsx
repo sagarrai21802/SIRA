@@ -40,6 +40,8 @@ import KeywordGenerator from "./pages/Keyword";
 import SchemaGenerator from "./pages/SchemaGenerator";
 import { ProfilePersonalization } from "./pages/Auth/ProfilePersonalization";
 import LinkedInCallback from "./pages/LinkdinCallback";
+import InstagramCallback from "./pages/InstagramCallback";
+import FacebookCallback from "./pages/FacebookCallback";
 import { Analytics } from "./pages/Analytics";
 import { NewProject } from "./pages/NewProject";
 import Careers from "./pages/Careers";
@@ -87,8 +89,8 @@ function AppContent() {
         {!hideSidebar && !isCollapsed && <Sidebar />}
 
         {/* ✅ Main content shifted by ml-72 when sidebar is visible */}
-        <div className={`flex flex-col flex-1 transition-all duration-300 ${!hideSidebar && !isCollapsed ? "ml-72" : isCollapsed ? "ml-16" : ""}`}>
-          <main className="flex-1 p-6">
+        <div className={`flex flex-col flex-1 transition-all duration-300 ${!hideSidebar && !isCollapsed ? "ml-72" : isCollapsed ? "ml-8" : ""}`}>
+          <main className={`flex-1 ${isCollapsed ? 'py-4' : 'p-6'}`}>
             <ProfileGuard>
               <Routes>
               <Route path="/" element={<Home />} />
@@ -98,6 +100,8 @@ function AppContent() {
               <Route path="/personalization" element={<ProtectedRoute><ProfilePersonalization /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/linkedin-callback" element={<LinkedInCallback />} />
+              <Route path="/instagram-callback" element={<InstagramCallback />} />
+              <Route path="/facebook-callback" element={<FacebookCallback />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/content" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
               {/* <Route path="/metatags" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} /> */}

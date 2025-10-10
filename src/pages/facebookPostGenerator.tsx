@@ -9,6 +9,7 @@ import { ModernDropdown } from "../components/UI/ModernDropdown";
 import { Dialog, Transition } from "@headlessui/react";
 import { ScheduleGeneratedPostModal } from '../components/Scheduler/ScheduleGeneratedPostModal';
 import toast from 'react-hot-toast';
+import { API_BASE, API_ENDPOINTS } from "../lib/api";
 
 // Error Modal Component
 const ErrorModal = ({ isOpen, message, onRetry, onClose }: {
@@ -129,6 +130,8 @@ export default function FacebookPostGenerator() {
   const [imgLoading, setImgLoading] = useState(false);
   const [apiError, setApiError] = useState<{ message: string; onRetry: () => void } | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [facebookConnected, setFacebookConnected] = useState<boolean | null>(null);
+  const [posting, setPosting] = useState(false);
 
   const imageStyles = ["3D", "Realistic", "Pixart", "Animated", "Cartoon"];
   const imageSizes = [
@@ -186,6 +189,72 @@ export default function FacebookPostGenerator() {
   };
 
   const fullPostContent = result ? `${result.templateTitle}\n\n${result.templateBody}\n\n${result.callToAction}` : '';
+
+  // Check Facebook connection status
+  const checkFacebookStatus = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return setFacebookConnected(false);
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.FACEBOOK_STATUS}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await resp.json().catch(() => ({}));
+      setFacebookConnected(Boolean((data as any)?.connected));
+    } catch {
+      setFacebookConnected(false);
+    }
+  };
+
+  React.useEffect(() => {
+    checkFacebookStatus();
+  }, []);
+
+  const handlePostNow = async () => {
+    if (!result) return;
+    const content = fullPostContent.trim();
+    if (!content) return;
+
+    const ensureConnected = async () => {
+      if (facebookConnected) return true;
+      const clientId = (import.meta.env as any).VITE_FACEBOOK_APP_ID;
+      const redirectUri = (import.meta.env as any).VITE_FACEBOOK_REDIRECT_URI || `${window.location.origin}/facebook-callback`;
+      const scope = encodeURIComponent('pages_manage_posts,pages_show_list,pages_read_engagement');
+      const state = Math.random().toString(36).slice(2);
+      try {
+        const imageUrlsToSend = images.length > 0 ? images : [];
+        localStorage.setItem('fb_pending_post', JSON.stringify({ content, image_urls: imageUrlsToSend }));
+      } catch {}
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+      toast('Redirecting to connect Facebook...', { icon: '🔗' });
+      window.location.href = authUrl;
+      return false;
+    };
+
+    const connected = await ensureConnected();
+    if (!connected) return;
+
+    try {
+      setPosting(true);
+      const token = localStorage.getItem('auth_token');
+      if (!token) throw new Error('Not authenticated');
+      const imageUrlsToSend = images.length > 0 ? images : [];
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.FACEBOOK_POST}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ content, image_urls: imageUrlsToSend })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error((data as any).error || 'Failed to post on Facebook');
+      toast.success('Posted to Facebook successfully!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to post');
+    } finally {
+      setPosting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950 p-6 font-inter">
@@ -312,6 +381,11 @@ export default function FacebookPostGenerator() {
                       <Button onClick={handleGenerateImage} disabled={imgLoading} className="w-full py-3 text-sm rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
                         {imgLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "🖼️ Generate Image(s)"}
                       </Button>
+                      {result && (
+                        <Button onClick={handlePostNow} disabled={posting} className="w-full py-3 text-sm rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                          {posting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : (facebookConnected ? 'Post Now to Facebook' : 'Connect & Post to Facebook')}
+                        </Button>
+                      )}
                       <Button onClick={() => setIsScheduleModalOpen(true)} variant="outline" className="w-full py-3 text-sm rounded-xl border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200">
                         <CalendarPlus className="h-4 w-4 mr-2" /> Schedule Post
                       </Button>

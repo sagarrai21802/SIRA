@@ -253,7 +253,7 @@ export function BeautifulCalendar({ className = '', isMini = false }: BeautifulC
         </div>
 
         {/* Calendar Body */}
-        <div className="min-h-[400px]">
+        <div>
           {rows}
         </div>
       </div>
@@ -378,7 +378,7 @@ export function BeautifulCalendar({ className = '', isMini = false }: BeautifulC
             Start scheduling your content to see it appear on the calendar
           </p>
           <Button variant="primary" size="lg" asChild className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-            <Link to="/scheduler" className="flex items-center space-x-2">
+            <Link to="/linkedinpostgenerator" className="flex items-center space-x-2">
               <Plus className="w-5 h-5" />
               <span>Schedule Your First Post</span>
             </Link>

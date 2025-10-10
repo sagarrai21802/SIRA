@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FileText, 
-  Image, 
-  TrendingUp, 
-  Layers, 
-  Calendar, 
-  BarChart3, 
-  ArrowUpRight, 
+import { useLayout } from '../components/Layout/LayoutContext';
+import {
+  FileText,
+  Image,
+  TrendingUp,
+  Layers,
+  Calendar,
+  BarChart3,
+  ArrowUpRight,
   ArrowDownRight,
   Target,
   Eye,
@@ -45,6 +46,7 @@ interface Stats {
 
 export function Dashboard() {
   const { user } = useAuth();
+  const { isCollapsed } = useLayout();
   const [stats, setStats] = useState<Stats>({
     contentCount: 0,
     imageCount: 0,
@@ -433,7 +435,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="p-4 sm:p-6 lg:p-8">
+      <div className={isCollapsed ? "py-2 sm:py-4 lg:py-6" : "p-4 sm:p-6 lg:p-8"}>
         {/* Welcome Header */}
         {showWelcome && (
         <div className="mb-8">
@@ -932,6 +934,41 @@ export function Dashboard() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+            {/* Tips & Resources Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="p-5 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tips & Resources</h2>
+              </div>
+              <div className="p-5 space-y-1">
+                <Link to="/docs" className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Documentation</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Explore features and best practices</p>
+                  </div>
+                </Link>
+                <Link to="/tutorials" className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
+                    <Camera className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Tutorials</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Step-by-step guides to get more done</p>
+                  </div>
+                </Link>
+                <Link to="/help" className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/20">
+                    <Settings className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Help Center</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Get answers and support</p>
+                  </div>
+                </Link>
               </div>
             </div>
           </div>

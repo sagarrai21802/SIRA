@@ -9,6 +9,7 @@ import { ModernDropdown } from '../components/UI/ModernDropdown';
 import { Dialog, Transition } from "@headlessui/react";
 import { ScheduleGeneratedPostModal } from '../components/Scheduler/ScheduleGeneratedPostModal';
 import toast from 'react-hot-toast';
+import { API_BASE, API_ENDPOINTS } from "../lib/api";
 
 // Error Modal
 const ErrorModal = ({ isOpen, message, onRetry, onClose }: {
@@ -130,6 +131,8 @@ export default function InstagramPostGenerator() {
   const [imageStyle, setImageStyle] = useState("Realistic");
   const [apiError, setApiError] = useState<{ message: string; onRetry: () => void } | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [instagramConnected, setInstagramConnected] = useState<boolean | null>(null);
+  const [posting, setPosting] = useState(false);
 
   const imageCountOptions = ["1", "2", "3", "4"];
   const imageSizeOptions = ["Post", "Story", "Reel"];
@@ -188,6 +191,72 @@ export default function InstagramPostGenerator() {
   };
 
   const fullPostContent = result ? `${result.templateTitle}\n\n${result.templateBody}\n\n${result.callToAction}` : '';
+
+  // Check Instagram connection status
+  const checkInstagramStatus = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return setInstagramConnected(false);
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.INSTAGRAM_STATUS}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await resp.json().catch(() => ({}));
+      setInstagramConnected(Boolean((data as any)?.connected));
+    } catch {
+      setInstagramConnected(false);
+    }
+  };
+
+  React.useEffect(() => {
+    checkInstagramStatus();
+  }, []);
+
+  const handlePostNow = async () => {
+    if (!result) return;
+    const content = fullPostContent.trim();
+    if (!content) return;
+
+    const ensureConnected = async () => {
+      if (instagramConnected) return true;
+      const clientId = (import.meta.env as any).VITE_INSTAGRAM_APP_ID || (import.meta.env as any).VITE_FACEBOOK_APP_ID;
+      const redirectUri = (import.meta.env as any).VITE_INSTAGRAM_REDIRECT_URI || `${window.location.origin}/instagram-callback`;
+      const scope = encodeURIComponent('instagram_basic,instagram_content_publish,pages_manage_posts,pages_show_list');
+      const state = Math.random().toString(36).slice(2);
+      try {
+        const imageUrlsToSend = images.length > 0 ? images : [];
+        localStorage.setItem('ig_pending_post', JSON.stringify({ content, image_urls: imageUrlsToSend }));
+      } catch {}
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+      toast('Redirecting to connect Instagram...', { icon: '🔗' });
+      window.location.href = authUrl;
+      return false;
+    };
+
+    const connected = await ensureConnected();
+    if (!connected) return;
+
+    try {
+      setPosting(true);
+      const token = localStorage.getItem('auth_token');
+      if (!token) throw new Error('Not authenticated');
+      const imageUrlsToSend = images.length > 0 ? images : [];
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.INSTAGRAM_POST}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ content, image_urls: imageUrlsToSend })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error((data as any).error || 'Failed to post on Instagram');
+      toast.success('Posted to Instagram successfully!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to post');
+    } finally {
+      setPosting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-pink-50 dark:from-slate-900 dark:via-slate-800 dark:to-pink-950 p-6">
@@ -305,6 +374,11 @@ export default function InstagramPostGenerator() {
                       <Button onClick={handleGenerateImage} disabled={imgLoading} className="w-full py-3 text-sm rounded-xl bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
                         {imgLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "🖼️ Generate Image(s)"}
                       </Button>
+                      {result && (
+                        <Button onClick={handlePostNow} disabled={posting} className="w-full py-3 text-sm rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                          {posting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : (instagramConnected ? 'Post Now to Instagram' : 'Connect & Post to Instagram')}
+                        </Button>
+                      )}
                       <Button onClick={() => setIsScheduleModalOpen(true)} variant="outline" className="w-full py-3 text-sm rounded-xl border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200">
                         <CalendarPlus className="h-4 w-4 mr-2" /> Schedule Post
                       </Button>
