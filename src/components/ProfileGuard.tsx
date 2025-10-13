@@ -31,14 +31,17 @@ export const ProfileGuard: React.FC<ProfileGuardProps> = ({ children }) => {
   const skippedPersonalization = typeof window !== 'undefined' && (user?.id ? localStorage.getItem(`skip_personalization_${user.id}`) === 'true' : false);
 
   useEffect(() => {
+    console.log('ProfileGuard check:', { loading, user: !!user, shouldSkipCheck, isComplete, bypassOnce, skippedPersonalization, pathname: location.pathname });
     if (!loading && user && !shouldSkipCheck && !isComplete) {
       if (bypassOnce || skippedPersonalization) {
+        console.log('ProfileGuard: bypassing due to bypassOnce or skippedPersonalization');
         return;
       }
       // Store the current path to redirect back after profile completion
       const currentPath = location.pathname;
       if (currentPath !== '/personalization') {
-        navigate('/personalization', { 
+        console.log('ProfileGuard: redirecting to personalization from:', currentPath);
+        navigate('/personalization', {
           replace: true,
           state: { returnTo: currentPath }
         });

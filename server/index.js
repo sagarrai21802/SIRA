@@ -453,7 +453,7 @@ app.post('/api/profiles/upsert', async (req, res) => {
     const updateData = {
       ...profileData,
       updated_at: now,
-      ...(profileData.is_profile_complete && !profileData.profile_completed_at ? { profile_completed_at: now } : {})
+      ...(profileData.is_profile_complete ? { profile_completed_at: now } : {})
     };
 
     await Profile.updateOne(
@@ -823,7 +823,7 @@ app.post('/api/generate-image', async (req, res) => {
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
     // Upload to Cloudinary with overlay rules
-    const transformations = [ { width: width, height: height, crop: 'fill' } ];
+    const transformations = [ { width: parseInt(width), height: parseInt(height), crop: 'fill' } ];
     let appliedOverlay = null;
     const isPremium = Boolean(profile?.is_premium);
     if (!isPremium) {

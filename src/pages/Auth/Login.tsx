@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { API_BASE, API_ENDPOINTS } from "../../lib/api";
 import toast from "react-hot-toast";
 
@@ -306,7 +306,7 @@ export default function Login() {
 
                 <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
                   Don’t have an account?
-                  <a href="/signup" className="ml-1 font-medium text-indigo-600 hover:underline">Sign up</a>
+                  <Link to="/signup" className="ml-1 font-medium text-indigo-600 hover:underline">Sign up</Link>
                 </p>
               </form>
             )}

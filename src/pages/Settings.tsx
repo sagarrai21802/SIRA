@@ -217,8 +217,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full rounded-2xl">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full rounded-2xl">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -228,131 +227,19 @@ export default function SettingsPage() {
 
         {/* Profile */}
         <TabsContent value="profile" className="space-y-6">
-          <Section title="Profile" icon={<User className="w-5 h-5"/>} description="Basic information visible to others.">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full name</Label>
-                <Input id="name" value={profile.name} onChange={e=>setProfile(prev=>({...prev, name: e.target.value}))} placeholder="Your name"/>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" value={profile.username} onChange={e=>setProfile(prev=>({...prev, username: e.target.value}))} placeholder="@username"/>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2"><Mail className="w-4 h-4"/> Email</Label>
-                <Input id="email" type="email" value={profile.email} onChange={e=>setProfile(prev=>({...prev, email: e.target.value}))} placeholder="you@example.com"/>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="w-4 h-4"/> Phone</Label>
-                <Input id="phone" value={profile.phone} onChange={e=>setProfile(prev=>({...prev, phone: e.target.value}))} placeholder="+91-"/>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea id="bio" value={profile.bio} onChange={e=>setProfile(prev=>({...prev, bio: e.target.value}))} placeholder="Tell the world who you are…"/>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
-                <div className="space-y-2">
-                  <Label>Locale</Label>
-                  <Select value={profile.locale} onValueChange={(v)=>setProfile(p=>({...p, locale: v}))}>
-                    <SelectTrigger><SelectValue placeholder="Select locale"/></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en-IN">English (India)</SelectItem>
-                      <SelectItem value="en-US">English (US)</SelectItem>
-                      <SelectItem value="hi-IN">Hindi (India)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2"><Globe className="w-4 h-4"/> Timezone</Label>
-                  <Select value={profile.timezone} onValueChange={(v)=>setProfile(p=>({...p, timezone: v}))}>
-                    <SelectTrigger><SelectValue placeholder="Select timezone"/></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </Section>
-
-          <Section title="Business & Brand" icon={<Palette className="w-5 h-5"/>} description="These details personalize your generated content.">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Company name</Label>
-                <Input value={companyName} onChange={e=>setCompanyName(e.target.value)} placeholder="Your company"/>
-              </div>
-              <div className="space-y-2">
-                <Label>Industry</Label>
-                <Input value={industry} onChange={e=>setIndustry(e.target.value)} placeholder="e.g., Technology"/>
-              </div>
-              <div className="space-y-2">
-                <Label>Business type</Label>
-                <Input value={businessType} onChange={e=>setBusinessType(e.target.value)} placeholder="Startup, SMB, Agency..."/>
-              </div>
-              <div className="space-y-2">
-                <Label>Location</Label>
-                <Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="City, Country"/>
-              </div>
-              <div className="space-y-2">
-                <Label>Company size</Label>
-                <Input value={companySize} onChange={e=>setCompanySize(e.target.value)} placeholder="e.g., 1-10"/>
-              </div>
-              <div className="space-y-2">
-                <Label>Target audience</Label>
-                <Input value={targetAudience} onChange={e=>setTargetAudience(e.target.value)} placeholder="e.g., Small business owners"/>
-              </div>
-              <div className="space-y-2">
-                <Label>Brand voice</Label>
-                <Input value={brandVoice} onChange={e=>setBrandVoice(e.target.value)} placeholder="Professional, Friendly, ..."/>
-              </div>
-              <div className="space-y-2">
-                <Label>Primary brand color</Label>
-                <div className="flex items-center gap-3">
-                  <input type="color" value={primaryBrandColor} onChange={e=>setPrimaryBrandColor(e.target.value)} className="h-10 w-20 rounded"/>
-                  <Input value={primaryBrandColor} onChange={e=>setPrimaryBrandColor(e.target.value)} placeholder="#0033FF"/>
-                </div>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Goals</Label>
-                <Textarea value={goals} onChange={e=>setGoals(e.target.value)} placeholder="What are your main goals?"/>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>About your brand/company</Label>
-                <Textarea value={brandAbout} onChange={e=>setBrandAbout(e.target.value)} placeholder="Share more details for better personalization"/>
-              </div>
-              <div className="space-y-2">
-                <Label>Brand motto</Label>
-                <Input value={brandMotto} onChange={e=>setBrandMotto(e.target.value)} placeholder="Empowering growth through creativity"/>
-              </div>
-              <div className="space-y-2">
-                <Label>Brand mission</Label>
-                <Input value={brandMission} onChange={e=>setBrandMission(e.target.value)} placeholder="Our mission is..."/>
-              </div>
-            </div>
-            <div className="mt-4 space-y-2">
-              <Label>Brand logo</Label>
-              <div className="flex items-center gap-4">
-                {brandLogoUrl ? (
-                  <img src={brandLogoUrl} className="w-16 h-16 rounded border object-contain" alt="Brand logo"/>
-                ) : (
-                  <div className="w-16 h-16 rounded border border-dashed flex items-center justify-center text-xs text-gray-500">No logo</div>
-                )}
-                <label className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 cursor-pointer">
-                  Upload Logo
-                  <input type="file" accept="image/*" hidden onChange={(e)=>{ if (e.target.files && e.target.files[0]) handleUploadBrandLogo(e.target.files[0]); }} />
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={includeLogoDefault} onChange={(e)=>setIncludeLogoDefault(e.target.checked)} className="h-4 w-4"/>
-                  Include company logo on generated images by default (premium only)
-                </label>
-              </div>
-            </div>
-            <div className="mt-4">
-              <Button onClick={saveBusinessAndBrand} disabled={savingBusiness}>{savingBusiness ? 'Saving...' : 'Save business & brand'}</Button>
-            </div>
-          </Section>
+          <div className="text-center py-12">
+            <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Profile Settings Moved</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              All profile and personalization settings have been moved to the dedicated Profile page for a better user experience.
+            </p>
+            <Link to="/profile">
+              <Button className="gap-2">
+                <User className="w-4 h-4" />
+                Go to Profile Page
+              </Button>
+            </Link>
+          </div>
         </TabsContent>
 
         {/* Account */}

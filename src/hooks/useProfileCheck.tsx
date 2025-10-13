@@ -50,7 +50,9 @@ export const useProfileCheck = (): ProfileStatus => {
           setIsComplete(false);
         } else {
           const data = await res.json();
-          setIsComplete(Boolean(data.profile?.is_profile_complete));
+          const profileComplete = Boolean(data.profile?.is_profile_complete);
+          console.log('Profile check result:', { profileComplete, profile: data.profile });
+          setIsComplete(profileComplete);
         }
       } catch (err: any) {
         // If network fails or times out, don't block the app — treat as complete to avoid loops

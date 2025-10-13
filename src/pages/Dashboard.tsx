@@ -78,11 +78,31 @@ export function Dashboard() {
   const [instagramUrl, setInstagramUrl] = useState('');
   const [facebookUrl, setFacebookUrl] = useState('');
 
-  // Calculate profile completion percentage
+  // Calculate profile completion percentage with weighted fields
   const calculateProfileCompletion = () => {
-    const fields = [fullName, phoneNumber, avatarUrl, gender, companyName, industry, businessType, location, companySize, targetAudience, brandVoice, goals, linkedinUrl, instagramUrl, facebookUrl];
-    const filled = fields.filter(field => field && field.trim() !== '').length;
-    return Math.round((filled / fields.length) * 100);
+    const fields = [
+      { value: fullName, weight: 2 }, // Basic info - higher weight
+      { value: phoneNumber, weight: 1 },
+      { value: avatarUrl, weight: 1 },
+      { value: companyName, weight: 3 }, // Business info - higher weight
+      { value: industry, weight: 2 },
+      { value: businessType, weight: 2 },
+      { value: location, weight: 1 },
+      { value: companySize, weight: 1 },
+      { value: targetAudience, weight: 2 },
+      { value: brandVoice, weight: 1 },
+      { value: goals, weight: 2 },
+      { value: linkedinUrl, weight: 1 }, // Social links - lower weight
+      { value: instagramUrl, weight: 1 },
+      { value: facebookUrl, weight: 1 }
+    ];
+
+    const totalWeight = fields.reduce((sum, field) => sum + field.weight, 0);
+    const filledWeight = fields
+      .filter(field => field.value && field.value.trim() !== '')
+      .reduce((sum, field) => sum + field.weight, 0);
+
+    return Math.round((filledWeight / totalWeight) * 100);
   };
 
   // Animation for stats
@@ -478,7 +498,7 @@ export function Dashboard() {
                     label: 'Content Generated',
                     icon: FileText,
                     value: animatedStats.contentCount,
-                    change: '+12%',
+                    // change: '+12%',
                     changeType: 'positive',
                     color: 'text-blue-600',
                     bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
@@ -488,7 +508,7 @@ export function Dashboard() {
                     label: 'Images Created',
                     icon: Image,
                     value: animatedStats.imageCount,
-                    change: '+8%',
+                    // change: '+8%',
                     changeType: 'positive',
                     color: 'text-green-600',
                     bgColor: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
@@ -498,7 +518,7 @@ export function Dashboard() {
                     label: 'Active Projects',
                     icon: TrendingUp,
                     value: animatedStats.projectCount,
-                    change: '+5%',
+                    // change: '+5%',
                     changeType: 'positive',
                     color: 'text-purple-600',
                     bgColor: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20',
@@ -508,7 +528,7 @@ export function Dashboard() {
                     label: 'Templates Used',
                     icon: Layers,
                     value: animatedStats.templateCount,
-                    change: '+15%',
+                    // change: '+15%',
                     changeType: 'positive',
                     color: 'text-orange-600',
                     bgColor: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20',
@@ -518,7 +538,7 @@ export function Dashboard() {
                     label: 'Scheduled Posts',
                     icon: Calendar,
                     value: animatedStats.scheduledPostsCount,
-                    change: '+20%',
+                    // change: '+20%',
                     changeType: 'positive',
                     color: 'text-indigo-600',
                     bgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20',
@@ -528,7 +548,7 @@ export function Dashboard() {
                     label: 'SEO Tools Used',
                     icon: BarChart3,
                     value: animatedStats.seoToolsCount,
-                    change: '+18%',
+                    // change: '+18%',
                     changeType: 'positive',
                     color: 'text-teal-600',
                     bgColor: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20',
@@ -542,26 +562,14 @@ export function Dashboard() {
                     transition={{ delay: idx * 0.1 }}
                     className={`${stat.bgColor} rounded-xl p-4 shadow-sm border ${stat.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {Math.round(stat.value)}
-                        </p>
-                        <div className="flex items-center mt-1">
-                          {stat.changeType === 'positive' ? (
-                            <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-                          ) : (
-                            <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-                          )}
-                          <span className={`text-xs font-medium ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
-                            {stat.change}
-                          </span>
-                        </div>
-              </div>
+                    <div className="flex flex-col items-center text-center space-y-2">
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {Math.round(stat.value)}
+                      </p>
                       <div className={`p-3 rounded-lg ${stat.bgColor} border ${stat.borderColor}`}>
                         <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              </div>
+                      </div>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
             </div>
           </motion.div>
         ))}
@@ -682,21 +690,21 @@ export function Dashboard() {
                 <div className="relative inline-block group">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
                   <svg
-                    className="absolute inset-0 w-24 h-24 transform -rotate-90"
+                    className="relative w-24 h-24 transform -rotate-90 z-10"
                     viewBox="0 0 36 36"
                   >
                     <path
                       d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
                       fill="none"
                       stroke="#d1d5db"
-                      strokeWidth="4"
+                      strokeWidth="3"
                       className="dark:stroke-gray-600"
                     />
                     <path
                       d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
                       fill="none"
                       stroke="#3b82f6"
-                      strokeWidth="4"
+                      strokeWidth="3"
                       strokeDasharray={`${calculateProfileCompletion()}, 100`}
                       className="dark:stroke-blue-400"
                       strokeLinecap="round"
@@ -705,10 +713,10 @@ export function Dashboard() {
                   <img
                     src={avatarUrl || (gender === 'female' ? "https://randomuser.me/api/portraits/women/1.jpg" : "https://randomuser.me/api/portraits/men/1.jpg")}
                     alt="Avatar"
-                    className="relative w-24 h-24 rounded-full border-4 border-white dark:border-gray-700 shadow-xl group-hover:scale-105 transition-transform duration-300"
+                    className="absolute inset-2 w-20 h-20 rounded-full border-2 border-white dark:border-gray-700 shadow-xl group-hover:scale-105 transition-transform duration-300 z-20"
                   />
                   {editingProfile && (
-                    <label className="absolute bottom-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white p-2.5 rounded-full cursor-pointer hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
+                    <label className="absolute bottom-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white p-2.5 rounded-full cursor-pointer hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 z-30">
                       <Camera className="w-4 h-4" />
                       <input type="file" accept="image/*" onChange={handleImageChange} hidden />
                     </label>

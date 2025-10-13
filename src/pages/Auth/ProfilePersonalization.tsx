@@ -14,7 +14,7 @@ interface PersonalizationData {
   targetAudience: string;
   brandVoice: string;
   companyName: string;
-  goals: string;
+  goals: string[];
   linkedinUrl?: string;
   instagramUrl?: string;
   facebookUrl?: string;
@@ -117,7 +117,7 @@ export function ProfilePersonalization() {
     targetAudience: '',
     brandVoice: 'professional',
     companyName: '',
-    goals: '',
+    goals: [],
     linkedinUrl: '',
     instagramUrl: '',
     facebookUrl: '',
@@ -174,8 +174,57 @@ export function ProfilePersonalization() {
     }
   ];
 
-  const handleInputChange = (field: keyof PersonalizationData, value: string) => {
+  const handleInputChange = (field: keyof PersonalizationData, value: string | string[] | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Auto-save after a short delay
+    if (user) {
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        saveProfileData();
+      }, 1000); // Save after 1 second of inactivity
+    }
+  };
+
+  let autoSaveTimeout: NodeJS.Timeout;
+
+  const saveProfileData = async () => {
+    if (!user) return;
+
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+      await fetch(`${apiBase}/api/profiles/upsert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          company_name: formData.companyName,
+          industry: formData.industry,
+          business_type: formData.businessType,
+          location: formData.location,
+          company_size: formData.companySize,
+          target_audience: formData.targetAudience,
+          brand_voice: formData.brandVoice,
+          goals: formData.goals.join(', '),
+          linkedin_url: formData.linkedinUrl || null,
+          instagram_url: formData.instagramUrl || null,
+          facebook_url: formData.facebookUrl || null,
+          primary_brand_color: formData.primaryBrandColor || null,
+          brand_motto: formData.brandMotto || null,
+          brand_mission: formData.brandMission || null,
+          brand_about: formData.brandAbout || null,
+          brand_logo_url: formData.brandLogoUrl || null,
+          brand_logo_public_id: formData.brandLogoPublicId || null,
+          image_prefs: {
+            include_brand_logo_by_default: Boolean(formData.includeBrandLogoByDefault),
+            apply_brand_theme_by_default: true
+          },
+          updated_at: new Date().toISOString(),
+        })
+      });
+      // Don't show toast for auto-save to avoid spam
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
   };
 
   const handleBrandLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,7 +292,7 @@ export function ProfilePersonalization() {
           company_size: formData.companySize,
           target_audience: formData.targetAudience,
           brand_voice: formData.brandVoice,
-          goals: formData.goals,
+          goals: formData.goals.join(', '),
           linkedin_url: formData.linkedinUrl || null,
           instagram_url: formData.instagramUrl || null,
           facebook_url: formData.facebookUrl || null,
@@ -268,6 +317,7 @@ export function ProfilePersonalization() {
       }
 
       toast.success('Profile completed successfully!');
+      console.log('Profile completion successful, navigating to:', returnTo);
       // Clear skip flag if it was set previously for this user
       try { if (user?.id) localStorage.removeItem(`skip_personalization_${user.id}`); } catch {}
       navigate(returnTo, { replace: true, state: { profileCompleted: true } });
@@ -535,7 +585,7 @@ export function ProfilePersonalization() {
                 id="includeBrandLogoByDefault"
                 type="checkbox"
                 checked={!!formData.includeBrandLogoByDefault}
-                onChange={(e) => handleInputChange('includeBrandLogoByDefault', e.target.checked ? 'true' : '')}
+                onChange={(e) => handleInputChange('includeBrandLogoByDefault', e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="includeBrandLogoByDefault" className="text-sm text-gray-700 dark:text-gray-300">
@@ -550,22 +600,27 @@ export function ProfilePersonalization() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Primary Goal
+                Primary Goals (Select all that apply)
               </label>
               <div className="grid grid-cols-1 gap-3 max-h-64 overflow-y-auto">
                 {GOALS.map(goal => (
-                  <button
-                    key={goal}
-                    type="button"
-                    onClick={() => handleInputChange('goals', goal)}
-                    className={`p-3 rounded-lg border text-sm font-medium transition-all text-left ${
-                      formData.goals === goal
-                        ? 'bg-blue-500 text-white border-blue-500'
-                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-500'
-                    }`}
-                  >
-                    {goal}
-                  </button>
+                  <label key={goal} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.goals.includes(goal)}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setFormData(prev => ({
+                          ...prev,
+                          goals: isChecked
+                            ? [...prev.goals, goal]
+                            : prev.goals.filter(g => g !== goal)
+                        }));
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-3 text-gray-700 dark:text-gray-300">{goal}</span>
+                  </label>
                 ))}
               </div>
             </div>
@@ -622,8 +677,10 @@ export function ProfilePersonalization() {
         return formData.targetAudience;
       case 'voice':
         return formData.brandVoice;
+      case 'brand':
+        return true; // Brand step is optional
       case 'goals':
-        return formData.goals;
+        return formData.goals.length > 0;
       default:
         return false;
     }
