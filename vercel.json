@@ -17,10 +17,11 @@
     {
       "src": "/api/(.*)",
       "dest": "/server/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
     }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
   ],
   "env": {
     "NODE_ENV": "production"
