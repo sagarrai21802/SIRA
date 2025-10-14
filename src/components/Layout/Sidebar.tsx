@@ -75,12 +75,20 @@ export function Sidebar() {
       color: "text-purple-600",
       bgColor: "bg-purple-50 dark:bg-purple-900/20"
     },
-    { 
-      name: "Images", 
-      icon: Image, 
+    {
+      name: "Images",
+      icon: Image,
       href: "/images",
       color: "text-emerald-600",
       bgColor: "bg-emerald-50 dark:bg-emerald-900/20"
+    },
+    {
+      name: "Carousel",
+      icon: Image,
+      href: "/carousel-generator",
+      badge: "New",
+      color: "text-teal-600",
+      bgColor: "bg-teal-50 dark:bg-teal-900/20"
     },
     {
       name: "SEO Tools",

@@ -56,8 +56,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' })); // Increase limit to 10MB
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Also increase URL-encoded limit
+app.use(express.json({ limit: '25mb' })); // Increase limit to 25MB
+app.use(express.urlencoded({ extended: true, limit: '25mb' })); // Also increase URL-encoded limit
 
 // MongoDB URI
 const mongoUri = process.env.MONGODB_URI;
@@ -764,18 +764,8 @@ app.post('/api/generate-image', async (req, res) => {
       return res.status(400).json({ error: 'user_id, prompt, image_type, width, height, quality required' });
     }
 
-    // Load user profile for brand context and overlays
-    const profile = await Profile.findOne({ id: String(user_id) }).lean();
-
-    // Build brand-aware prompt
-    let brandPromptPrefix = '';
-    const shouldApplyBrandTheme = profile?.image_prefs?.apply_brand_theme_by_default !== false;
-    if (shouldApplyBrandTheme && profile?.primary_brand_color) {
-      brandPromptPrefix = `Use the primary brand color ${profile.primary_brand_color} with a harmonious palette. `;
-    }
-
-    // Generate image using Gemini REST API
-    const fullPrompt = `${brandPromptPrefix}${prompt} | Style: ${image_type} | Size: ${width}x${height} | Quality: ${quality}`;
+    // Generate image using Gemini REST API (simple prompt)
+    const fullPrompt = `${prompt} | Style: ${image_type} | Size: ${width}x${height} | Quality: ${quality}`;
     
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
@@ -821,33 +811,8 @@ app.post('/api/generate-image', async (req, res) => {
     const base64Data = imagePart.inlineData.data;
     const mimeType = imagePart.inlineData.mimeType;
     const imageBuffer = Buffer.from(base64Data, 'base64');
-
-    // Upload to Cloudinary with overlay rules
+    // Upload to Cloudinary with simple resize only (no overlays)
     const transformations = [ { width: parseInt(width), height: parseInt(height), crop: 'fill' } ];
-    let appliedOverlay = null;
-    const isPremium = Boolean(profile?.is_premium);
-    if (!isPremium) {
-      // Apply SIRA watermark for non-premium users
-      if (process.env.CLOUDINARY_WATERMARK_PUBLIC_ID) {
-        transformations.push({
-          overlay: process.env.CLOUDINARY_WATERMARK_PUBLIC_ID,
-          gravity: 'south_east',
-          opacity: 35,
-          width: Math.floor(Number(width) * 0.15),
-          crop: 'scale'
-        });
-        appliedOverlay = 'watermark';
-      }
-    } else if (profile?.image_prefs?.include_brand_logo_by_default && profile?.brand_logo_public_id) {
-      transformations.push({
-        overlay: profile.brand_logo_public_id,
-        gravity: 'south_east',
-        opacity: 85,
-        width: Math.floor(Number(width) * 0.15),
-        crop: 'scale'
-      });
-      appliedOverlay = 'brand_logo';
-    }
 
     const uploadResult = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
@@ -875,8 +840,7 @@ app.post('/api/generate-image', async (req, res) => {
       width: parseInt(width),
       height: parseInt(height),
       quality,
-      created_at: new Date().toISOString(),
-      applied_overlay: appliedOverlay
+      created_at: new Date().toISOString()
     };
 
     await ImageGeneration.create(doc);
@@ -890,6 +854,77 @@ app.post('/api/generate-image', async (req, res) => {
 
   } catch (err) {
     console.error('Image generation error:', err);
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// Save a client-generated image (base64) to Cloudinary and MongoDB
+app.post('/api/save-image', async (req, res) => {
+  try {
+    const { user_id, prompt, image_type, width, height, quality, dataUrl, image_base64 } = req.body || {};
+    if (!user_id || !prompt || !image_type || !width || !height) {
+      return res.status(400).json({ error: 'user_id, prompt, image_type, width, height required' });
+    }
+
+    // Normalize base64 input from dataUrl or raw base64
+    let base64Data = '';
+    if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) {
+      const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+      if (!match || !match[2]) return res.status(400).json({ error: 'Invalid dataUrl format' });
+      base64Data = match[2];
+    } else if (typeof image_base64 === 'string' && image_base64.trim()) {
+      base64Data = image_base64.trim();
+    } else {
+      return res.status(400).json({ error: 'image_base64 or dataUrl required' });
+    }
+
+    let imageBuffer;
+    try {
+      imageBuffer = Buffer.from(base64Data, 'base64');
+    } catch {
+      return res.status(400).json({ error: 'Invalid base64 payload' });
+    }
+
+    const w = parseInt(width, 10);
+    const h = parseInt(height, 10);
+    if (!Number.isFinite(w) || !Number.isFinite(h)) {
+      return res.status(400).json({ error: 'width and height must be numbers' });
+    }
+
+    // Upload to Cloudinary with resize
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'sira-generated-images',
+          public_id: `image_client_${Date.now()}_${randomUUID().slice(0, 8)}`,
+          transformation: [{ width: w, height: h, crop: 'fill' }]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(imageBuffer);
+    });
+
+    const doc = {
+      id: randomUUID(),
+      user_id: String(user_id),
+      prompt: String(prompt),
+      cloudinary_url: uploadResult.secure_url,
+      cloudinary_public_id: uploadResult.public_id,
+      image_type: String(image_type),
+      width: w,
+      height: h,
+      quality: String(quality || 'high'),
+      created_at: new Date().toISOString()
+    };
+
+    await ImageGeneration.create(doc);
+
+    res.json({ ok: true, image_url: uploadResult.secure_url, public_id: uploadResult.public_id, item: doc });
+  } catch (err) {
+    console.error('Save image error:', err);
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
   }
 });

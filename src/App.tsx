@@ -21,6 +21,7 @@ import { useAuth, AuthProvider } from "./hooks/useAuth";
 import { useLayout } from "./components/Layout/LayoutContext";
 import GenerateTemplate from "./pages/Template";
 import { ImageGenerator } from "./pages/ImageGeneration";
+import { CarouselGenerator } from "./pages/CarouselGenerator";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import ContactUs from "./pages/Contact";
@@ -107,6 +108,7 @@ function AppContent() {
               {/* <Route path="/metatags" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} /> */}
               <Route path="/template" element={<ProtectedRoute><GenerateTemplate /></ProtectedRoute>} />
               <Route path="/images" element={<ProtectedRoute><ImageGenerator /></ProtectedRoute>} />
+              <Route path="/carousel-generator" element={<ProtectedRoute><CarouselGenerator /></ProtectedRoute>} />
               <Route path="/ads" element={<ProtectedRoute><AdGenerator /></ProtectedRoute>} />
               <Route path="/humanizer" element={<ProtectedRoute><Humanizer /></ProtectedRoute>} />
               <Route path="/promptgenerator" element={<ProtectedRoute><PromptGenerator /></ProtectedRoute>} />

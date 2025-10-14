@@ -50,6 +50,7 @@ export const API_ENDPOINTS = {
   IMAGE_GENERATIONS: '/api/image-generations',
   IMAGE_GENERATIONS_GET: (id: string) => `/api/image-generations/${id}`,
   GENERATE_IMAGE: '/api/generate-image',
+  SAVE_IMAGE: '/api/save-image',
   EDIT_IMAGE: '/api/edit-image',
   ENHANCE_IMAGE_PROMPT: '/api/enhance-image-prompt',
   UPLOAD_PROFILE_PICTURE: '/api/upload-profile-picture',

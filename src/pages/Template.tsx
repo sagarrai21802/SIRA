@@ -13,6 +13,7 @@ import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
 import { generateTemplate } from "../lib/template";
 import { generateTemplateImage } from "../lib/templateImage";
+import { generateImageBackend, parseSize } from "../lib/imageApi";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
 
 type Platform = "linkedin" | "facebook" | "instagram";
@@ -139,13 +140,23 @@ export default function GenerateTemplate() {
 
   const handleGenerateImage = async () => {
     if (!generatedTemplate) return toast.error("Generate content first!");
+    if (!user) return toast.error("Please log in to generate images");
 
     try {
       setLoading(true);
       setGeneratedImage(null);
 
       const size = selectedCard === "linkedin" ? "1200x628" : "1080x1080";
-      const imgUrl = await generateTemplateImage(generatedTemplate, size);
+      const { width, height } = parseSize(size);
+      const imageType = selectedCard === "linkedin" ? "Professional" : "Modern";
+      const imgUrl = await generateImageBackend({
+        userId: user.id,
+        prompt: generatedTemplate,
+        imageType,
+        width,
+        height,
+        quality: "high"
+      });
 
       setGeneratedImage(imgUrl);
       toast.success("Image generated!");
