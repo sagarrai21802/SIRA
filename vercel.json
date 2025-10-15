@@ -1,3 +1,5 @@
+
+
 {
   "version": 2,
   "builds": [
@@ -20,7 +22,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/$1"
+      "dest": "/dist/index.html"
     }
   ],
   "env": {
