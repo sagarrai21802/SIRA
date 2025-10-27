@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader2, Download, Copy, Cpu, Trash2, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Download, Copy, Cpu, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 
@@ -104,7 +104,8 @@ export const CarouselGenerator: React.FC = () => {
             image_type: "Realistic", // Default type
             width: 512,
             height: 512,
-            quality: "Medium"
+            quality: "Medium",
+            source: "carousel"
           })
         });
 
@@ -351,20 +352,24 @@ export const CarouselGenerator: React.FC = () => {
                 >
                   <div className="aspect-video relative overflow-hidden bg-gray-100 dark:bg-gray-800">
                     <div className="flex h-full">
-                      {carousel.images.slice(0, 3).map((img: any, index: number) => (
-                        <div key={index} className="flex-1 relative">
-                          <img
-                            src={img.image_url}
-                            alt={`Carousel ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          {index === 2 && carousel.images.length > 3 && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                              <span className="text-white font-bold text-lg">+{carousel.images.length - 3}</span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      {carousel.images.slice(0, 3).map((img: any, index: number) => {
+                        // Handle both image_url (from carousel-generations) and cloudinary_url (from image-generations)
+                        const imageUrl = img.image_url || img.cloudinary_url;
+                        return (
+                          <div key={index} className="flex-1 relative">
+                            <img
+                              src={imageUrl}
+                              alt={`Carousel ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            {index === 2 && carousel.images.length > 3 && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">+{carousel.images.length - 3}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="p-4">

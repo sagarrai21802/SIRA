@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 // import { getMongoDb } from "../lib/realm";
 import { uploadImage } from "../utils/uploadImage";
-import { User, Mail, Phone, Camera, Building2, MapPin, Users, Volume2, Target, Trophy, Edit3, Save, X, Briefcase, Linkedin, Instagram, Facebook, Sparkles, Palette, FileText, Award, Globe } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { User, Mail, Phone, Camera, Building2, MapPin, Users, Volume2, Target, Trophy, Edit3, Save, X, Briefcase, Linkedin, Instagram, Facebook, Sparkles, Palette, FileText, Award, Globe, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function Profile() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -195,18 +193,35 @@ export default function Profile() {
     if (url) setAvatarUrl(url);
   };
 
+  // Handle brand logo upload
+  const handleUploadBrandLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !user) return;
+    const file = e.target.files[0];
+    
+    const toDataUrl = (f: File) => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    });
 
-  const handleConnectLinkedin = () => {
-    const clientId = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
-    const redirectUri = import.meta.env.VITE_LINKEDIN_REDIRECT_URI || `${window.location.origin}/linkedin-callback`;
-    const scope = encodeURIComponent('openid profile w_member_social');
-    const state = Math.random().toString(36).slice(2);
-    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
-
-    window.location.href = authUrl;
+    try {
+      const dataUrl = await toDataUrl(file);
+      const apiBase = import.meta.env.VITE_API_BASE || 'https://sira-msb1.onrender.com';
+      const resp = await fetch(`${apiBase}/api/upload-brand-logo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) throw new Error(data?.error || 'Upload failed');
+      setBrandLogoUrl(data.image_url);
+      setBrandLogoPublicId(data.public_id);
+      toast.success('Brand logo uploaded successfully!');
+    } catch (error: any) {
+      toast.error('Failed to upload brand logo: ' + (error?.message || 'Unknown error'));
+    }
   };
-
-  //
 
   if (!user) return <div>No user logged in</div>;
 
@@ -593,18 +608,84 @@ export default function Profile() {
                           placeholder="Empowering growth through creativity"
                         />
                       </div>
-                      <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          <Award className="w-4 h-4" /> Brand Mission
-                        </label>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <Award className="w-4 h-4" /> Brand Mission
+                      </label>
+                      <input
+                        type="text"
+                        value={brandMission}
+                        onChange={(e) => setBrandMission(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        placeholder="Our mission is..."
+                      />
+                    </div>
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <Palette className="w-4 h-4" /> Primary Brand Color
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={primaryBrandColor}
+                          onChange={(e) => setPrimaryBrandColor(e.target.value)}
+                          className="w-20 h-12 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer"
+                        />
                         <input
                           type="text"
-                          value={brandMission}
-                          onChange={(e) => setBrandMission(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          placeholder="Our mission is..."
+                          value={primaryBrandColor}
+                          onChange={(e) => setPrimaryBrandColor(e.target.value)}
+                          className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="#0033FF"
                         />
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This color will be used in your generated content</p>
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <ImageIcon className="w-4 h-4" /> Brand Logo
+                      </label>
+                      <div className="flex items-center gap-4">
+                        {brandLogoUrl ? (
+                          <img src={brandLogoUrl} alt="Brand logo" className="w-16 h-16 object-contain border border-gray-300 dark:border-gray-600 rounded-lg" />
+                        ) : (
+                          <div className="w-16 h-16 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center">
+                            <ImageIcon className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                        <label className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 cursor-pointer transition-all font-medium shadow-lg hover:shadow-xl">
+                          <Camera className="w-4 h-4" /> {brandLogoUrl ? 'Change Logo' : 'Upload Logo'}
+                          <input type="file" accept="image/*" onChange={handleUploadBrandLogo} hidden />
+                        </label>
+                        {brandLogoUrl && (
+                          <button
+                            onClick={() => {
+                              setBrandLogoUrl('');
+                              setBrandLogoPublicId('');
+                            }}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-medium"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload your company logo to include in generated images</p>
+                    </div>
+                    <div className="flex items-center justify-between p-4 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700/50">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">Include logo in images by default</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Automatically add your brand logo to generated images</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={includeLogoDefault}
+                          onChange={(e) => setIncludeLogoDefault(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                      </label>
                     </div>
                   </div>
                   <div className="flex gap-3 pt-4">
@@ -715,6 +796,33 @@ export default function Profile() {
                           </div>
                         </div>
                       )}
+                      {(primaryBrandColor || brandLogoUrl) && (
+                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl border border-pink-200/50 dark:border-pink-700/50">
+                          <div className="w-10 h-10 bg-pink-500 rounded-xl flex items-center justify-center">
+                            <Palette className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 flex items-center gap-4">
+                            {primaryBrandColor && (
+                              <div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Brand Color</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <div 
+                                    className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                                    style={{ backgroundColor: primaryBrandColor }}
+                                  />
+                                  <span className="font-semibold text-gray-900 dark:text-white">{primaryBrandColor}</span>
+                                </div>
+                              </div>
+                            )}
+                            {brandLogoUrl && (
+                              <div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Brand Logo</p>
+                                <img src={brandLogoUrl} alt="Brand logo" className="w-12 h-12 object-contain border border-gray-300 dark:border-gray-600 rounded-lg" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-12">
@@ -723,10 +831,10 @@ export default function Profile() {
                         Complete your business information to get personalized content recommendations.
                       </p>
                       <button
-                        onClick={() => navigate('/personalization')}
+                        onClick={() => setEditingPersonalization(true)}
                         className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all font-medium shadow-lg hover:shadow-xl"
                       >
-                        Complete Personalization
+                        Start Personalization
                       </button>
                     </div>
                   )}

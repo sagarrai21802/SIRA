@@ -1,47 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --toast-bg: #ffffff;
-  --toast-color: #374151;
-  --toast-border: #e5e7eb;
-}
-
-.dark {
-  --toast-bg: #1f2937;
-  --toast-color: #f3f4f6;
-  --toast-border: #374151;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #1e293b;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+/* Prevent overscroll bounce effect */
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
 @tailwind base;

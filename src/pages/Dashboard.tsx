@@ -593,30 +593,39 @@ export function Dashboard() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={`grid grid-cols-1 sm:grid-cols-2 ${isCollapsed ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-2 xl:grid-cols-3'} gap-4`}>
         {quickActions.map((action, index) => (
-          <motion.div
-            key={index}
-                    whileHover={{ scale: 1.02 }}
-                    className={`${action.bgColor} rounded-xl p-6 shadow-sm border ${action.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105 group`}
-                  >
-                    <div className="flex items-start space-x-4">
-                      <div className={`p-4 rounded-xl bg-gradient-to-r ${action.color} text-white shadow-lg group-hover:shadow-xl transition-shadow`}>
-                        <action.icon className="w-6 h-6" />
-              </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{action.title}</h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{action.description}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{action.stats}</span>
-                <Button variant="outline" size="sm" className="hover:scale-105 transition-transform" asChild>
-                  <Link to={action.href}>Get Started</Link>
-                </Button>
-                        </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+           <motion.div
+             key={index}
+                     whileHover={{ scale: 1.02 }}
+                     className={`${action.bgColor} rounded-xl ${isCollapsed ? 'p-6' : 'p-4'} shadow-sm border ${action.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105 group`}
+                   >
+                     <div className={`${isCollapsed ? 'flex items-start space-x-4' : 'flex flex-col items-center text-center space-y-3'}`}>
+                       <div className={`${isCollapsed ? 'p-4 flex-shrink-0' : 'p-3'} rounded-xl bg-gradient-to-r ${action.color} text-white shadow-lg group-hover:shadow-xl transition-shadow ${isCollapsed ? '' : 'self-center'}`}>
+                         <action.icon className={`${isCollapsed ? 'w-6 h-6' : 'w-5 h-5'}`} />
+               </div>
+                       <div className={`${isCollapsed ? 'flex-1 min-w-0' : 'w-full text-center'}`}>
+                         <h3 className={`${isCollapsed ? 'text-lg' : 'text-base'} font-semibold text-gray-900 dark:text-white mb-2`}>{action.title}</h3>
+                         <p className={`text-gray-600 dark:text-gray-400 ${isCollapsed ? 'text-sm' : 'text-xs'} mb-3 ${isCollapsed ? 'text-left' : 'text-center'}`}>{action.description}</p>
+                         {isCollapsed ? (
+                           <div className="flex items-center justify-between mt-auto">
+                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{action.stats}</span>
+                             <Link to={action.href} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group-hover:scale-110 transition-transform">
+                               <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
+                             </Link>
+                           </div>
+                         ) : (
+                           <div className="flex flex-col space-y-2">
+                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{action.stats}</span>
+                             <Link to={action.href} className="self-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group-hover:scale-110 transition-transform">
+                               <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
+                             </Link>
+                           </div>
+                         )}
+               </div>
+             </div>
+           </motion.div>
+         ))}
       </div>
             </div>
 

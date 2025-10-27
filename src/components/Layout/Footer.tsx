@@ -35,12 +35,7 @@ export function Footer() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Brand section */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="lg:col-span-1"
-              >
+              <div className="lg:col-span-1">
                 <div className="flex items-center space-x-2 mb-3">
                   <div className="relative">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
@@ -75,16 +70,12 @@ export function Footer() {
                     <span className="text-xs">San Francisco, CA</span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Links sections */}
               <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Product */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.6 }}
-                >
+                <div>
                   <h3 className="text-base font-semibold text-white mb-4 flex items-center">
                     <Zap className="w-4 h-4 mr-2 text-blue-400" />
                     Product
@@ -113,14 +104,10 @@ export function Footer() {
                       </motion.li>
                     ))}
                   </ul>
-                </motion.div>
+                </div>
 
                 {/* Company */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
-                >
+                <div>
                   <h3 className="text-base font-semibold text-white mb-4 flex items-center">
                     <Globe className="w-4 h-4 mr-2 text-purple-400" />
                     Company
@@ -149,14 +136,10 @@ export function Footer() {
                       </motion.li>
                     ))}
                   </ul>
-                </motion.div>
+                </div>
 
                 {/* Resources */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.6 }}
-                >
+                <div>
                   <h3 className="text-base font-semibold text-white mb-4 flex items-center">
                     <Star className="w-4 h-4 mr-2 text-pink-400" />
                     Resources
@@ -185,14 +168,10 @@ export function Footer() {
                       </motion.li>
                     ))}
                   </ul>
-                </motion.div>
+                </div>
 
                 {/* Legal */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                >
+                <div>
                   <h3 className="text-base font-semibold text-white mb-4 flex items-center">
                     <Shield className="w-4 h-4 mr-2 text-green-400" />
                     Legal
@@ -221,7 +200,7 @@ export function Footer() {
                       </motion.li>
                     ))}
                   </ul>
-                </motion.div>
+                </div>
               </div>
             </div>
           </div>
@@ -233,22 +212,12 @@ export function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col md:flex-row items-center justify-between">
             {/* Copyright */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-gray-400 text-sm mb-4 md:mb-0"
-            >
+            <div className="text-gray-400 text-sm mb-4 md:mb-0">
               © {new Date().getFullYear()} <span className="font-semibold text-blue-400">SYRA.io</span>. All rights reserved.
-            </motion.div>
+            </div>
 
             {/* Social links */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="flex items-center space-x-6"
-            >
+            <div className="flex items-center space-x-6">
               <span className="text-gray-500 text-sm mr-4">Follow us:</span>
               {[
                 { icon: Twitter, href: '#', color: 'hover:text-blue-400' },
@@ -266,7 +235,7 @@ export function Footer() {
                   <social.icon className="w-5 h-5" />
                 </motion.a>
               ))}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

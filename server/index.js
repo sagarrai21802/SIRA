@@ -688,9 +688,25 @@ const imageGenerationSchema = new mongoose.Schema({
   width: { type: Number, required: true },
   height: { type: Number, required: true },
   quality: { type: String, required: true },
+  source: { type: String, default: 'image_generator' }, // 'image_generator' or 'carousel'
   created_at: { type: String, required: true }
 });
 const ImageGeneration = mongoose.model('ImageGeneration', imageGenerationSchema);
+
+// ---- Carousel Generations ----
+const carouselGenerationSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  user_id: { type: String, required: true },
+  base_prompt: { type: String, required: true },
+  images: [{
+    id: String,
+    prompt: String,
+    image_url: String,
+    created_at: String
+  }],
+  created_at: { type: String, required: true }
+});
+const CarouselGeneration = mongoose.model('CarouselGeneration', carouselGenerationSchema);
 
 // ---- Feedback ----
 const feedbackSchema = new mongoose.Schema({
@@ -758,7 +774,7 @@ app.post('/api/deletion-complaints', async (req, res) => {
 // ---- Image Generation ----
 app.post('/api/generate-image', async (req, res) => {
   try {
-    const { user_id, prompt, image_type, width, height, quality } = req.body;
+    const { user_id, prompt, image_type, width, height, quality, source } = req.body;
     
     if (!user_id || !prompt || !image_type || !width || !height || !quality) {
       return res.status(400).json({ error: 'user_id, prompt, image_type, width, height, quality required' });
@@ -840,6 +856,7 @@ app.post('/api/generate-image', async (req, res) => {
       width: parseInt(width),
       height: parseInt(height),
       quality,
+      source: source || 'image_generator',
       created_at: new Date().toISOString()
     };
 
@@ -1068,10 +1085,18 @@ app.post('/api/enhance-image-prompt', async (req, res) => {
 // Get user's generated images
 app.get('/api/image-generations', async (req, res) => {
   try {
-    const { user_id } = req.query;
+    const { user_id, source } = req.query;
     if (!user_id) return res.status(400).json({ error: 'user_id required' });
     
-    const items = await ImageGeneration.find({ user_id: String(user_id) })
+    const filter = { user_id: String(user_id) };
+    if (source) {
+      filter.source = String(source);
+    } else {
+      // Exclude carousel images by default if no source specified
+      filter.source = { $ne: 'carousel' };
+    }
+    
+    const items = await ImageGeneration.find(filter)
       .sort({ created_at: -1 })
       .lean();
     
@@ -1097,6 +1122,52 @@ app.delete('/api/image-generations/:id', async (req, res) => {
     await ImageGeneration.deleteOne({ id });
     
     res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// ---- Carousel Generations ----
+// Save carousel
+app.post('/api/carousel-generations', async (req, res) => {
+  try {
+    const { user_id, images, base_prompt } = req.body;
+    if (!user_id || !images || !base_prompt) {
+      return res.status(400).json({ error: 'user_id, images, and base_prompt required' });
+    }
+    
+    const doc = {
+      id: randomUUID(),
+      user_id: String(user_id),
+      base_prompt: String(base_prompt),
+      images: images.map(img => ({
+        id: img.id || randomUUID(),
+        prompt: String(img.prompt),
+        image_url: String(img.image_url),
+        created_at: img.created_at || new Date().toISOString()
+      })),
+      created_at: new Date().toISOString()
+    };
+    
+    await CarouselGeneration.create(doc);
+    res.json({ ok: true, item: doc });
+  } catch (err) {
+    console.error('Save carousel error:', err);
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// Get user's carousels
+app.get('/api/carousel-generations', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    
+    const items = await CarouselGeneration.find({ user_id: String(user_id) })
+      .sort({ created_at: -1 })
+      .lean();
+    
+    res.json({ items });
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
   }
