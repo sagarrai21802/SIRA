@@ -8,15 +8,11 @@ import { API_BASE, API_ENDPOINTS } from "../lib/api";
 
 const IMAGE_TYPES = ["Realistic", "Cartoon", "3D", "Anime", "Pixel Art"];
 const IMAGE_SIZES = [
-  { label: "256x256", width: 256, height: 256 },
-  { label: "512x512", width: 512, height: 512 },
-  { label: "1024x1024", width: 1024, height: 1024 },
-  { label: "Instagram Post 1:1", width: 1080, height: 1080 },
-  { label: "Instagram Story 9:16", width: 1080, height: 1920 },
-  { label: "Facebook Post 1.91:1", width: 1200, height: 628 },
-  { label: "Facebook Cover 16:9", width: 820, height: 312 },
-  { label: "LinkedIn Post 1.91:1", width: 1200, height: 627 },
-  { label: "LinkedIn Banner 4:1", width: 1584, height: 396 },
+  { label: "1080x1080", width: 1080, height: 1080 },
+  { label: "Instagram Post 4:5", width: 1080, height: 1350 },
+  { label: "LinkedIn Post 1:1", width: 1200, height: 1200 },
+  { label: "LinkedIn Background Cover 4:1", width: 1584, height: 396 },
+  { label: "Banner 1000x500", width: 1000, height: 500 },
 ];
 
 const IMAGE_QUALITY = ["Low", "Medium", "High"];

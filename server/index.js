@@ -1175,18 +1175,56 @@ app.get('/api/carousel-generations', async (req, res) => {
 
 // ---- LinkedIn OAuth & Posting ----
 app.post('/api/linkedin/exchange-code', authenticateToken, async (req, res) => {
+  const userId = req.user?.userId;
+  const requestId = randomUUID().slice(0, 8);
+
+  console.log(`[${requestId}] LinkedIn token exchange started for user: ${userId}`);
+
   try {
     const { code, redirect_uri: providedRedirect } = req.body || {};
+
+    console.log(`[${requestId}] Request body:`, {
+      hasCode: !!code,
+      redirectUri: providedRedirect,
+      userId
+    });
+
     if (!code) {
-      return res.status(400).json({ error: 'code required' });
+      console.error(`[${requestId}] Missing authorization code`);
+      return res.status(400).json({
+        error: 'Authorization code is required',
+        details: 'The LinkedIn authorization code was not provided in the request'
+      });
     }
+
     if (!providedRedirect) {
-      return res.status(400).json({ error: 'redirect_uri required' });
+      console.error(`[${requestId}] Missing redirect URI`);
+      return res.status(400).json({
+        error: 'Redirect URI is required',
+        details: 'The redirect URI used in the OAuth flow must be provided'
+      });
     }
 
     const clientId = process.env.LINKEDIN_CLIENT_ID;
     const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+
+    console.log(`[${requestId}] Environment check:`, {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      clientIdPrefix: clientId ? clientId.substring(0, 8) + '...' : 'missing'
+    });
+
+    if (!clientId || !clientSecret) {
+      console.error(`[${requestId}] LinkedIn credentials not configured`);
+      return res.status(500).json({
+        error: 'LinkedIn integration not configured',
+        details: 'Server configuration error: LinkedIn client credentials are missing'
+      });
+    }
+
     const tokenUrl = 'https://www.linkedin.com/oauth/v2/accessToken';
+
+    console.log(`[${requestId}] Exchanging code for tokens...`);
 
     const tokenResp = await fetch(tokenUrl, {
       method: 'POST',
@@ -1200,45 +1238,123 @@ app.post('/api/linkedin/exchange-code', authenticateToken, async (req, res) => {
       })
     });
 
+    console.log(`[${requestId}] Token exchange response:`, {
+      status: tokenResp.status,
+      statusText: tokenResp.statusText,
+      headers: Object.fromEntries(tokenResp.headers.entries())
+    });
+
     const tokenData = await tokenResp.json();
+
+    console.log(`[${requestId}] Token response data:`, {
+      hasAccessToken: !!tokenData.access_token,
+      hasRefreshToken: !!tokenData.refresh_token,
+      expiresIn: tokenData.expires_in,
+      error: tokenData.error,
+      errorDescription: tokenData.error_description
+    });
+
     if (!tokenResp.ok) {
-      return res.status(tokenResp.status).json(tokenData);
+      console.error(`[${requestId}] LinkedIn token exchange failed:`, tokenData);
+
+      // Provide specific error messages based on LinkedIn error codes
+      let errorMessage = 'Failed to exchange authorization code for access token';
+      let errorDetails = tokenData.error_description || 'Unknown LinkedIn API error';
+
+      if (tokenData.error === 'invalid_grant') {
+        errorMessage = 'Invalid or expired authorization code';
+        errorDetails = 'The authorization code may have expired or been used already. Please try connecting to LinkedIn again.';
+      } else if (tokenData.error === 'invalid_client') {
+        errorMessage = 'LinkedIn application configuration error';
+        errorDetails = 'The LinkedIn app credentials are invalid. Please check the client ID and secret.';
+      } else if (tokenData.error === 'invalid_request') {
+        errorMessage = 'Invalid OAuth request';
+        errorDetails = 'The request parameters are malformed. This may be a configuration issue.';
+      } else if (tokenData.error === 'redirect_uri_mismatch') {
+        errorMessage = 'Redirect URI mismatch';
+        errorDetails = 'The redirect URI does not match what\'s configured in the LinkedIn app. Please check the app settings.';
+      }
+
+      return res.status(tokenResp.status).json({
+        error: errorMessage,
+        details: errorDetails,
+        linkedin_error: tokenData.error,
+        linkedin_error_description: tokenData.error_description
+      });
     }
 
     const accessToken = tokenData.access_token;
     const expiresIn = tokenData.expires_in; // seconds
     const refreshToken = tokenData.refresh_token || null;
 
+    if (!accessToken) {
+      console.error(`[${requestId}] No access token in successful response`);
+      return res.status(500).json({
+        error: 'Invalid token response',
+        details: 'LinkedIn returned a successful response but no access token was provided'
+      });
+    }
+
+    console.log(`[${requestId}] Token exchange successful, fetching user info...`);
+
     // Prefer OIDC userinfo when openid is used; fallback to /v2/me if available
     let memberId = null;
+
+    console.log(`[${requestId}] Trying OIDC userinfo endpoint...`);
     let userinfoResp = await fetch('https://api.linkedin.com/v2/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
+
+    console.log(`[${requestId}] Userinfo response:`, {
+      status: userinfoResp.status,
+      ok: userinfoResp.ok
+    });
+
     if (userinfoResp.ok) {
       const ui = await userinfoResp.json();
       memberId = ui && (ui.sub || ui.user_id || null);
+      console.log(`[${requestId}] Got member ID from userinfo:`, memberId);
     } else {
+      console.log(`[${requestId}] Userinfo failed, trying /v2/me endpoint...`);
       const meResp = await fetch('https://api.linkedin.com/v2/me', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
+
+      console.log(`[${requestId}] /v2/me response:`, {
+        status: meResp.status,
+        ok: meResp.ok
+      });
+
       if (meResp.ok) {
         const meData = await meResp.json();
         memberId = meData && meData.id;
+        console.log(`[${requestId}] Got member ID from /v2/me:`, memberId);
       } else {
         const errData = await meResp.json().catch(() => ({}));
-        return res.status(meResp.status).json(errData);
+        console.error(`[${requestId}] Both userinfo and /v2/me failed:`, errData);
+        return res.status(meResp.status).json({
+          error: 'Failed to retrieve LinkedIn user information',
+          details: 'Could not fetch user profile data from LinkedIn API',
+          linkedin_error: errData
+        });
       }
     }
 
     if (!memberId) {
-      return res.status(400).json({ error: 'Failed to determine LinkedIn member id' });
+      console.error(`[${requestId}] No member ID found in LinkedIn response`);
+      return res.status(400).json({
+        error: 'Could not determine LinkedIn member ID',
+        details: 'LinkedIn API returned user data but no member identifier was found'
+      });
     }
-    const memberUrn = `urn:li:person:${memberId}`;
 
+    const memberUrn = `urn:li:person:${memberId}`;
     const expiresAt = new Date(Date.now() + (expiresIn || 0) * 1000);
 
+    console.log(`[${requestId}] Saving LinkedIn tokens to database...`);
+
     await Profile.updateOne(
-      { id: req.user.userId },
+      { id: userId },
       {
         $set: {
           linkedin_access_token: accessToken,
@@ -1251,10 +1367,26 @@ app.post('/api/linkedin/exchange-code', authenticateToken, async (req, res) => {
       { upsert: true }
     );
 
-    res.json({ ok: true, member_urn: memberUrn });
+    console.log(`[${requestId}] LinkedIn connection successful for user: ${userId}`);
+
+    res.json({
+      ok: true,
+      member_urn: memberUrn,
+      message: 'LinkedIn account connected successfully'
+    });
+
   } catch (err) {
-    console.error('LinkedIn exchange error:', err);
-    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+    console.error(`[${requestId}] LinkedIn exchange error:`, {
+      error: err.message,
+      stack: err.stack,
+      userId
+    });
+
+    res.status(500).json({
+      error: 'Internal server error during LinkedIn connection',
+      details: 'An unexpected error occurred while connecting to LinkedIn. Please try again.',
+      request_id: requestId
+    });
   }
 });
 
