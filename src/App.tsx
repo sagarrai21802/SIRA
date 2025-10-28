@@ -60,6 +60,7 @@ import GDPR from "./pages/GDPR";
 import Security from "./pages/Security";
 import Compliance from "./pages/Compliance";
 import ComplaintDeletion from "./pages/ComplaintDeletion";
+import DataDeletion from "./pages/DataDeletion";
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -117,7 +118,7 @@ function AppContent() {
               <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
               <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/privacy" element={<ProtectedRoute><Privacy /></ProtectedRoute>} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/linkedinpostgenerator" element={<ProtectedRoute><LinkedInPostGenerator /></ProtectedRoute>} />
               <Route path="/facebookpostgenerator" element={<ProtectedRoute><FacebookPostGenerator /></ProtectedRoute>} />
               <Route path="/instagrampostgenerator" element={<ProtectedRoute><InstagramPostGenerator /></ProtectedRoute>} />
@@ -151,6 +152,7 @@ function AppContent() {
               <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
               {/* Public complaints/deletion page */}
               <Route path="/complaint-deletion" element={<ComplaintDeletion />} />
+              <Route path="/datadeletion" element={<DataDeletion />} />
               </Routes>
             </ProfileGuard>
           </main>

@@ -4,12 +4,13 @@ import { generateTemplate, TemplateResult } from "../lib/template";
 import { generateTemplateImage } from "../lib/templateImage";
 import { Button } from '../components/UI/Button';
 import { Card, CardContent } from '../components/UI/Card';
-import { Loader2, Copy, Check, AlertTriangle, Download, CalendarPlus } from "lucide-react";
-import { ModernDropdown } from '../components/UI/ModernDropdown'; 
+import { Loader2, Copy, Check, AlertTriangle, Download, CalendarPlus, Maximize2, Edit3 } from "lucide-react";
+import { ModernDropdown } from '../components/UI/ModernDropdown';
 import { Dialog, Transition } from "@headlessui/react";
 import { ScheduleGeneratedPostModal } from '../components/Scheduler/ScheduleGeneratedPostModal';
 import toast from 'react-hot-toast';
 import { API_BASE, API_ENDPOINTS } from "../lib/api";
+import { editLinkedInPostWithGemini } from "../lib/gemini";
 
 // Error Modal
 const ErrorModal = ({ isOpen, message, onRetry, onClose }: {
@@ -120,20 +121,36 @@ const SuggestionsSidebar = ({ tips }: { tips: string[] }) => (
 );
 
 export default function InstagramPostGenerator() {
-  const [topic, setTopic] = useState("");
-  const [description, setDescription] = useState("");
-  const [result, setResult] = useState<TemplateResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
-  const [imgLoading, setImgLoading] = useState(false);
-  const [imageCount, setImageCount] = useState("1");
-  const [imageSize, setImageSize] = useState("Post");
-  const [imageStyle, setImageStyle] = useState("Realistic");
-  const [apiError, setApiError] = useState<{ message: string; onRetry: () => void } | null>(null);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [instagramConnected, setInstagramConnected] = useState<boolean | null>(null);
-  const [posting, setPosting] = useState(false);
+   const [industry, setIndustry] = useState("Select Industry");
+   const [designation, setDesignation] = useState("Select Designation");
+   const [topic, setTopic] = useState("");
+   const [description, setDescription] = useState("");
+   const [result, setResult] = useState<TemplateResult | null>(null);
+   const [loading, setLoading] = useState(false);
+   const [images, setImages] = useState<string[]>([]);
+   const [imgLoading, setImgLoading] = useState(false);
+   const [imageCount, setImageCount] = useState("1");
+   const [imageSize, setImageSize] = useState("Post");
+   const [imageStyle, setImageStyle] = useState("Realistic");
+   const [apiError, setApiError] = useState<{ message: string; onRetry: () => void } | null>(null);
+   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+   const [instagramConnected, setInstagramConnected] = useState<boolean | null>(null);
+   const [posting, setPosting] = useState(false);
+   const [isEditing, setIsEditing] = useState(false);
+   const [editedTitle, setEditedTitle] = useState("");
+   const [editedBody, setEditedBody] = useState("");
+   const [editedCta, setEditedCta] = useState("");
+   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+   const [isEditImageOpen, setIsEditImageOpen] = useState(false);
+   const [editPrompt, setEditPrompt] = useState("");
+   const [editingImageIdx, setEditingImageIdx] = useState<number | null>(null);
+   const [editLoading, setEditLoading] = useState(false);
+   const [aiEditInstruction, setAiEditInstruction] = useState("");
+   const [aiEditing, setAiEditing] = useState(false);
 
+  const industries = ["Technology", "Finance", "Healthcare", "Marketing"];
+  const designations = ["Software Engineer", "Product Manager", "Marketing Head", "CEO"];
   const imageCountOptions = ["1", "2", "3", "4"];
   const imageSizeOptions = ["Post", "Story", "Reel"];
   const imageStyleOptions = ["3D", "Cartoon", "Pixart", "Realistic"];
@@ -147,7 +164,10 @@ export default function InstagramPostGenerator() {
     try {
       const template = await generateTemplate({
         title: topic,
-        description: description || `Generate a creative Instagram post.`,
+        description: `
+          Industry: ${industry}, Designation: ${designation}
+          ${description ? `\n\nAdditional context: ${description}` : ""}
+        `,
         tone: "creative",
         style: "instagram-post",
       });
@@ -190,7 +210,31 @@ export default function InstagramPostGenerator() {
     }
   };
 
-  const fullPostContent = result ? `${result.templateTitle}\n\n${result.templateBody}\n\n${result.callToAction}` : '';
+  const fullPostContent = result ? `${editedTitle}\n\n${editedBody}\n\n${editedCta}` : '';
+
+  const handleAiEditContent = async () => {
+    if (!result) return;
+    if (!aiEditInstruction.trim()) {
+      toast.error('Enter an edit instruction');
+      return;
+    }
+    try {
+      setAiEditing(true);
+      const updated = await editLinkedInPostWithGemini(
+        { title: editedTitle, body: editedBody, cta: editedCta },
+        aiEditInstruction,
+        'creative'
+      );
+      setEditedTitle(updated.title || editedTitle);
+      setEditedBody(updated.body || editedBody);
+      setEditedCta(updated.cta || editedCta);
+      toast.success('Content updated');
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to edit content');
+    } finally {
+      setAiEditing(false);
+    }
+  };
 
   // Check Instagram connection status
   const checkInstagramStatus = async () => {
@@ -210,6 +254,65 @@ export default function InstagramPostGenerator() {
   React.useEffect(() => {
     checkInstagramStatus();
   }, []);
+
+  React.useEffect(() => {
+    if (result) {
+      setEditedTitle(result.templateTitle);
+      setEditedBody(result.templateBody);
+      setEditedCta(result.callToAction);
+    } else {
+      setEditedTitle("");
+      setEditedBody("");
+      setEditedCta("");
+    }
+  }, [result]);
+
+  const openImagePreview = (url: string) => {
+    setPreviewImageUrl(url);
+    setIsImagePreviewOpen(true);
+  };
+
+  const closeImagePreview = () => {
+    setIsImagePreviewOpen(false);
+    setPreviewImageUrl(null);
+  };
+
+  const openEditImageModal = (idx: number) => {
+    setEditingImageIdx(idx);
+    setEditPrompt("");
+    setIsEditImageOpen(true);
+  };
+
+  const handleEditImage = async () => {
+    if (editingImageIdx === null || !images[editingImageIdx]) return;
+    const imageUrl = images[editingImageIdx];
+    if (!editPrompt.trim()) {
+      toast.error('Please enter an edit prompt');
+      return;
+    }
+    try {
+      setEditLoading(true);
+      const token = localStorage.getItem('auth_token');
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.EDIT_IMAGE}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ image_url: imageUrl, prompt: editPrompt })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed to edit image');
+      const newUrl = data.image_url as string;
+      setImages(prev => prev.map((img, i) => (i === editingImageIdx ? newUrl : img)));
+      toast.success('Image edited successfully');
+      setIsEditImageOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to edit image');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   const handlePostNow = async () => {
     if (!result) return;
@@ -280,6 +383,15 @@ export default function InstagramPostGenerator() {
                   <p className="text-slate-600 dark:text-slate-400">Fill in the information to generate your creative Instagram post.</p>
                 </div>
                 <div className="grid gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative z-[100]">
+                      <ModernDropdown label="Industry" options={industries} selected={industry} onChange={setIndustry} />
+                    </div>
+                    <div className="relative z-[100]">
+                      <ModernDropdown label="Designation" options={designations} selected={designation} onChange={setDesignation} />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Topic</label>
                     <input
@@ -299,6 +411,9 @@ export default function InstagramPostGenerator() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                     />
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                      Industry and Designation will be included automatically.
+                    </p>
                   </div>
 
                   <Button onClick={handleGenerate} disabled={loading} className="w-full py-4 text-lg rounded-xl bg-gradient-to-r from-pink-600 to-yellow-600 hover:from-pink-700 hover:to-yellow-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]">
@@ -320,6 +435,15 @@ export default function InstagramPostGenerator() {
                     <p className="text-slate-600 dark:text-slate-400 text-sm">Edit your inputs and regenerate.</p>
                   </div>
                   <div className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Industry" options={industries} selected={industry} onChange={setIndustry} />
+                      </div>
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Designation" options={designations} selected={designation} onChange={setDesignation} />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Topic</label>
                       <input
@@ -339,6 +463,9 @@ export default function InstagramPostGenerator() {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                       />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Industry and Designation will be included automatically.
+                      </p>
                     </div>
 
                     <Button onClick={handleGenerate} disabled={loading} className="w-full py-3 text-base rounded-xl bg-gradient-to-r from-pink-600 to-yellow-600 hover:from-pink-700 hover:to-yellow-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
@@ -374,6 +501,38 @@ export default function InstagramPostGenerator() {
                       <Button onClick={handleGenerateImage} disabled={imgLoading} className="w-full py-3 text-sm rounded-xl bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
                         {imgLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "🖼️ Generate Image(s)"}
                       </Button>
+                      {images.length > 0 && (
+                        <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">📸 Generated Images</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {images.map((image, idx) => (
+                              <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg transition-all duration-300">
+                                <img onClick={() => openImagePreview(image)} src={image} alt={`Generated Instagram Post ${idx + 1}`} className="w-full h-28 object-cover cursor-zoom-in" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <div className="absolute top-2 right-2">
+                                  <button onClick={() => openImagePreview(image)} className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-800 text-xs font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                                    <Maximize2 className="h-3.5 w-3.5 mr-1.5" /> View
+                                  </button>
+                                </div>
+                                <div className="absolute top-2 left-2">
+                                  <button onClick={() => openEditImageModal(idx)} className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-800 text-xs font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                                    <Edit3 className="h-3.5 w-3.5 mr-1.5" /> Edit
+                                  </button>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                                  <a
+                                    href={image}
+                                    download={`syra-instagram-image-${idx + 1}.png`}
+                                    className="inline-flex items-center justify-center w-full py-1.5 px-3 bg-white/90 hover:bg-white text-slate-800 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all duration-200"
+                                  >
+                                    <Download className="h-3.5 w-3.5 mr-1.5" /> Download
+                                  </a>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {result && (
                         <Button onClick={handlePostNow} disabled={posting} className="w-full py-3 text-sm rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
                           {posting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : (instagramConnected ? 'Post Now to Instagram' : 'Connect & Post to Instagram')}
@@ -392,34 +551,65 @@ export default function InstagramPostGenerator() {
             <Card className="shadow-2xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl overflow-hidden">
               <CardContent className="p-8 space-y-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4">🌟 Generated Instagram Post</h3>
-                  <CopyableOutput title={result.templateTitle} body={result.templateBody} cta={result.callToAction} />
-                </div>
-
-
-                {/* Generated Images */}
-                {images.length > 0 && (
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-                    <h4 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-4">📸 Generated Images</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {images.map((image, idx) => (
-                        <div key={idx} className="relative group rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300">
-                          <img src={image} alt={`Generated Instagram Post ${idx + 1}`} className="w-full h-48 object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                            <a
-                              href={image}
-                              download={`syra-instagram-image-${idx + 1}.png`}
-                              className="inline-flex items-center justify-center w-full py-2 px-4 bg-white/90 hover:bg-white text-slate-800 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-                            >
-                              <Download className="h-4 w-4 mr-2" /> Download
-                            </a>
-                          </div>
-                        </div>
-                      ))}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200">🌟 Generated Instagram Post</h3>
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
+                      {isEditing ? 'Done Editing' : 'Edit Content'}
+                    </Button>
+                  </div>
+                  {/* AI Edit Assistance */}
+                  <div className="mb-6">
+                    <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">AI Edit Instruction</label>
+                    <textarea
+                      value={aiEditInstruction}
+                      onChange={(e) => setAiEditInstruction(e.target.value)}
+                      placeholder="Describe what to change or add (e.g., 'make the tone more inspiring, add a short anecdote about creativity, and include 2 relevant hashtags at the end')"
+                      className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 min-h-[90px]"
+                    />
+                    <div className="mt-2 flex gap-3">
+                      <Button onClick={handleAiEditContent} disabled={aiEditing}>
+                        {aiEditing ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                        Apply AI Edit
+                      </Button>
+                      <Button variant="outline" onClick={() => setAiEditInstruction('')}>
+                        Clear
+                      </Button>
                     </div>
                   </div>
-                )}
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Title</label>
+                        <input
+                          type="text"
+                          className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                          value={editedTitle}
+                          onChange={(e) => setEditedTitle(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Body</label>
+                        <textarea
+                          className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md min-h-[140px] resize-y"
+                          value={editedBody}
+                          onChange={(e) => setEditedBody(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Call to Action</label>
+                        <input
+                          type="text"
+                          className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                          value={editedCta}
+                          onChange={(e) => setEditedCta(e.target.value)}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">These edits will be used for posting and scheduling.</p>
+                    </div>
+                  ) : (
+                    <CopyableOutput title={editedTitle} body={editedBody} cta={editedCta} />
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -445,6 +635,136 @@ export default function InstagramPostGenerator() {
           platform="Instagram"
         />
       )}
+
+      {/* Image Preview Modal */}
+      <Transition appear show={isImagePreviewOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={closeImagePreview}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/70" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-5xl transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-4 text-left align-middle shadow-xl transition-all">
+                  <div className="flex justify-between items-center mb-3">
+                    <Dialog.Title as="h3" className="text-base font-medium text-slate-900 dark:text-slate-100">Image Preview</Dialog.Title>
+                    <Button variant="outline" size="sm" onClick={closeImagePreview}>Close</Button>
+                  </div>
+                  <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-2">
+                    {previewImageUrl && (
+                      <img src={previewImageUrl} alt="Generated Image Preview" className="max-h-[80vh] w-full h-auto object-contain rounded-md" />
+                    )}
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Edit Image Modal */}
+      <Transition appear show={isEditImageOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => setIsEditImageOpen(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/70" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-xl transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title as="h3" className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
+                    Edit Image with AI
+                  </Dialog.Title>
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Edit Prompt</label>
+                    <textarea
+                      value={editPrompt}
+                      onChange={(e) => setEditPrompt(e.target.value)}
+                      placeholder="Describe how to edit the image (e.g., 'add a subtle bokeh background, enhance contrast, remove watermark')"
+                      className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 min-h-[120px]"
+                    />
+                  </div>
+                  <div className="mt-6 flex justify-between gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        if (!editPrompt.trim()) {
+                          toast.error('Enter a prompt to enhance');
+                          return;
+                        }
+                        try {
+                          setEditLoading(true);
+                          const token = localStorage.getItem('auth_token');
+                          const resp = await fetch(`${API_BASE}${API_ENDPOINTS.ENHANCE_IMAGE_PROMPT}`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                            },
+                            body: JSON.stringify({ prompt: editPrompt })
+                          });
+                          const data = await resp.json();
+                          if (!resp.ok) throw new Error(data.error || 'Failed to enhance prompt');
+                          setEditPrompt(data.prompt || '');
+                          toast.success('Prompt enhanced');
+                        } catch (e: any) {
+                          toast.error(e?.message || 'Failed to enhance prompt');
+                        } finally {
+                          setEditLoading(false);
+                        }
+                      }}
+                    >
+                      {editLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                      Enhance Prompt
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsEditImageOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleEditImage} disabled={editLoading}>
+                      {editLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                      Apply Edit
+                    </Button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
       </div>
     </div>
   );

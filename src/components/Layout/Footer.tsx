@@ -184,6 +184,7 @@ export function Footer() {
                       { to: '/gdpr', label: 'GDPR' },
                       { to: '/security', label: 'Security' },
                       { to: '/compliance', label: 'Compliance' },
+                      { to: '/datadeletion', label: 'Data Deletion' },
                     ].map((link, i) => (
                       <motion.li
                         key={i}
