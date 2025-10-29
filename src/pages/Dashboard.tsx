@@ -42,6 +42,7 @@ interface Stats {
   templateCount: number;
   scheduledPostsCount: number;
   seoToolsCount: number;
+  editedDesignCount: number;
 }
 
 export function Dashboard() {
@@ -54,6 +55,7 @@ export function Dashboard() {
     templateCount: 0,
     scheduledPostsCount: 0,
     seoToolsCount: 0,
+    editedDesignCount: 0,
   });
   const [animatedStats, setAnimatedStats] = useState<Stats>(stats);
   const [loading, setLoading] = useState(false);
@@ -186,6 +188,7 @@ export function Dashboard() {
         templateCount: data.template || 0,
         scheduledPostsCount,
         seoToolsCount,
+        editedDesignCount: data.edited_design || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -951,6 +954,10 @@ export function Dashboard() {
                       <div className="bg-white/10 rounded-lg p-3 hover:bg-white/20 transition-colors">
                         <p className="text-2xl font-bold">{Math.round(animatedStats.seoToolsCount)}</p>
                         <p className="text-xs opacity-80">SEO Tools</p>
+                      </div>
+                      <div className="bg-white/10 rounded-lg p-3 hover:bg-white/20 transition-colors">
+                        <p className="text-2xl font-bold">{Math.round(animatedStats.editedDesignCount)}</p>
+                        <p className="text-xs opacity-80">Designs</p>
                       </div>
                     </div>
                   </motion.div>

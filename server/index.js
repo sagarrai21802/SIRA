@@ -1784,6 +1784,83 @@ app.post('/api/upload-brand-logo', async (req, res) => {
   }
 });
 
+// ---- Edited Designs (for image editor) ----
+const editedDesignSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  user_id: { type: String, required: true },
+  original_image_url: { type: String },
+  edited_image_url: { type: String, required: true },
+  edited_image_public_id: { type: String, required: true },
+  design_json: { type: String }, // Serialized Polotno canvas state
+  prompt: { type: String },
+  created_at: { type: String, required: true }
+});
+const EditedDesign = mongoose.model('EditedDesign', editedDesignSchema);
+
+// Save edited design
+app.post('/api/save-edited-design', async (req, res) => {
+  try {
+    const { user_id, original_image_url, edited_image_url, edited_image_public_id, design_json, prompt } = req.body || {};
+    if (!user_id || !edited_image_url || !edited_image_public_id) {
+      return res.status(400).json({ error: 'user_id, edited_image_url, edited_image_public_id required' });
+    }
+
+    const doc = {
+      id: randomUUID(),
+      user_id: String(user_id),
+      original_image_url: original_image_url || null,
+      edited_image_url: String(edited_image_url),
+      edited_image_public_id: String(edited_image_public_id),
+      design_json: design_json ? String(design_json) : null,
+      prompt: prompt ? String(prompt) : null,
+      created_at: new Date().toISOString()
+    };
+
+    await EditedDesign.create(doc);
+    res.json({ ok: true, item: doc });
+  } catch (err) {
+    console.error('Save edited design error:', err);
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// Get user's edited designs
+app.get('/api/edited-designs', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+    const items = await EditedDesign.find({ user_id: String(user_id) })
+      .sort({ created_at: -1 })
+      .lean();
+
+    res.json({ items });
+  } catch (err) {
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
+// Delete edited design
+app.delete('/api/edited-designs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'id required' });
+
+    const design = await EditedDesign.findOne({ id });
+    if (!design) return res.status(404).json({ error: 'Design not found' });
+
+    // Delete from Cloudinary
+    await cloudinary.uploader.destroy(design.edited_image_public_id);
+
+    // Delete from MongoDB
+    await EditedDesign.deleteOne({ id });
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
+  }
+});
+
 // ---- Simple counts for dashboard (no models required) ----
 app.get('/api/stats/counts', async (req, res) => {
   try {
@@ -1791,13 +1868,14 @@ app.get('/api/stats/counts', async (req, res) => {
     if (!user_id) return res.status(400).json({ error: 'user_id required' });
     const db = mongoose.connection.db;
     const filter = { user_id: String(user_id) };
-    const [content, image, project, template] = await Promise.all([
+    const [content, image, project, template, edited_design] = await Promise.all([
       db.collection('contentgenerations').countDocuments(filter).catch(() => 0),
       db.collection('imagegenerations').countDocuments(filter).catch(() => 0),
       db.collection('projects').countDocuments(filter).catch(() => 0),
       db.collection('templategenerations').countDocuments(filter).catch(() => 0),
+      db.collection('editeddesigns').countDocuments(filter).catch(() => 0),
     ]);
-    res.json({ content, image, project, template });
+    res.json({ content, image, project, template, edited_design });
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
   }

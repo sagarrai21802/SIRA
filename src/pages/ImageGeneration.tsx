@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Loader2, Download, Copy, Cpu, Trash2, Image as ImageIcon } from "lucide-react";
+import { Loader2, Download, Copy, Cpu, Trash2, Image as ImageIcon, Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { ModernDropdown } from "../components/UI/ModernDropdown";
 import { useAuth } from "../hooks/useAuth";
@@ -30,6 +31,7 @@ interface GeneratedImage {
 
 export const ImageGenerator: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -181,6 +183,11 @@ export const ImageGenerator: React.FC = () => {
     toast.success("Image URL copied!");
   };
 
+  const handleEditImage = () => {
+    if (!image) return;
+    navigate('/studio', { state: { imageUrl: image } });
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-6 relative z-20">
       <h2 className="text-4xl font-extrabold text-center mb-10 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
@@ -216,12 +223,20 @@ export const ImageGenerator: React.FC = () => {
           </button>
 
           {image && (
-            <button
-              className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-gray-700 dark:text-white bg-gray-200 dark:bg-gray-800 shadow hover:scale-105 transition-transform"
-              onClick={handleCopyPrompt}
-            >
-              <Copy className="w-4 h-4" /> Copy Prompt
-            </button>
+            <>
+              <button
+                className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-gray-700 dark:text-white bg-gray-200 dark:bg-gray-800 shadow hover:scale-105 transition-transform"
+                onClick={handleCopyPrompt}
+              >
+                <Copy className="w-4 h-4" /> Copy Prompt
+              </button>
+              <button
+                className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 shadow hover:scale-105 transition-transform"
+                onClick={handleEditImage}
+              >
+                <Edit className="w-4 h-4" /> Edit in Studio
+              </button>
+            </>
           )}
         </div>
 
@@ -262,6 +277,12 @@ export const ImageGenerator: React.FC = () => {
               onClick={handleCopyImageUrl}
             >
               <Copy className="w-4 h-4" /> Copy URL
+            </button>
+            <button
+              className="bg-purple-500/90 backdrop-blur-md text-white px-3 py-2 rounded-lg hover:bg-purple-600 shadow flex items-center gap-1"
+              onClick={handleEditImage}
+            >
+              <Edit className="w-4 h-4" /> Edit
             </button>
           </div>
         </div>
@@ -320,6 +341,13 @@ export const ImageGenerator: React.FC = () => {
                     >
                       <Copy className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={() => navigate('/studio', { state: { imageUrl: url } })}
+                      className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg transition-colors"
+                      title="Edit in Studio"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
                 <div className="p-4">
@@ -363,6 +391,13 @@ export const ImageGenerator: React.FC = () => {
                       title="Copy URL"
                     >
                       <Copy className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => navigate('/studio', { state: { imageUrl: img.cloudinary_url } })}
+                      className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg transition-colors"
+                      title="Edit in Studio"
+                    >
+                      <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteImage(img.id)}
