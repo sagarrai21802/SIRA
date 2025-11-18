@@ -93,67 +93,49 @@ export const ImageGenerator: React.FC = () => {
     setLoading(true);
     setError(null);
     setImage(null);
-    setLoadingMessage("Initializing AI engine...");
+    setLoadingMessage(user ? "Generating image on server..." : "Initializing AI engine...");
 
     try {
-      const messages = ["Analyzing your prompt...", "Generating visual...", "Rendering preview...", "Almost there..."];
-      let i = 0;
-      const msgInterval = setInterval(() => {
-        setLoadingMessage(messages[i % messages.length]);
-        i++;
-      }, 1000);
+      if (user) {
+        const response = await fetch(`${API_BASE}${API_ENDPOINTS.GENERATE_IMAGE}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            prompt,
+            image_type: type,
+            width: size.width,
+            height: size.height,
+            quality
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate image');
+        }
+        setImage(data.image_url);
+        // Refresh the gallery to show the new image
+        loadGeneratedImages();
+      } else {
+        const messages = ["Analyzing your prompt...", "Generating visual...", "Rendering preview...", "Almost there..."];
+        let i = 0;
+        const msgInterval = setInterval(() => {
+          setLoadingMessage(messages[i % messages.length]);
+          i++;
+        }, 1000);
 
-      const sizeStr = `${size.width}x${size.height}`;
-      const concept = `${type} style: ${prompt}`;
-      const imgUrl = await generateTemplateImage(concept, sizeStr);
-      setImage(imgUrl);
-      if (!user) {
+        const sizeStr = `${size.width}x${size.height}`;
+        const concept = `${type} style: ${prompt}`;
+        const imgUrl = await generateTemplateImage(concept, sizeStr);
+        setImage(imgUrl);
         setSessionImages((prev) => [imgUrl, ...prev]);
+        clearInterval(msgInterval);
       }
       // ensure the gallery is visible after generation
       setTimeout(() => {
         galleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 50);
       toast.success("Image generated!");
-
-      // Auto-save to Cloudinary + MongoDB if logged in
-      try {
-        if (user) {
-          const isDataUrl = imgUrl.startsWith('data:');
-          if (isDataUrl) {
-            const rawBase64 = imgUrl.split(',')[1] || '';
-            const resp = await fetch(`${API_BASE}${API_ENDPOINTS.SAVE_IMAGE}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                user_id: user.id,
-                prompt,
-                image_type: type,
-                width: size.width,
-                height: size.height,
-                quality,
-                image_base64: rawBase64,
-                dataUrl: imgUrl
-              })
-            });
-            const data = await resp.json().catch(() => ({}));
-            if (resp.ok && (data as any)?.item) {
-              // Immediately show in saved gallery list
-              setGeneratedImages((prev) => [(data as any).item, ...prev]);
-              // Also refresh from server to keep in sync (order, dedupe)
-              loadGeneratedImages();
-            } else {
-              // Fallback: refresh from server
-              loadGeneratedImages();
-              const msg = (data as any)?.error || 'Failed to save image';
-              toast.error(msg);
-            }
-          }
-        }
-      } catch (e) {
-        toast.error('Failed to save image');
-      }
-      clearInterval(msgInterval);
     } catch (err: any) {
       setError(err.message || "Failed to generate image. Check console.");
       toast.error("Image generation failed!");

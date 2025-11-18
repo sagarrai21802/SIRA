@@ -11,7 +11,7 @@ if (!API_KEY) {
 
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 // Use a supported text model
-const model = genAI?.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI?.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 export interface TemplateParams {
   title: string;

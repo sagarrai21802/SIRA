@@ -775,57 +775,37 @@ app.post('/api/deletion-complaints', async (req, res) => {
 app.post('/api/generate-image', async (req, res) => {
   try {
     const { user_id, prompt, image_type, width, height, quality, source } = req.body;
-    
+
     if (!user_id || !prompt || !image_type || !width || !height || !quality) {
       return res.status(400).json({ error: 'user_id, prompt, image_type, width, height, quality required' });
     }
 
-    // Generate image using Gemini REST API (simple prompt)
+    // Generate image using GoogleGenerativeAI SDK
     const fullPrompt = `${prompt} | Style: ${image_type} | Size: ${width}x${height} | Quality: ${quality}`;
-    
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: fullPrompt
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"]
-          }
-        })
-      }
-    );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Gemini API error: ${JSON.stringify(errorData)}`);
+    const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "imagen-4.0-generate-001" });
+
+    // Calculate simplified aspect ratio
+    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+    const w = parseInt(width);
+    const h = parseInt(height);
+    const g = gcd(w, h);
+    const aspectRatio = `${w / g}:${h / g}`;
+
+    const result = await model.generateImages({
+      prompt: fullPrompt,
+      numberOfImages: 1,
+      aspectRatio: aspectRatio,
+      outputMimeType: "image/png"
+    });
+
+    if (!result.images || result.images.length === 0) {
+      throw new Error("No image returned from Gemini");
     }
 
-    const data = await response.json();
-    
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error("No candidate returned from Gemini");
-    }
-
-    const candidate = data.candidates[0];
-    const imagePart = candidate.content.parts.find(
-      (p) => p.inlineData?.data
-    );
-    if (!imagePart) throw new Error("No image returned from Gemini");
-
-    const base64Data = imagePart.inlineData.data;
-    const mimeType = imagePart.inlineData.mimeType;
+    const image = result.images[0];
+    const base64Data = image.bytes;
     const imageBuffer = Buffer.from(base64Data, 'base64');
     // Upload to Cloudinary with simple resize only (no overlays)
     const transformations = [ { width: parseInt(width), height: parseInt(height), crop: 'fill' } ];
@@ -966,7 +946,7 @@ app.post('/api/edit-image', async (req, res) => {
 
     // Call Gemini image model with prompt + inline image
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
@@ -1053,7 +1033,7 @@ app.post('/api/enhance-image-prompt', async (req, res) => {
 
     const merged = `${systemInstruction}\n\nUser request: ${String(prompt)}`;
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.VITE_GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

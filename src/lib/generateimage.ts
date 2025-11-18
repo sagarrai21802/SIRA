@@ -8,7 +8,7 @@ export async function generateImage(prompt: string): Promise<string> {
     });
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-preview-image-generation",
+      model: "gemini-2.5-flash-image",
       contents: [
         {
           role: "user",
@@ -23,10 +23,11 @@ export async function generateImage(prompt: string): Promise<string> {
     const candidate = response.candidates?.[0];
     if (!candidate) throw new Error("No candidate returned");
 
-    const imagePart = candidate.content.parts.find(
+    const imagePart = candidate.content?.parts?.find(
       (p: any) => p.inlineData?.data
     );
     if (!imagePart) throw new Error("No image returned");
+    if (!imagePart.inlineData || !imagePart.inlineData.data) throw new Error("No image data returned");
 
     const base64Data = imagePart.inlineData.data;
     return `data:image/png;base64,${base64Data}`;

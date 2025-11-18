@@ -16,8 +16,8 @@ if (!API_KEY) {
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 // Default text model (supported)
-// gemini-1.5-flash is not available, using gemini-2.0-flash instead
-const textModel = genAI?.getGenerativeModel({ model: 'gemini-2.0-flash' });
+// gemini-1.5-flash is not available, using gemini-2.5-flash instead
+const textModel = genAI?.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 // ---------------- Types ----------------
 export interface ContentGenerationParams {
@@ -122,8 +122,9 @@ export async function enhancePrompt(originalPrompt: string): Promise<string> {
   if (!API_KEY) return originalPrompt;
 
   try {
+    console.log('enhancePrompt: Using model gemini-2.5-flash for prompt enhancement');
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -150,7 +151,7 @@ export async function generateImageWithGemini(prompt: string): Promise<string | 
   if (!genAI) throw new Error('Gemini AI not configured. Please add VITE_GEMINI_API_KEY.');
 
   const imageModel = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-preview-image-generation',
+    model: 'gemini-2.5-flash-image',
     generationConfig: { responseMimeType: 'image/jpeg' },
   });
 

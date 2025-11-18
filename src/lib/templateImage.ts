@@ -32,7 +32,7 @@ export async function generateTemplateImage(concept: string, size?: string): Pro
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-preview-image-generation",
+      model: "gemini-2.5-flash-image",
       contents: [
         {
           role: "user",
@@ -47,10 +47,11 @@ export async function generateTemplateImage(concept: string, size?: string): Pro
     const candidate = response.candidates?.[0];
     if (!candidate) throw new Error("No candidate returned");
 
-    const imagePart = candidate.content.parts.find((p: any) => p.inlineData?.data);
-    if (!imagePart) throw new Error("No image returned");
+    const imagePart = candidate.content?.parts?.find((p: any) => p.inlineData?.data);
+    if (!imagePart || !imagePart.inlineData?.data) throw new Error("No image returned");
 
-    return `data:image/png;base64,${imagePart.inlineData.data}`;
+    const base64 = imagePart.inlineData.data;
+    return `data:image/png;base64,${base64}`;
   } catch (err) {
     console.error("Template Image generation error:", err);
     throw err;
