@@ -12,17 +12,9 @@ export async function generateTemplateImage(concept: string, size?: string): Pro
       apiKey: import.meta.env.VITE_GEMINI_API_KEY,
     });
 
-    // Make the prompt clean & text-free
-    // const finalPrompt = `
-    //   Create a high-quality, professional illustration based on: "${concept}".
-    //   The image should be refined, modern, and visually appealing.
-    //   Do NOT include any text, words, numbers, or watermarks.
-    //   Style: cinematic, sharp, clean, and realistic.
-    //   ${size ? `Target dimensions: ${size}.` : ""}
-    // `;
 
 
- const finalPrompt = `
+    const finalPrompt = `
   Create a high-quality, professional illustration based on: "${concept}".
   The image should be refined, modern, and visually appealing.
   If the image represents an infographic, ensure all text is perfectly clear, readable, and well-placed.
@@ -40,7 +32,7 @@ export async function generateTemplateImage(concept: string, size?: string): Pro
         },
       ],
       config: {
-        responseModalities: [Modality.TEXT,Modality.IMAGE], // Only request IMAGE
+        responseModalities: [Modality.TEXT, Modality.IMAGE], // Only request IMAGE
       },
     });
 
