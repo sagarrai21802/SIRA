@@ -455,10 +455,18 @@ export function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
-        </div>
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-blue-100 dark:border-blue-900/30"></div>
+            <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mt-4 font-medium">Loading your dashboard...</p>
+        </motion.div>
       </div>
     );
   }
@@ -495,87 +503,93 @@ export function Dashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {[
                   {
-                    label: 'Content Generated',
+                    label: 'Content',
                     icon: FileText,
                     value: animatedStats.contentCount,
-                    // change: '+12%',
-                    changeType: 'positive',
+                    change: '+12%',
                     color: 'text-blue-600',
                     bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
-                    borderColor: 'border-blue-200 dark:border-blue-700'
+                    borderColor: 'border-blue-200 dark:border-blue-700',
+                    trend: 'up'
                   },
                   {
-                    label: 'Images Created',
+                    label: 'Images',
                     icon: Image,
                     value: animatedStats.imageCount,
-                    // change: '+8%',
-                    changeType: 'positive',
+                    change: '+8%',
                     color: 'text-green-600',
                     bgColor: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
-                    borderColor: 'border-green-200 dark:border-green-700'
+                    borderColor: 'border-green-200 dark:border-green-700',
+                    trend: 'up'
                   },
                   {
-                    label: 'Active Projects',
+                    label: 'Projects',
                     icon: TrendingUp,
                     value: animatedStats.projectCount,
-                    // change: '+5%',
-                    changeType: 'positive',
+                    change: '+5%',
                     color: 'text-purple-600',
                     bgColor: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20',
-                    borderColor: 'border-purple-200 dark:border-purple-700'
+                    borderColor: 'border-purple-200 dark:border-purple-700',
+                    trend: 'up'
                   },
                   {
-                    label: 'Templates Used',
+                    label: 'Templates',
                     icon: Layers,
                     value: animatedStats.templateCount,
-                    // change: '+15%',
-                    changeType: 'positive',
+                    change: '+15%',
                     color: 'text-orange-600',
                     bgColor: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20',
-                    borderColor: 'border-orange-200 dark:border-orange-700'
+                    borderColor: 'border-orange-200 dark:border-orange-700',
+                    trend: 'up'
                   },
                   {
-                    label: 'Scheduled Posts',
+                    label: 'Scheduled',
                     icon: Calendar,
                     value: animatedStats.scheduledPostsCount,
-                    // change: '+20%',
-                    changeType: 'positive',
+                    change: '+20%',
                     color: 'text-indigo-600',
                     bgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20',
-                    borderColor: 'border-indigo-200 dark:border-indigo-700'
+                    borderColor: 'border-indigo-200 dark:border-indigo-700',
+                    trend: 'up'
                   },
                   {
-                    label: 'SEO Tools Used',
+                    label: 'SEO Tools',
                     icon: BarChart3,
                     value: animatedStats.seoToolsCount,
-                    // change: '+18%',
-                    changeType: 'positive',
+                    change: '+18%',
                     color: 'text-teal-600',
                     bgColor: 'bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20',
-                    borderColor: 'border-teal-200 dark:border-teal-700'
+                    borderColor: 'border-teal-200 dark:border-teal-700',
+                    trend: 'up'
                   },
-        ].map((stat, idx) => (
-          <motion.div
-            key={idx}
+                ].map((stat, idx) => (
+                  <motion.div
+                    key={idx}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className={`${stat.bgColor} rounded-xl p-4 shadow-sm border ${stat.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden`}
+                    className={`${stat.bgColor} rounded-2xl p-4 shadow-sm border ${stat.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group`}
                   >
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {Math.round(stat.value)}
-                      </p>
-                      <div className={`p-3 rounded-lg ${stat.bgColor} border ${stat.borderColor}`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 shadow-sm group-hover:shadow-md transition-shadow`}>
                         <stat.icon className={`w-5 h-5 ${stat.color}`} />
                       </div>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
-            </div>
-          </motion.div>
-        ))}
+                      <div className="flex items-center text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
+                        <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                        {stat.change}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
+                        {Math.round(stat.value)}
+                      </p>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </div>
 

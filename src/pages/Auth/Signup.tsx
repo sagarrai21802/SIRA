@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, UserPlus } from 'lucide-react';
+import { Sparkles, UserPlus, Mail, Lock, Eye, EyeOff, User, Phone, CheckCircle2, Github, Chrome } from 'lucide-react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Card, CardContent, CardHeader } from '../../components/UI/Card';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
-
-// New Signup component with additional fields
 export function Signup() {
   // State for user inputs
   const [email, setEmail] = useState('');
@@ -72,6 +70,9 @@ export function Signup() {
     setLoading(false);
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
       {/* Decorative background orbs */}
@@ -110,90 +111,170 @@ export function Signup() {
             initial={{ opacity: 0, scale: 0.98, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.35 }}
-            className="w-full max-w-md rounded-3xl border border-white/20 bg-white/80 p-6 shadow-2xl backdrop-blur dark:bg-gray-900/80"
+            className="w-full max-w-md rounded-3xl border border-white/20 bg-white/80 p-8 shadow-2xl backdrop-blur dark:bg-gray-900/80"
           >
             <div className="mb-6 text-center">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create your account</h2>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Start your marketing journey with SIRA</p>
             </div>
 
-            <Card className="border-0 bg-transparent shadow-none">
-              <CardHeader className="p-0 mb-2">
-                <h3 className="text-base font-medium text-gray-900 dark:text-white">Sign up</h3>
-              </CardHeader>
-              <CardContent className="p-0">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <Input
-                    label="Name"
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
                     type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="bg-white/90 dark:bg-gray-800/90"
+                    placeholder="Enter your full name"
+                    className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
                     required
                   />
-                  <div>
-                    <Input
-                      label="Email address"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      className="bg-white/90 dark:bg-gray-800/90"
-                      required
-                    />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">We’ll never share your email.</p>
-                  </div>
-                  <div className="relative">
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      className="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete="new-password"
-                    />
-                  </div>
-                  <div className="relative">
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
-                    <input
-                      type="password"
-                      placeholder="Repeat your password"
-                      className="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      autoComplete="new-password"
-                    />
-                  </div>
-                  <Input
-                    label="Phone Number (Optional)"
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
+                    required
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">We'll never share your email with anyone.</p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a strong password"
+                    className="w-full rounded-xl border border-gray-300 pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    className="w-full rounded-xl border border-gray-300 pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number <span className="text-gray-400 font-normal">(Optional)</span></label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Enter your phone number"
-                    className="bg-white/90 dark:bg-gray-800/90"
+                    placeholder="+1 (555) 000-0000"
+                    className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
                   />
-
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    By creating an account, you agree to our <a href="/terms" className="text-indigo-600 hover:underline">Terms</a> and <a href="/privacy" className="text-indigo-600 hover:underline">Privacy Policy</a>.
-                  </div>
-
-                  <Button type="submit" className="w-full" loading={loading} icon={UserPlus}>
-                    Create Account
-                  </Button>
-                </form>
-
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Already have an account?{' '}
-                    <Link to="/login" className="text-indigo-600 hover:underline font-medium">
-                      Sign in
-                    </Link>
-                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                By creating an account, you agree to our{' '}
+                <Link to="/terms" className="text-indigo-600 hover:text-indigo-700 font-medium">Terms of Service</Link>{' '}
+                and{' '}
+                <Link to="/privacy" className="text-indigo-600 hover:text-indigo-700 font-medium">Privacy Policy</Link>.
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3.5 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    </svg>
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5" />
+                    Create Account
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white/80 dark:bg-gray-900/80 text-gray-500">Or sign up with</span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Chrome className="w-5 h-5 text-red-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Google</span>
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Github className="w-5 h-5 text-gray-900 dark:text-white" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Already have an account?{' '}
+                <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </motion.div>
         </div>
       </div>

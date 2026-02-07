@@ -27,7 +27,13 @@ import {
   ThumbsUp,
   ThumbsDown,
   Bookmark,
-  Send
+  Send,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Twitter,
+  Smartphone,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../components/UI/Button';
 
@@ -215,33 +221,53 @@ export function Analytics() {
 
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
-      case 'linkedin': return '💼';
-      case 'instagram': return '📷';
-      case 'facebook': return '📘';
-      case 'twitter': return '🐦';
-      default: return '📱';
+      case 'linkedin': return Linkedin;
+      case 'instagram': return Instagram;
+      case 'facebook': return Facebook;
+      case 'twitter': return Twitter;
+      default: return Smartphone;
+    }
+  };
+
+  const getPlatformColor = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'linkedin': return 'text-blue-600 bg-blue-100 dark:bg-blue-900/30';
+      case 'instagram': return 'text-pink-600 bg-pink-100 dark:bg-pink-900/30';
+      case 'facebook': return 'text-blue-700 bg-blue-100 dark:bg-blue-900/30';
+      case 'twitter': return 'text-sky-500 bg-sky-100 dark:bg-sky-900/30';
+      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-800';
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading analytics...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-900 dark:to-blue-900/10 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="p-6 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl">
+            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400 font-medium">Loading analytics...</p>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-900 dark:to-blue-900/10">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 lg:px-8"
+      >
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
-              <BarChart3 className="w-6 h-6 text-white" />
+            <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+              <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -252,39 +278,45 @@ export function Analytics() {
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Filter className="w-4 h-4" />
+              Filter
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+            <Button 
+              size="sm" 
+              className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Time Range Selector */}
-        <div className="mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Time Range:</span>
-            <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div className="flex space-x-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
               {['7d', '30d', '90d', '1y'].map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 font-medium ${
                     timeRange === range
-                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   {range}
@@ -292,7 +324,7 @@ export function Analytics() {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -304,8 +336,7 @@ export function Analytics() {
               changeType: 'positive',
               icon: Eye,
               color: 'text-blue-600',
-              bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-              borderColor: 'border-blue-200 dark:border-blue-700'
+              bgColor: 'bg-blue-100 dark:bg-blue-900/30',
             },
             {
               title: 'Total Engagement',
@@ -314,8 +345,7 @@ export function Analytics() {
               changeType: 'positive',
               icon: Heart,
               color: 'text-red-600',
-              bgColor: 'bg-red-50 dark:bg-red-900/20',
-              borderColor: 'border-red-200 dark:border-red-700'
+              bgColor: 'bg-red-100 dark:bg-red-900/30',
             },
             {
               title: 'Total Posts',
@@ -324,8 +354,7 @@ export function Analytics() {
               changeType: 'positive',
               icon: Send,
               color: 'text-green-600',
-              bgColor: 'bg-green-50 dark:bg-green-900/20',
-              borderColor: 'border-green-200 dark:border-green-700'
+              bgColor: 'bg-green-100 dark:bg-green-900/30',
             },
             {
               title: 'Avg. Engagement Rate',
@@ -334,8 +363,7 @@ export function Analytics() {
               changeType: 'positive',
               icon: Target,
               color: 'text-purple-600',
-              bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-              borderColor: 'border-purple-200 dark:border-purple-700'
+              bgColor: 'bg-purple-100 dark:bg-purple-900/30',
             }
           ].map((metric, index) => (
             <motion.div
@@ -343,7 +371,7 @@ export function Analytics() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className={`${metric.bgColor} rounded-xl p-6 shadow-sm border ${metric.borderColor} hover:shadow-lg transition-all duration-300`}
+              className="shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -369,7 +397,7 @@ export function Analytics() {
                     </span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg ${metric.bgColor} border ${metric.borderColor}`}>
+                <div className={`p-3 rounded-xl ${metric.bgColor}`}>
                   <metric.icon className={`w-6 h-6 ${metric.color}`} />
                 </div>
               </div>
@@ -379,87 +407,118 @@ export function Analytics() {
 
         {/* Platform Performance */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+          >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Platform Performance
-              </h3>
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                  <PieChart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Platform Performance
+                </h3>
+              </div>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Settings className="w-4 h-4" />
                 Settings
               </Button>
             </div>
             <div className="space-y-4">
-              {analyticsData.platformStats.map((platform, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="text-2xl">{getPlatformIcon(platform.platform)}</div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {platform.platform}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {platform.posts} posts • {formatNumber(platform.followers)} followers
+              {analyticsData.platformStats.map((platform, index) => {
+                const PlatformIcon = getPlatformIcon(platform.platform);
+                const platformColor = getPlatformColor(platform.platform);
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-xl ${platformColor}`}>
+                        <PlatformIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900 dark:text-white">
+                          {platform.platform}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {platform.posts} posts • {formatNumber(platform.followers)} followers
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {formatNumber(platform.views)} views
                       </p>
+                      <div className="flex items-center justify-end">
+                        {platform.growth > 0 ? (
+                          <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
+                        ) : (
+                          <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
+                        )}
+                        <span className={`text-sm ${
+                          platform.growth > 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {platform.growth > 0 ? '+' : ''}{platform.growth}%
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {formatNumber(platform.views)} views
-                    </p>
-                    <div className="flex items-center">
-                      {platform.growth > 0 ? (
-                        <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-                      ) : (
-                        <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-                      )}
-                      <span className={`text-sm ${
-                        platform.growth > 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {platform.growth > 0 ? '+' : ''}{platform.growth}%
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+          >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Top Performing Post
-              </h3>
-              <Button variant="outline" size="sm">
-                <ExternalLink className="w-4 h-4 mr-2" />
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/30">
+                  <Star className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Top Performing Post
+                </h3>
+              </div>
+              <Button variant="outline" size="sm" className="gap-2">
+                <ExternalLink className="w-4 h-4" />
                 View
               </Button>
             </div>
             <div className="space-y-4">
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <div className="text-2xl">{getPlatformIcon(analyticsData.topPerformingPost.platform)}</div>
+              <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-800/50">
+                <div className="flex items-start space-x-4">
+                  <div className={`p-3 rounded-xl ${getPlatformColor(analyticsData.topPerformingPost.platform)}`}>
+                    {(() => {
+                      const PlatformIcon = getPlatformIcon(analyticsData.topPerformingPost.platform);
+                      return <PlatformIcon className="w-6 h-6" />;
+                    })()}
+                  </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-lg">
                       {analyticsData.topPerformingPost.title}
                     </h4>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="flex items-center">
-                        <Eye className="w-4 h-4 mr-1" />
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-white/80 dark:bg-gray-800/80 rounded-lg">
+                        <Eye className="w-4 h-4 text-blue-600" />
                         {formatNumber(analyticsData.topPerformingPost.views)} views
                       </span>
-                      <span className="flex items-center">
-                        <Heart className="w-4 h-4 mr-1" />
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-white/80 dark:bg-gray-800/80 rounded-lg">
+                        <Heart className="w-4 h-4 text-red-500" />
                         {analyticsData.topPerformingPost.engagement}% engagement
                       </span>
-                      <span className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-white/80 dark:bg-gray-800/80 rounded-lg">
+                        <Calendar className="w-4 h-4 text-green-600" />
                         {new Date(analyticsData.topPerformingPost.date).toLocaleDateString()}
                       </span>
                     </div>
@@ -467,16 +526,26 @@ export function Analytics() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Recent Posts */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700"
+        >
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Recent Posts Performance
-              </h3>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-green-100 dark:bg-green-900/30">
+                  <Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Recent Posts Performance
+                </h3>
+              </div>
               <Button variant="outline" size="sm">
                 View All
               </Button>
@@ -484,49 +553,55 @@ export function Analytics() {
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {analyticsData.recentPosts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-2xl">{getPlatformIcon(post.platform)}</div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {post.title}
-                      </h4>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        <span className="flex items-center">
-                          <Eye className="w-4 h-4 mr-1" />
-                          {formatNumber(post.views)} views
-                        </span>
-                        <span className="flex items-center">
-                          <Heart className="w-4 h-4 mr-1" />
-                          {post.engagement}% engagement
-                        </span>
-                        <span className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(post.date).toLocaleDateString()}
-                        </span>
+              {analyticsData.recentPosts.map((post, index) => {
+                const PlatformIcon = getPlatformIcon(post.platform);
+                const platformColor = getPlatformColor(post.platform);
+                return (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`p-2 rounded-xl ${platformColor}`}>
+                        <PlatformIcon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 dark:text-white">
+                          {post.title}
+                        </h4>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-4 h-4" />
+                            {formatNumber(post.views)} views
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-4 h-4" />
+                            {post.engagement}% engagement
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(post.date).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(post.status)}`}>
-                      {post.status}
-                    </span>
-                    <Button variant="outline" size="sm">
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="flex items-center space-x-3">
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(post.status)}`}>
+                        {post.status}
+                      </span>
+                      <Button variant="outline" size="sm" className="p-2">
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

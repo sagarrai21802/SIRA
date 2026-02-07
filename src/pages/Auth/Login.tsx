@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Github, Chrome } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { API_BASE, API_ENDPOINTS } from "../../lib/api";
@@ -184,16 +184,30 @@ export default function Login() {
             className="w-full max-w-md rounded-3xl border border-white/20 bg-white/80 p-6 shadow-2xl backdrop-blur dark:bg-gray-900/80"
           >
             {successMessage && (
-              <div className="mb-3 rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-green-700">
-                {successMessage}
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 rounded-xl border border-green-200 bg-green-50/90 dark:bg-green-900/30 px-4 py-3 flex items-center gap-2 text-green-700 dark:text-green-300"
+              >
+                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm">{successMessage}</span>
+              </motion.div>
             )}
 
             {needsPasswordSetup ? (
               <form onSubmit={handlePasswordSetup}>
                 <div className="mb-6 text-center">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Set up password</h2>
-                  {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+                  {error && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 rounded-xl border border-red-200 bg-red-50/90 dark:bg-red-900/30 px-4 py-3 flex items-center gap-2 text-red-700 dark:text-red-300"
+                    >
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-sm">{error}</span>
+                    </motion.div>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -257,56 +271,108 @@ export default function Login() {
               <form onSubmit={handleSubmit}>
                 <div className="mb-6 text-center">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back</h2>
-                  {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Sign in to continue your journey</p>
+                  {error && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 rounded-xl border border-red-200 bg-red-50/90 dark:bg-red-900/30 px-4 py-3 flex items-center gap-2 text-red-700 dark:text-red-300"
+                    >
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-sm">{error}</span>
+                    </motion.div>
+                  )}
                 </div>
 
                 <div className="mb-4">
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    className="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
-                    autoFocus
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                      autoFocus
+                    />
+                  </div>
                 </div>
 
-                <div className="mb-2 relative">
+                <div className="mb-2">
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    className="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-[38px] text-sm text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-gray-300 pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mb-6 text-right">
-                  <a href="/help" className="text-xs text-indigo-600 hover:underline">Forgot password?</a>
+                  <Link to="/help" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">Forgot password?</Link>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white shadow hover:bg-indigo-700 disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3.5 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 transition-all duration-200"
                 >
-                  {loading ? "Logging in..." : "Login"}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      </svg>
+                      Signing in...
+                    </span>
+                  ) : "Sign In"}
                 </button>
 
-                <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                  Don’t have an account?
-                  <Link to="/signup" className="ml-1 font-medium text-indigo-600 hover:underline">Sign up</Link>
+                <div className="mt-6">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white/80 dark:bg-gray-900/80 text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <Chrome className="w-5 h-5 text-red-500" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Google</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <Github className="w-5 h-5 text-gray-900 dark:text-white" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</span>
+                    </button>
+                  </div>
+                </div>
+
+                <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+                  Don't have an account?{' '}
+                  <Link to="/signup" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">Create one</Link>
                 </p>
               </form>
             )}

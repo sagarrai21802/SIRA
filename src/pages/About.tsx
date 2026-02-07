@@ -1,186 +1,258 @@
-
-
 import React from 'react';
+import { motion } from 'framer-motion';
+import { BookOpen, Rocket, Layers, BarChart3, Calendar, Shield, Code, HelpCircle, MessageCircle, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function About() {
+  const sections = [
+    { id: 'introduction', title: 'Introduction', icon: BookOpen },
+    { id: 'getting-started', title: 'Getting Started', icon: Rocket },
+    { id: 'features', title: 'Features', icon: Layers },
+    { id: 'api', title: 'API Reference', icon: Code },
+    { id: 'faq', title: 'FAQ', icon: HelpCircle },
+  ];
+
+  const features = [
+    {
+      title: 'AI Content Generator',
+      icon: Sparkles,
+      description: 'Generate high-quality written content for blogs, social media, ads, and emails.',
+      items: ['Multi-language support', 'Customizable tone and style', 'SEO-optimized content']
+    },
+    {
+      title: 'Image Creation',
+      icon: Layers,
+      description: 'Create professional images using AI-powered generation with DALL-E integration.',
+      items: ['Natural language prompts', 'Multiple aspect ratios', 'Image editing tools']
+    },
+    {
+      title: 'SEO Toolkit',
+      icon: BarChart3,
+      description: 'Optimize content for search engines with comprehensive SEO tools.',
+      items: ['Keyword research', 'Meta tag generation', 'Competitor analysis']
+    },
+    {
+      title: 'Content Scheduler',
+      icon: Calendar,
+      description: 'Plan and automate content publishing across multiple platforms.',
+      items: ['Multi-platform scheduling', 'Content calendar view', 'Automated posting']
+    },
+    {
+      title: 'Analytics Dashboard',
+      icon: BarChart3,
+      description: 'Track marketing performance and ROI with detailed insights.',
+      items: ['Engagement metrics', 'Campaign reports', 'Audience insights']
+    },
+    {
+      title: 'Security',
+      icon: Shield,
+      description: 'Enterprise-grade security to protect your data and content.',
+      items: ['End-to-end encryption', 'SOC 2 compliant', 'Regular security audits']
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold mb-8 border-b border-gray-300 dark:border-gray-700 pb-4">SYRA.io Documentation</h1>
-
-        <nav className="mb-8">
-          <ul className="space-y-2">
-            <li><a href="#introduction" className="text-blue-600 hover:underline">Introduction</a></li>
-            <li><a href="#getting-started" className="text-blue-600 hover:underline">Getting Started</a></li>
-            <li><a href="#features" className="text-blue-600 hover:underline">Features</a></li>
-            <li><a href="#api" className="text-blue-600 hover:underline">API Reference</a></li>
-            <li><a href="#faq" className="text-blue-600 hover:underline">FAQ</a></li>
-          </ul>
-        </nav>
-
-        <section id="introduction" className="mb-12">
-          <h2 className="text-3xl font-semibold mb-4">Introduction</h2>
-          <p className="mb-4">
-            SYRA.io is an AI-powered marketing platform designed to help solo founders, startups, agencies, and content teams create, optimize, and manage marketing content efficiently.
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-900 dark:to-blue-900/10">
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium mb-4">
+            <BookOpen className="w-4 h-4" />
+            <span>Documentation</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+            SYRA.io Documentation
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Everything you need to know about using SYRA.io to supercharge your marketing.
           </p>
-          <p className="mb-4">
-            The platform integrates multiple AI tools into a single, user-friendly interface, eliminating the need for multiple subscriptions and complex workflows.
-          </p>
-          <h3 className="text-2xl font-semibold mb-2">Key Capabilities</h3>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li>AI-powered content generation for blogs, social media, ads, and emails</li>
-            <li>Image creation using advanced AI models</li>
-            <li>SEO optimization tools including keyword analysis and meta tag generation</li>
-            <li>Content scheduling and automation</li>
-            <li>Analytics and performance tracking</li>
-            <li>Content humanization to avoid AI detection</li>
-          </ul>
-        </section>
+        </motion.div>
 
-        <section id="getting-started" className="mb-12">
-          <h2 className="text-3xl font-semibold mb-4">Getting Started</h2>
-          <h3 className="text-2xl font-semibold mb-2">Account Setup</h3>
-          <ol className="list-decimal list-inside space-y-2 mb-4">
-            <li>Visit <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">syra.io</code> and click "Get Started Free"</li>
-            <li>Create an account using email or social login</li>
-            <li>Complete your profile personalization</li>
-            <li>Choose a pricing plan or start with the free tier</li>
-          </ol>
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Sidebar Navigation */}
+          <motion.div 
+            className="lg:col-span-1"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="sticky top-24 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">On this page</h3>
+              <nav className="space-y-2">
+                {sections.map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <a
+                      key={section.id}
+                      href={`#${section.id}`}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="text-sm font-medium">{section.title}</span>
+                    </a>
+                  );
+                })}
+              </nav>
+            </div>
+          </motion.div>
 
-          <h3 className="text-2xl font-semibold mb-2">First Content Generation</h3>
-          <ol className="list-decimal list-inside space-y-2 mb-4">
-            <li>Navigate to the Content Generator from the dashboard</li>
-            <li>Select content type (blog post, social media, etc.)</li>
-            <li>Enter your topic and target audience</li>
-            <li>Customize tone, length, and style preferences</li>
-            <li>Generate and edit the content</li>
-          </ol>
-        </section>
+          {/* Main Content */}
+          <motion.div 
+            className="lg:col-span-3 space-y-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            {/* Introduction */}
+            <section id="introduction" className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                  <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Introduction</h2>
+              </div>
+              <div className="prose dark:prose-invert max-w-none">
+                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                  SYRA.io is an AI-powered marketing platform designed to help solo founders, startups, agencies, and content teams create, optimize, and manage marketing content efficiently.
+                </p>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                  The platform integrates multiple AI tools into a single, user-friendly interface, eliminating the need for multiple subscriptions and complex workflows.
+                </p>
+              </div>
+            </section>
 
-        <section id="features" className="mb-12">
-          <h2 className="text-3xl font-semibold mb-4">Features</h2>
+            {/* Getting Started */}
+            <section id="getting-started" className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/30">
+                  <Rocket className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Getting Started</h2>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Account Setup</h3>
+                  <ol className="space-y-3">
+                    {[
+                      'Visit syra.io and click "Get Started Free"',
+                      'Create an account using email or social login',
+                      'Complete your profile personalization',
+                      'Choose a pricing plan or start with the free tier'
+                    ].map((step, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-300">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            </section>
 
-          <h3 className="text-2xl font-semibold mb-2">AI Content Generator</h3>
-          <p className="mb-2">Generate high-quality written content for various marketing needs.</p>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li>Supports blog posts, social media posts, email campaigns, and advertisements</li>
-            <li>Multi-language support</li>
-            <li>Customizable tone and style</li>
-            <li>SEO-optimized content options</li>
-          </ul>
+            {/* Features */}
+            <section id="features">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-900/30">
+                  <Layers className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Features</h2>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                {features.map((feature, idx) => {
+                  const Icon = feature.icon;
+                  return (
+                    <motion.div
+                      key={feature.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * idx }}
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-shadow"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 rounded-xl bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30">
+                          <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{feature.title}</h3>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">{feature.description}</p>
+                      <ul className="space-y-2">
+                        {feature.items.map((item, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </section>
 
-          <h3 className="text-2xl font-semibold mb-2">Image Creation</h3>
-          <p className="mb-2">Create professional images using AI-powered generation.</p>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li>DALL-E integration for high-quality image generation</li>
-            <li>Natural language prompts</li>
-            <li>Multiple aspect ratios and resolutions</li>
-            <li>Image editing and optimization tools</li>
-          </ul>
-
-          <h3 className="text-2xl font-semibold mb-2">SEO Toolkit</h3>
-          <p className="mb-2">Optimize content for search engines.</p>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li>Keyword research and analysis</li>
-            <li>Meta tag generation</li>
-            <li>SEO score checking</li>
-            <li>Competitor analysis</li>
-          </ul>
-
-          <h3 className="text-2xl font-semibold mb-2">Content Scheduler</h3>
-          <p className="mb-2">Plan and automate content publishing.</p>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li>Multi-platform scheduling (Twitter, Facebook, LinkedIn, Instagram)</li>
-            <li>Content calendar view</li>
-            <li>Automated posting</li>
-            <li>Performance tracking</li>
-          </ul>
-
-          <h3 className="text-2xl font-semibold mb-2">Analytics Dashboard</h3>
-          <p className="mb-2">Track marketing performance and ROI.</p>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li>Content engagement metrics</li>
-            <li>Campaign performance reports</li>
-            <li>Audience insights</li>
-            <li>Custom reporting</li>
-          </ul>
-
-          <h3 className="text-2xl font-semibold mb-2">Humanizer</h3>
-          <p className="mb-2">Transform AI-generated content to sound more natural.</p>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li>AI detection avoidance</li>
-            <li>Natural language processing</li>
-            <li>Multiple style options</li>
-            <li>Quality preservation</li>
-          </ul>
-        </section>
-
-        <section id="api" className="mb-12">
-          <h2 className="text-3xl font-semibold mb-4">API Reference</h2>
-          <p className="mb-4">
-            SYRA.io provides a REST API for programmatic access to our AI tools. API access is available on paid plans.
-          </p>
-
-          <h3 className="text-2xl font-semibold mb-2">Authentication</h3>
-          <p className="mb-2">All API requests require authentication using API keys.</p>
-          <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded mb-4 overflow-x-auto">
-            <code>
-{`curl -X GET "https://api.syra.io/v1/content/generate" \\
+            {/* API Reference */}
+            <section id="api" className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-orange-100 dark:bg-orange-900/30">
+                  <Code className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">API Reference</h2>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                SYRA.io provides a REST API for programmatic access to our AI tools. API access is available on paid plans.
+              </p>
+              <div className="bg-gray-900 rounded-xl p-6 overflow-x-auto">
+                <pre className="text-sm text-gray-300">
+                  <code>{`curl -X GET "https://api.syra.io/v1/content/generate" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "type": "blog_post",
     "topic": "AI Marketing Trends",
     "length": 1000
-  }'`}
-            </code>
-          </pre>
+  }'`}</code>
+                </pre>
+              </div>
+            </section>
 
-          <h3 className="text-2xl font-semibold mb-2">Endpoints</h3>
-          <ul className="list-disc list-inside space-y-1 mb-4">
-            <li><code>POST /v1/content/generate</code> - Generate content</li>
-            <li><code>POST /v1/images/generate</code> - Generate images</li>
-            <li><code>POST /v1/seo/analyze</code> - SEO analysis</li>
-            <li><code>GET /v1/analytics</code> - Retrieve analytics</li>
-          </ul>
-        </section>
+            {/* FAQ */}
+            <section id="faq" className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-900/30">
+                  <HelpCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Frequently Asked Questions</h2>
+              </div>
+              <div className="space-y-6">
+                {[
+                  { q: 'Do I need technical skills?', a: 'No, SYRA.io is designed for non-technical users. Our AI handles all complex parts.' },
+                  { q: 'Can I customize AI-generated content?', a: 'Yes! Edit, tweak, and humanize AI-generated content before publishing.' },
+                  { q: 'Does it support multiple languages?', a: 'Absolutely! Generate content in multiple languages and localize campaigns.' },
+                  { q: 'Is my data secure?', a: 'Yes, we use industry-standard encryption and security measures.' },
+                ].map((faq, idx) => (
+                  <div key={idx} className="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-6 last:pb-0">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
+                    <p className="text-gray-600 dark:text-gray-300">{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-        <section id="faq" className="mb-12">
-          <h2 className="text-3xl font-semibold mb-4">Frequently Asked Questions</h2>
-
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Do I need technical skills to use SYRA.io?</h3>
-              <p>No, SYRA.io is designed for non-technical users. Our AI handles all complex parts while you focus on creativity.</p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Can I customize AI-generated content?</h3>
-              <p>Yes! SYRA.io allows you to edit, tweak, and humanize AI-generated content before publishing.</p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Does SYRA.io support multiple languages?</h3>
-              <p>Absolutely! You can generate content in multiple languages and localize your campaigns easily.</p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Is my data secure?</h3>
-              <p>Yes, we use industry-standard encryption and security measures to protect your data. See our Privacy Policy for details.</p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">What are the pricing plans?</h3>
-              <p>We offer flexible pricing starting with a free tier. Visit our Pricing page for current plans and features.</p>
-            </div>
-          </div>
-        </section>
-
-        <footer className="border-t border-gray-300 dark:border-gray-700 pt-8 mt-12">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            For more information, visit our <a href="/help" className="text-blue-600 hover:underline">Help Center</a> or contact <a href="/contact" className="text-blue-600 hover:underline">Support</a>.
-          </p>
-        </footer>
+            {/* Footer */}
+            <footer className="text-center py-8 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                Need help? Visit our <Link to="/help" className="text-blue-600 hover:text-blue-700 font-medium">Help Center</Link> or <Link to="/contact" className="text-blue-600 hover:text-blue-700 font-medium">Contact Support</Link>
+              </p>
+            </footer>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

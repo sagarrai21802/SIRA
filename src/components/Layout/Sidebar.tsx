@@ -18,17 +18,24 @@ import {
   LogOut,
   Plus,
   TrendingUp,
+  Linkedin,
+  Facebook,
+  Instagram,
+  Tags,
+  Search,
+  Table,
+  Images,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type MenuItem = {
   name: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   href: string;
-  badge: string | null;
-  color: string;
-  bgColor: string;
-  subItems?: { name: string; href: string; icon: string }[];
+  badge?: string | null;
+  color?: string;
+  bgColor?: string;
+  subItems?: { name: string; href: string; icon: React.ComponentType<{ className?: string }> }[];
 };
 
 export function Sidebar() {
@@ -63,9 +70,9 @@ export function Sidebar() {
       color: "text-pink-600",
       bgColor: "bg-pink-50 dark:bg-pink-900/20",
       subItems: [
-        { name: "LinkedIn Post", href: "/linkedinpostgenerator", icon: "💼" },
-        { name: "Facebook Post", href: "/facebookpostgenerator", icon: "📘" },
-        { name: "Instagram Post", href: "/instagrampostgenerator", icon: "📷" },
+        { name: "LinkedIn Post", href: "/linkedinpostgenerator", icon: Linkedin },
+        { name: "Facebook Post", href: "/facebookpostgenerator", icon: Facebook },
+        { name: "Instagram Post", href: "/instagrampostgenerator", icon: Instagram },
       ],
     },
     { 
@@ -84,7 +91,7 @@ export function Sidebar() {
     },
     {
       name: "Carousel",
-      icon: Image,
+      icon: Images,
       href: "/carousel-generator",
       badge: "New",
       color: "text-teal-600",
@@ -98,9 +105,9 @@ export function Sidebar() {
       color: "text-indigo-600",
       bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
       subItems: [
-        { name: "Meta Tag Generator", href: "/seo/metatags", icon: "🏷️" },
-        { name: "Keywords Generator", href: "/seo/keyword", icon: "🔍" },
-        { name: "Schema Generator", href: "/seo/schemagenerator", icon: "📊" },
+        { name: "Meta Tag Generator", href: "/seo/metatags", icon: Tags },
+        { name: "Keywords Generator", href: "/seo/keyword", icon: Search },
+        { name: "Schema Generator", href: "/seo/schemagenerator", icon: Table },
       ],
     },
     { 
@@ -239,18 +246,23 @@ export function Sidebar() {
                     transition={{ duration: 0.3, ease: "easeOut" }}
                     className={`${isCollapsed ? 'absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-2 z-40 border border-gray-200 dark:border-gray-700' : 'ml-6 mt-2'} space-y-1 overflow-hidden`}
                   >
-                    {item.subItems.map((sub, subIndex) => (
-                      <Link
-                        key={subIndex}
-                        to={sub.href}
-                        className={`flex items-center ${isCollapsed ? 'justify-start space-x-2' : 'space-x-3'} px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 group hover:shadow-sm`}
-                      >
-                        <span className="text-lg">{sub.icon}</span>
-                        <span className={`text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white font-medium ${isCollapsed ? '' : ''}`}>
-                          {sub.name}
-                        </span>
-                      </Link>
-                    ))}
+                    {item.subItems.map((sub, subIndex) => {
+                      const SubIcon = sub.icon;
+                      return (
+                        <Link
+                          key={subIndex}
+                          to={sub.href}
+                          className={`flex items-center ${isCollapsed ? 'justify-start space-x-2' : 'space-x-3'} px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 group hover:shadow-sm`}
+                        >
+                          <div className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-700 group-hover:bg-gray-200 dark:group-hover:bg-gray-600 transition-colors">
+                            <SubIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                          </div>
+                          <span className={`text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white font-medium ${isCollapsed ? '' : ''}`}>
+                            {sub.name}
+                          </span>
+                        </Link>
+                      );
+                    })}
                   </motion.div>
                 )}
               </AnimatePresence>
