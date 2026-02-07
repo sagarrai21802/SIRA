@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLayout } from '../components/Layout/LayoutContext';
 import {
@@ -34,6 +34,7 @@ import { Button } from '../components/UI/Button';
 import { MiniCalendar } from '../components/Scheduler/MiniCalendar';
 import { uploadImage } from '../utils/uploadImage';
 import toast from 'react-hot-toast';
+import { API_BASE, API_ENDPOINTS } from '../lib/api';
 
 interface Stats {
   contentCount: number;
@@ -48,6 +49,7 @@ interface Stats {
 export function Dashboard() {
   const { user } = useAuth();
   const { isCollapsed } = useLayout();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     contentCount: 0,
     imageCount: 0,
@@ -333,6 +335,78 @@ export function Dashboard() {
       localStorage.removeItem('showWelcome');
     }
   }, []);
+
+  // Auto-resume LinkedIn connection (moved from Login to prevent blocking)
+  useEffect(() => {
+    const resumeLinkedInConnection = async () => {
+      const pendingCode = localStorage.getItem('li_pending_code');
+      if (!pendingCode || !user) return;
+
+      // Use timeout to not block initial dashboard load
+      setTimeout(async () => {
+        try {
+          toast.loading('Finishing LinkedIn connection...', { id: 'li-connect' });
+          const token = localStorage.getItem('auth_token');
+          const redirectUri = import.meta.env.VITE_LINKEDIN_REDIRECT_URI || `${window.location.origin}/linkedin-callback`;
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          
+          const resp = await fetch(`${API_BASE}${API_ENDPOINTS.LINKEDIN_EXCHANGE_CODE}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ code: pendingCode, redirect_uri: redirectUri }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Failed to connect LinkedIn');
+          
+          toast.success('LinkedIn connected!', { id: 'li-connect' });
+          localStorage.removeItem('li_pending_code');
+
+          // If there is a pending post, publish it
+          const pendingRaw = localStorage.getItem('li_pending_post');
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw);
+            if (pending?.content) {
+              toast.loading('Posting to LinkedIn...', { id: 'li-post' });
+              const postController = new AbortController();
+              const postTimeoutId = setTimeout(() => postController.abort(), 15000);
+              
+              const postResp = await fetch(`${API_BASE}${API_ENDPOINTS.LINKEDIN_POST}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ content: pending.content, image_url: pending.image_url || null }),
+                signal: postController.signal
+              });
+              clearTimeout(postTimeoutId);
+              
+              const postData = await postResp.json();
+              if (!postResp.ok) throw new Error(postData.error || 'Failed to post to LinkedIn');
+              toast.success('Posted to LinkedIn!', { id: 'li-post' });
+            }
+            localStorage.removeItem('li_pending_post');
+          }
+        } catch (ex: any) {
+          if (ex.name === 'AbortError') {
+            toast.error('LinkedIn connection timed out. Please try again from the LinkedIn Post Generator.', { id: 'li-connect' });
+          } else {
+            toast.error(ex?.message || 'Failed to finish LinkedIn connection', { id: 'li-connect' });
+          }
+        }
+      }, 2000); // Wait 2 seconds after dashboard loads
+    };
+
+    resumeLinkedInConnection();
+  }, [user]);
 
   // Quick Actions with enhanced design
   const quickActions = [

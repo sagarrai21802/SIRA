@@ -44,11 +44,18 @@ export function Signup() {
     }
 
     setLoading(true);
+    setLoadingMessage('Creating account...');
+    
+    // Show "waking up server" message after 3 seconds if still loading
+    const serverWakeTimeout = setTimeout(() => {
+      if (loading) {
+        setLoadingMessage('Waking up server... This may take a moment');
+      }
+    }, 3000);
+    
     try {
-      // The signUp function from useAuth will need to be updated to handle the new fields.
-      // For now, we'll pass them, but this will require changes in AuthContext.tsx.
-      // This is a placeholder to show where the new data will be used.
       const { isConfirmed } = await signUp(email, password, { displayName, phone });
+      clearTimeout(serverWakeTimeout);
       
       if (isConfirmed) {
         // User is already confirmed (rare case)
@@ -65,13 +72,16 @@ export function Signup() {
         });
       }
     } catch (error: any) {
+      clearTimeout(serverWakeTimeout);
       toast.error(error?.message || 'Failed to sign up');
     }
     setLoading(false);
+    setLoadingMessage('Creating account...');
   };
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Creating account...');
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
@@ -228,7 +238,7 @@ export function Signup() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                     </svg>
-                    Creating account...
+                    {loadingMessage}
                   </>
                 ) : (
                   <>

@@ -19,6 +19,7 @@ export default function Login() {
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loadingMessage, setLoadingMessage] = useState("Signing in...");
 
   useEffect(() => {
     const state = location.state as { message?: string; error?: string } | null;
@@ -34,57 +35,30 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setLoadingMessage("Signing in...");
+    
+    // Show "waking up server" message after 3 seconds if still loading
+    const serverWakeTimeout = setTimeout(() => {
+      if (loading) {
+        setLoadingMessage("Waking up server... This may take a moment");
+      }
+    }, 3000);
+    
     try {
       await signIn(email, password);
+      clearTimeout(serverWakeTimeout);
       localStorage.setItem('showWelcome', 'true');
-      navigate("/dashboard");
-
-      // Auto-resume LinkedIn connect if a code was stored
+      
+      // Check if there's pending LinkedIn connection (just for toast notification)
       const pendingCode = localStorage.getItem('li_pending_code');
       if (pendingCode) {
-        try {
-          toast.loading('Finishing LinkedIn connection...', { id: 'li-connect' });
-          const token = localStorage.getItem('auth_token');
-          const redirectUri = import.meta.env.VITE_LINKEDIN_REDIRECT_URI || `${window.location.origin}/linkedin-callback`;
-          const resp = await fetch(`${API_BASE}${API_ENDPOINTS.LINKEDIN_EXCHANGE_CODE}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({ code: pendingCode, redirect_uri: redirectUri })
-          });
-          const data = await resp.json();
-          if (!resp.ok) throw new Error(data.error || 'Failed to connect LinkedIn');
-          toast.success('LinkedIn connected!', { id: 'li-connect' });
-          localStorage.removeItem('li_pending_code');
-
-          // If there is a pending post, publish it
-          const pendingRaw = localStorage.getItem('li_pending_post');
-          if (pendingRaw) {
-            const pending = JSON.parse(pendingRaw);
-            if (pending?.content) {
-              toast.loading('Posting to LinkedIn...', { id: 'li-post' });
-              const postResp = await fetch(`${API_BASE}${API_ENDPOINTS.LINKEDIN_POST}`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
-                body: JSON.stringify({ content: pending.content, image_url: pending.image_url || null })
-              });
-              const postData = await postResp.json();
-              if (!postResp.ok) throw new Error(postData.error || 'Failed to post to LinkedIn');
-              toast.success('Posted to LinkedIn!', { id: 'li-post' });
-            }
-            localStorage.removeItem('li_pending_post');
-            navigate('/linkedinpostgenerator');
-          }
-        } catch (ex: any) {
-          toast.error(ex?.message || 'Failed to finish LinkedIn connection', { id: 'li-connect' });
-        }
+        toast.info('LinkedIn connection will resume on dashboard', { duration: 3000 });
       }
+      
+      // Navigate immediately - LinkedIn logic moved to Dashboard
+      navigate("/dashboard");
     } catch (err: any) {
+      clearTimeout(serverWakeTimeout);
       if (err.needsPasswordSetup || err.message?.toLowerCase().includes('needs password setup') || err.message?.toLowerCase().includes('account needs password setup')) {
         setNeedsPasswordSetup(true);
         setError('Your account needs password setup. Please set a new password below.');
@@ -95,6 +69,7 @@ export default function Login() {
       }
     } finally {
       setLoading(false);
+      setLoadingMessage("Signing in...");
     }
   };
 
@@ -337,7 +312,7 @@ export default function Login() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                       </svg>
-                      Signing in...
+                      {loadingMessage}
                     </span>
                   ) : "Sign In"}
                 </button>

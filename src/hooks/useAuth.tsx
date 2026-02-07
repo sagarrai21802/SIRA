@@ -1,6 +1,7 @@
 // src/hooks/useAuth.tsx
 import { useEffect, useState, useContext, createContext } from "react";
 import { API_BASE, API_ENDPOINTS } from "../lib/api";
+import { fetchWithRetry, warmUpServer } from "../lib/apiUtils";
 
 interface User {
   id: string;
@@ -66,12 +67,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const token = localStorage.getItem('auth_token');
         if (token) {
-          const response = await fetchWithTimeout(`${apiBase}/api/auth/me`, {
+          const response = await fetchWithRetry(`${apiBase}/api/auth/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
-            }
-          }, 8000);
+            },
+            timeout: 8000,
+            retries: 2,
+            retryDelay: 1000
+          });
           
           if (response.ok) {
             const userData = await response.json();
@@ -89,17 +93,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
+    // Warm up the server on app load to prevent cold start delays
+    warmUpServer(apiBase);
+    
     checkAuth();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${apiBase}${API_ENDPOINTS.LOGIN}`, {
+      const response = await fetchWithRetry(`${apiBase}${API_ENDPOINTS.LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        timeout: 10000, // 10 second timeout for login
+        retries: 3,
+        retryDelay: 1500 // Start with 1.5s delay
       });
 
       const data = await response.json();
@@ -117,13 +127,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('auth_token', data.token);
       setUser(data.user);
     } catch (error: any) {
+      if (error.message?.includes('timed out')) {
+        throw new Error('Login request timed out. The server may be starting up. Please try again.');
+      }
       throw new Error(error.message || 'Login failed');
     }
   };
 
   const signUp = async (email: string, password: string, options: { displayName?: string; phone?: string } = {}) => {
     try {
-      const response = await fetch(`${apiBase}/api/auth/register`, {
+      const response = await fetchWithRetry(`${apiBase}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -133,7 +146,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           password,
           full_name: options.displayName,
           phone: options.phone
-        })
+        }),
+        timeout: 15000, // 15 second timeout for registration (can take longer)
+        retries: 3,
+        retryDelay: 2000 // Start with 2s delay for registration
       });
 
       const data = await response.json();
@@ -146,6 +162,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // In a real app, you might want to implement email verification
       return { isConfirmed: true };
     } catch (error: any) {
+      if (error.message?.includes('timed out')) {
+        throw new Error('Registration request timed out. The server may be starting up. Please try again in a moment.');
+      }
       throw new Error(error.message || 'Registration failed');
     }
   };
@@ -154,12 +173,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const token = localStorage.getItem('auth_token');
       if (token) {
-        await fetch(`${apiBase}/api/auth/logout`, {
+        await fetchWithRetry(`${apiBase}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: 5000, // 5 second timeout for logout
+          retries: 1 // Only 1 retry for logout
         });
       }
     } catch (error) {
