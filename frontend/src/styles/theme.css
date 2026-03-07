@@ -1,0 +1,186 @@
+/* SIRA Website Theme CSS Variables and Global Styles */
+
+:root {
+  /* Primary Colors */
+  --color-light-pink: #F2E6EE;
+  --color-purple: #977DFF;
+  --color-light-pink-accent: #FFCCF2;
+  --color-blue: #0033FF;
+  --color-dark-blue: #0600AF;
+  --color-medium-blue: #0600AB;
+  --color-dark-navy: #00003D;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--color-blue) 0%, var(--color-purple) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--color-purple) 0%, var(--color-light-pink-accent) 100%);
+  --gradient-tertiary: linear-gradient(135deg, var(--color-dark-blue) 0%, var(--color-medium-blue) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--color-blue) 0%, var(--color-dark-blue) 100%);
+  --gradient-hero: linear-gradient(135deg, var(--color-blue) 0%, var(--color-purple) 50%, var(--color-dark-blue) 100%);
+  --gradient-card: linear-gradient(135deg, var(--color-light-pink) 0%, var(--color-light-pink-accent) 100%);
+  --gradient-button: linear-gradient(135deg, var(--color-blue) 0%, var(--color-purple) 50%, var(--color-medium-blue) 100%);
+  --gradient-background: linear-gradient(135deg, var(--color-light-pink) 0%, var(--color-light-pink-accent) 50%, var(--color-light-pink) 100%);
+  
+  /* Text Gradients */
+  --gradient-text-primary: linear-gradient(135deg, var(--color-blue) 0%, var(--color-purple) 100%);
+  --gradient-text-secondary: linear-gradient(135deg, var(--color-dark-blue) 0%, var(--color-medium-blue) 100%);
+  --gradient-text-accent: linear-gradient(135deg, var(--color-purple) 0%, var(--color-light-pink-accent) 100%);
+}
+
+/* Global Theme Styles */
+.sira-theme {
+  /* Background gradients */
+  background: var(--gradient-background);
+  min-height: 100vh;
+}
+
+/* Utility Classes for Theme Colors */
+.text-primary-gradient {
+  background: var(--gradient-text-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-secondary-gradient {
+  background: var(--gradient-text-secondary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-accent-gradient {
+  background: var(--gradient-text-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-primary-gradient {
+  background: var(--gradient-primary);
+}
+
+.bg-secondary-gradient {
+  background: var(--gradient-secondary);
+}
+
+.bg-tertiary-gradient {
+  background: var(--gradient-tertiary);
+}
+
+.bg-accent-gradient {
+  background: var(--gradient-accent);
+}
+
+.bg-hero-gradient {
+  background: var(--gradient-hero);
+}
+
+.bg-card-gradient {
+  background: var(--gradient-card);
+}
+
+.bg-button-gradient {
+  background: var(--gradient-button);
+}
+
+/* Button Styles */
+.btn-primary-gradient {
+  background: var(--gradient-button);
+  border: none;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 51, 255, 0.3);
+}
+
+/* Card Styles */
+.card-theme {
+  background: var(--gradient-card);
+  border: 2px solid rgba(0, 51, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card-theme:hover {
+  border-color: rgba(151, 125, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(151, 125, 255, 0.1);
+}
+
+/* Input Styles */
+.input-theme {
+  border: 2px solid rgba(0, 51, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.input-theme:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(0, 51, 255, 0.1);
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .sira-theme {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  }
+  
+  .card-theme {
+    background: rgba(31, 41, 55, 0.8);
+    border-color: rgba(0, 51, 255, 0.3);
+  }
+  
+  .input-theme {
+    background: rgba(31, 41, 55, 0.8);
+    border-color: rgba(0, 51, 255, 0.3);
+    color: white;
+  }
+}
+
+/* Animation Keyframes */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-light-pink);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gradient-accent);
+}
+
+/* Selection Styling */
+::selection {
+  background: rgba(0, 51, 255, 0.2);
+  color: var(--color-dark-navy);
+}
+
+::-moz-selection {
+  background: rgba(0, 51, 255, 0.2);
+  color: var(--color-dark-navy);
+}

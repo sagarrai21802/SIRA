@@ -1,0 +1,772 @@
+
+import React, { useState, Fragment } from "react";
+import { generateTemplate, TemplateResult } from "../lib/template";
+import { generateTemplateImage } from "../lib/templateImage";
+import { Button } from '../components/UI/Button';
+import { Card, CardContent } from '../components/UI/Card';
+import { Loader2, Copy, Check, AlertTriangle, Download, CalendarPlus, Maximize2, Edit3 } from "lucide-react";
+import { ModernDropdown } from '../components/UI/ModernDropdown';
+import { Dialog, Transition } from "@headlessui/react";
+import { ScheduleGeneratedPostModal } from '../components/Scheduler/ScheduleGeneratedPostModal';
+import toast from 'react-hot-toast';
+import { API_BASE, API_ENDPOINTS } from "../lib/api";
+import { editLinkedInPostWithGemini } from "../lib/gemini";
+
+// Error Modal
+const ErrorModal = ({ isOpen, message, onRetry, onClose }: {
+  isOpen: boolean;
+  message: string;
+  onRetry: () => void;
+  onClose: () => void;
+}) => (
+  <Transition appear show={isOpen} as={Fragment}>
+    <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Transition.Child
+        as={Fragment}
+        enter="ease-out duration-300"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="ease-in duration-200"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <div className="fixed inset-0 bg-black bg-opacity-40" />
+      </Transition.Child>
+      <div className="fixed inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Title className="text-lg font-medium leading-6 text-gray-900 dark:text-white flex items-center">
+                <AlertTriangle className="h-6 w-6 text-red-500 mr-3" /> API Error
+              </Dialog.Title>
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <Button onClick={() => { onClose(); onRetry(); }}>Retry</Button>
+              </div>
+            </Dialog.Panel>
+          </Transition.Child>
+        </div>
+      </div>
+    </Dialog>
+  </Transition>
+);
+
+// Copyable Output (improved design)
+const CopyableOutput = ({ title, body, cta }: { title: string; body: string; cta: string }) => {
+  const [copied, setCopied] = useState(false);
+  const fullText = `${title}\n\n${body}\n\n${cta}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(fullText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div className="relative bg-gradient-to-br from-slate-50 to-pink-50 dark:from-slate-800 dark:to-pink-900/30 rounded-2xl p-6 shadow-inner border border-slate-200/50 dark:border-slate-700/50">
+      <Button
+        size="sm"
+        variant="ghost"
+        className="absolute top-4 right-4 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-white/80 dark:bg-slate-800/80 rounded-full p-2 shadow-sm hover:shadow-md transition-all duration-200"
+        onClick={handleCopy}
+      >
+        {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+      </Button>
+      <div className="pr-12">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">{title}</h2>
+        <div className="bg-white/70 dark:bg-slate-900/50 p-4 rounded-xl shadow-inner mb-4">
+          <div className="text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap font-medium">
+            {body}
+          </div>
+        </div>
+        <div className="bg-gradient-to-r from-pink-500 to-yellow-500 text-white px-4 py-3 rounded-xl font-semibold text-center shadow-md">
+          {cta}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Suggestions Sidebar
+const SuggestionsSidebar = ({ tips }: { tips: string[] }) => (
+  <Card className="shadow-xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl overflow-hidden">
+    <CardContent className="p-6">
+      <div className="flex items-center mb-4">
+        <div className="w-8 h-8 bg-pink-100 dark:bg-pink-900/50 rounded-full flex items-center justify-center mr-3">
+          💡
+        </div>
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Quick Tips</h3>
+      </div>
+      <ul className="space-y-3">
+        {tips.map((tip, idx) => (
+          <li key={idx} className="flex items-start">
+            <div className="w-2 h-2 bg-pink-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+            <span className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{tip}</span>
+          </li>
+        ))}
+      </ul>
+    </CardContent>
+  </Card>
+);
+
+export default function InstagramPostGenerator() {
+   const [industry, setIndustry] = useState("Select Industry");
+   const [designation, setDesignation] = useState("Select Designation");
+   const [topic, setTopic] = useState("");
+   const [description, setDescription] = useState("");
+   const [result, setResult] = useState<TemplateResult | null>(null);
+   const [loading, setLoading] = useState(false);
+   const [images, setImages] = useState<string[]>([]);
+   const [imgLoading, setImgLoading] = useState(false);
+   const [imageCount, setImageCount] = useState("1");
+   const [imageSize, setImageSize] = useState("Post");
+   const [imageStyle, setImageStyle] = useState("Realistic");
+   const [apiError, setApiError] = useState<{ message: string; onRetry: () => void } | null>(null);
+   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+   const [instagramConnected, setInstagramConnected] = useState<boolean | null>(null);
+   const [posting, setPosting] = useState(false);
+   const [isEditing, setIsEditing] = useState(false);
+   const [editedTitle, setEditedTitle] = useState("");
+   const [editedBody, setEditedBody] = useState("");
+   const [editedCta, setEditedCta] = useState("");
+   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+   const [isEditImageOpen, setIsEditImageOpen] = useState(false);
+   const [editPrompt, setEditPrompt] = useState("");
+   const [editingImageIdx, setEditingImageIdx] = useState<number | null>(null);
+   const [editLoading, setEditLoading] = useState(false);
+   const [aiEditInstruction, setAiEditInstruction] = useState("");
+   const [aiEditing, setAiEditing] = useState(false);
+
+  const industries = ["Technology", "Finance", "Healthcare", "Marketing"];
+  const designations = ["Software Engineer", "Product Manager", "Marketing Head", "CEO"];
+  const imageCountOptions = ["1", "2", "3", "4"];
+  const imageSizeOptions = ["Post", "Story", "Reel"];
+  const imageStyleOptions = ["3D", "Cartoon", "Pixart", "Realistic"];
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    setResult(null);
+    setImages([]);
+    setApiError(null);
+
+    try {
+      const template = await generateTemplate({
+        title: topic,
+        description: `
+          Industry: ${industry}, Designation: ${designation}
+          ${description ? `\n\nAdditional context: ${description}` : ""}
+        `,
+        tone: "creative",
+        style: "instagram-post",
+      });
+      setResult(template);
+    } catch (err) {
+      setApiError({
+        message: "Error generating Instagram post. Please check your connection or API key.",
+        onRetry: handleGenerate,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!result) return;
+    setImgLoading(true);
+    setImages([]);
+    setApiError(null);
+
+    try {
+      const numImages = parseInt(imageCount, 10);
+      const imagePromises = Array.from({ length: numImages }, () =>
+        generateTemplateImage(
+          `${imageStyle} style: ${result.templateBody}`,
+          imageSize === "Post" ? "1080x1080" :
+          imageSize === "Story" ? "1080x1920" :
+          "1080x1080"
+        )
+      );
+      const generatedImages = await Promise.all(imagePromises);
+      setImages(generatedImages.filter((img): img is string => !!img));
+    } catch (err) {
+      setApiError({
+        message: "Error generating images. The service may be temporarily unavailable.",
+        onRetry: handleGenerateImage,
+      });
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
+  const fullPostContent = result ? `${editedTitle}\n\n${editedBody}\n\n${editedCta}` : '';
+
+  const handleAiEditContent = async () => {
+    if (!result) return;
+    if (!aiEditInstruction.trim()) {
+      toast.error('Enter an edit instruction');
+      return;
+    }
+    try {
+      setAiEditing(true);
+      const updated = await editLinkedInPostWithGemini(
+        { title: editedTitle, body: editedBody, cta: editedCta },
+        aiEditInstruction,
+        'creative'
+      );
+      setEditedTitle(updated.title || editedTitle);
+      setEditedBody(updated.body || editedBody);
+      setEditedCta(updated.cta || editedCta);
+      toast.success('Content updated');
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to edit content');
+    } finally {
+      setAiEditing(false);
+    }
+  };
+
+  // Check Instagram connection status
+  const checkInstagramStatus = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return setInstagramConnected(false);
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.INSTAGRAM_STATUS}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await resp.json().catch(() => ({}));
+      setInstagramConnected(Boolean((data as any)?.connected));
+    } catch {
+      setInstagramConnected(false);
+    }
+  };
+
+  React.useEffect(() => {
+    checkInstagramStatus();
+  }, []);
+
+  React.useEffect(() => {
+    if (result) {
+      setEditedTitle(result.templateTitle);
+      setEditedBody(result.templateBody);
+      setEditedCta(result.callToAction);
+    } else {
+      setEditedTitle("");
+      setEditedBody("");
+      setEditedCta("");
+    }
+  }, [result]);
+
+  const openImagePreview = (url: string) => {
+    setPreviewImageUrl(url);
+    setIsImagePreviewOpen(true);
+  };
+
+  const closeImagePreview = () => {
+    setIsImagePreviewOpen(false);
+    setPreviewImageUrl(null);
+  };
+
+  const openEditImageModal = (idx: number) => {
+    setEditingImageIdx(idx);
+    setEditPrompt("");
+    setIsEditImageOpen(true);
+  };
+
+  const handleEditImage = async () => {
+    if (editingImageIdx === null || !images[editingImageIdx]) return;
+    const imageUrl = images[editingImageIdx];
+    if (!editPrompt.trim()) {
+      toast.error('Please enter an edit prompt');
+      return;
+    }
+    try {
+      setEditLoading(true);
+      const token = localStorage.getItem('auth_token');
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.EDIT_IMAGE}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ image_url: imageUrl, prompt: editPrompt })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed to edit image');
+      const newUrl = data.image_url as string;
+      setImages(prev => prev.map((img, i) => (i === editingImageIdx ? newUrl : img)));
+      toast.success('Image edited successfully');
+      setIsEditImageOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to edit image');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handlePostNow = async () => {
+    if (!result) return;
+    const content = fullPostContent.trim();
+    if (!content) return;
+
+    const ensureConnected = async () => {
+      if (instagramConnected) return true;
+      const clientId = (import.meta.env as any).VITE_INSTAGRAM_APP_ID || (import.meta.env as any).VITE_FACEBOOK_APP_ID;
+      const redirectUri = (import.meta.env as any).VITE_INSTAGRAM_REDIRECT_URI || `${window.location.origin}/instagram-callback`;
+      const scope = encodeURIComponent('instagram_basic,instagram_content_publish,pages_manage_posts,pages_show_list');
+      const state = Math.random().toString(36).slice(2);
+      try {
+        const imageUrlsToSend = images.length > 0 ? images : [];
+        localStorage.setItem('ig_pending_post', JSON.stringify({ content, image_urls: imageUrlsToSend }));
+      } catch {}
+      const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+      toast('Redirecting to connect Instagram...', { icon: '🔗' });
+      window.location.href = authUrl;
+      return false;
+    };
+
+    const connected = await ensureConnected();
+    if (!connected) return;
+
+    try {
+      setPosting(true);
+      const token = localStorage.getItem('auth_token');
+      if (!token) throw new Error('Not authenticated');
+      const imageUrlsToSend = images.length > 0 ? images : [];
+      const resp = await fetch(`${API_BASE}${API_ENDPOINTS.INSTAGRAM_POST}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ content, image_urls: imageUrlsToSend })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error((data as any).error || 'Failed to post on Instagram');
+      toast.success('Posted to Instagram successfully!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to post');
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-pink-50 dark:from-slate-900 dark:via-slate-800 dark:to-pink-950 p-6">
+      <div className="max-w-7xl mx-auto space-y-10 relative z-20">
+        <div className="text-center py-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-yellow-600 bg-clip-text text-transparent mb-2">
+            Instagram Post Generator
+          </h1>
+          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+            Create visually stunning Instagram posts that captivate your followers and boost engagement.
+          </p>
+        </div>
+
+        {!result ? (
+          <div className="max-w-4xl mx-auto">
+            {/* Form - Full Width */}
+            <Card className="shadow-xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl overflow-hidden">
+              <CardContent className="p-8">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-200 mb-2">Post Details</h2>
+                  <p className="text-slate-600 dark:text-slate-400">Fill in the information to generate your creative Instagram post.</p>
+                </div>
+                <div className="grid gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative z-[100]">
+                      <ModernDropdown label="Industry" options={industries} selected={industry} onChange={setIndustry} />
+                    </div>
+                    <div className="relative z-[100]">
+                      <ModernDropdown label="Designation" options={designations} selected={designation} onChange={setDesignation} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Topic</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 'A day in the life of a travel blogger'"
+                      className="w-full p-4 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Additional Context</label>
+                    <textarea
+                      placeholder="Add additional details for the post..."
+                      className="w-full p-4 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md resize-none min-h-[120px]"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                      Industry and Designation will be included automatically.
+                    </p>
+                  </div>
+
+                  <Button onClick={handleGenerate} disabled={loading} className="w-full py-4 text-lg rounded-xl bg-gradient-to-r from-pink-600 to-yellow-600 hover:from-pink-700 hover:to-yellow-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]">
+                    {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "✨ Generate Instagram Post"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto space-y-8">
+            {/* Top Row: Form + Enhanced Sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Form - Shrunk */}
+              <Card className="lg:col-span-2 shadow-xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">Post Details</h2>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm">Edit your inputs and regenerate.</p>
+                  </div>
+                  <div className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Industry" options={industries} selected={industry} onChange={setIndustry} />
+                      </div>
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Designation" options={designations} selected={designation} onChange={setDesignation} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Topic</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 'A day in the life of a travel blogger'"
+                        className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Additional Context</label>
+                      <textarea
+                        placeholder="Add additional details for the post..."
+                        className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md resize-none min-h-[100px]"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Industry and Designation will be included automatically.
+                      </p>
+                    </div>
+
+                    <Button onClick={handleGenerate} disabled={loading} className="w-full py-3 text-base rounded-xl bg-gradient-to-r from-pink-600 to-yellow-600 hover:from-pink-700 hover:to-yellow-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
+                      {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "🔄 Regenerate"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sidebar with Image Controls */}
+              <Card className="shadow-2xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-br from-pink-50 via-white to-yellow-50 dark:from-pink-900/20 dark:via-slate-800 dark:to-yellow-900/20 backdrop-blur-xl overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="space-y-6">
+                    <div className="flex items-center mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-yellow-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                        <span className="text-lg">⚙️</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Image Settings</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">Configure your visuals</p>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Image Size" options={imageSizeOptions} selected={imageSize} onChange={setImageSize} />
+                      </div>
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Image Style" options={imageStyleOptions} selected={imageStyle} onChange={setImageStyle} />
+                      </div>
+                      <div className="relative z-[100]">
+                        <ModernDropdown label="Number of Images" options={imageCountOptions} selected={imageCount} onChange={setImageCount} />
+                      </div>
+                      <Button onClick={handleGenerateImage} disabled={imgLoading} className="w-full py-3 text-sm rounded-xl bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                        {imgLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : "🖼️ Generate Image(s)"}
+                      </Button>
+                      {images.length > 0 && (
+                        <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">📸 Generated Images</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {images.map((image, idx) => (
+                              <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg transition-all duration-300">
+                                <img onClick={() => openImagePreview(image)} src={image} alt={`Generated Instagram Post ${idx + 1}`} className="w-full h-28 object-cover cursor-zoom-in" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <div className="absolute top-2 right-2">
+                                  <button onClick={() => openImagePreview(image)} className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-800 text-xs font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                                    <Maximize2 className="h-3.5 w-3.5 mr-1.5" /> View
+                                  </button>
+                                </div>
+                                <div className="absolute top-2 left-2">
+                                  <button onClick={() => openEditImageModal(idx)} className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-800 text-xs font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                                    <Edit3 className="h-3.5 w-3.5 mr-1.5" /> Edit
+                                  </button>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                                  <a
+                                    href={image}
+                                    download={`syra-instagram-image-${idx + 1}.png`}
+                                    className="inline-flex items-center justify-center w-full py-1.5 px-3 bg-white/90 hover:bg-white text-slate-800 rounded-lg text-xs font-medium shadow-md hover:shadow-lg transition-all duration-200"
+                                  >
+                                    <Download className="h-3.5 w-3.5 mr-1.5" /> Download
+                                  </a>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {result && (
+                        <Button onClick={handlePostNow} disabled={posting} className="w-full py-3 text-sm rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200">
+                          {posting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : (instagramConnected ? 'Post Now to Instagram' : 'Connect & Post to Instagram')}
+                        </Button>
+                      )}
+                      <Button onClick={() => setIsScheduleModalOpen(true)} variant="outline" className="w-full py-3 text-sm rounded-xl border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200">
+                        <CalendarPlus className="h-4 w-4 mr-2" /> Schedule Post
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Bottom: Generated Content */}
+            <Card className="shadow-2xl rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl overflow-hidden">
+              <CardContent className="p-8 space-y-8">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200">🌟 Generated Instagram Post</h3>
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
+                      {isEditing ? 'Done Editing' : 'Edit Content'}
+                    </Button>
+                  </div>
+                  {/* AI Edit Assistance */}
+                  <div className="mb-6">
+                    <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">AI Edit Instruction</label>
+                    <textarea
+                      value={aiEditInstruction}
+                      onChange={(e) => setAiEditInstruction(e.target.value)}
+                      placeholder="Describe what to change or add (e.g., 'make the tone more inspiring, add a short anecdote about creativity, and include 2 relevant hashtags at the end')"
+                      className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 min-h-[90px]"
+                    />
+                    <div className="mt-2 flex gap-3">
+                      <Button onClick={handleAiEditContent} disabled={aiEditing}>
+                        {aiEditing ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                        Apply AI Edit
+                      </Button>
+                      <Button variant="outline" onClick={() => setAiEditInstruction('')}>
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Title</label>
+                        <input
+                          type="text"
+                          className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                          value={editedTitle}
+                          onChange={(e) => setEditedTitle(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Body</label>
+                        <textarea
+                          className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md min-h-[140px] resize-y"
+                          value={editedBody}
+                          onChange={(e) => setEditedBody(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Call to Action</label>
+                        <input
+                          type="text"
+                          className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 hover:shadow-md"
+                          value={editedCta}
+                          onChange={(e) => setEditedCta(e.target.value)}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">These edits will be used for posting and scheduling.</p>
+                    </div>
+                  ) : (
+                    <CopyableOutput title={editedTitle} body={editedBody} cta={editedCta} />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+      <ErrorModal
+        isOpen={!!apiError}
+        message={apiError?.message || ""}
+        onRetry={apiError?.onRetry || (() => {})}
+        onClose={() => setApiError(null)}
+      />
+
+      {result && (
+        <ScheduleGeneratedPostModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          onPostScheduled={() => {
+            setIsScheduleModalOpen(false);
+            toast.success("Post scheduled! Check the Scheduler page.");
+          }}
+          content={fullPostContent}
+          imageUrl={images.length > 0 ? images[0] : null}
+          platform="Instagram"
+        />
+      )}
+
+      {/* Image Preview Modal */}
+      <Transition appear show={isImagePreviewOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={closeImagePreview}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/70" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-5xl transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-4 text-left align-middle shadow-xl transition-all">
+                  <div className="flex justify-between items-center mb-3">
+                    <Dialog.Title as="h3" className="text-base font-medium text-slate-900 dark:text-slate-100">Image Preview</Dialog.Title>
+                    <Button variant="outline" size="sm" onClick={closeImagePreview}>Close</Button>
+                  </div>
+                  <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-2">
+                    {previewImageUrl && (
+                      <img src={previewImageUrl} alt="Generated Image Preview" className="max-h-[80vh] w-full h-auto object-contain rounded-md" />
+                    )}
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Edit Image Modal */}
+      <Transition appear show={isEditImageOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => setIsEditImageOpen(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/70" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-xl transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title as="h3" className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">
+                    Edit Image with AI
+                  </Dialog.Title>
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Edit Prompt</label>
+                    <textarea
+                      value={editPrompt}
+                      onChange={(e) => setEditPrompt(e.target.value)}
+                      placeholder="Describe how to edit the image (e.g., 'add a subtle bokeh background, enhance contrast, remove watermark')"
+                      className="w-full p-3 rounded-xl border border-slate-300/60 dark:border-slate-600/60 bg-white/50 dark:bg-slate-900/50 shadow-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 focus:outline-none transition-all duration-200 min-h-[120px]"
+                    />
+                  </div>
+                  <div className="mt-6 flex justify-between gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        if (!editPrompt.trim()) {
+                          toast.error('Enter a prompt to enhance');
+                          return;
+                        }
+                        try {
+                          setEditLoading(true);
+                          const token = localStorage.getItem('auth_token');
+                          const resp = await fetch(`${API_BASE}${API_ENDPOINTS.ENHANCE_IMAGE_PROMPT}`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                            },
+                            body: JSON.stringify({ prompt: editPrompt })
+                          });
+                          const data = await resp.json();
+                          if (!resp.ok) throw new Error(data.error || 'Failed to enhance prompt');
+                          setEditPrompt(data.prompt || '');
+                          toast.success('Prompt enhanced');
+                        } catch (e: any) {
+                          toast.error(e?.message || 'Failed to enhance prompt');
+                        } finally {
+                          setEditLoading(false);
+                        }
+                      }}
+                    >
+                      {editLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                      Enhance Prompt
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsEditImageOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleEditImage} disabled={editLoading}>
+                      {editLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                      Apply Edit
+                    </Button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+      </div>
+    </div>
+  );
+}
+// InstagramPostGenerator.tsx
