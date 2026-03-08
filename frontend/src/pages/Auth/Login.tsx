@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Github, Chrome } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { API_BASE, API_ENDPOINTS } from "../../lib/api";
-import toast from "react-hot-toast";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -13,19 +11,14 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loadingMessage, setLoadingMessage] = useState("Signing in...");
 
   useEffect(() => {
     const state = location.state as { message?: string; error?: string } | null;
-    if (state?.message) {
-      setSuccessMessage(state.message);
-    }
     if (state?.error) {
       setError(state.error);
     }
@@ -35,81 +28,51 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    setLoadingMessage("Signing in...");
-    
-    // Show "waking up server" message after 3 seconds if still loading
-    const serverWakeTimeout = setTimeout(() => {
-      if (loading) {
-        setLoadingMessage("Waking up server... This may take a moment");
-      }
-    }, 3000);
-    
+
     try {
       await signIn(email, password);
-      clearTimeout(serverWakeTimeout);
       localStorage.setItem('showWelcome', 'true');
-      
-      // Check if there's pending LinkedIn connection (just for toast notification)
-      const pendingCode = localStorage.getItem('li_pending_code');
-      if (pendingCode) {
-        toast.info('LinkedIn connection will resume on dashboard', { duration: 3000 });
-      }
-      
-      // Navigate immediately - LinkedIn logic moved to Dashboard
       navigate("/dashboard");
     } catch (err: any) {
-      clearTimeout(serverWakeTimeout);
-      if (err.needsPasswordSetup || err.message?.toLowerCase().includes('needs password setup') || err.message?.toLowerCase().includes('account needs password setup')) {
+      if (err.needsPasswordSetup || err.message?.toLowerCase().includes('needs password setup')) {
         setNeedsPasswordSetup(true);
-        setError('Your account needs password setup. Please set a new password below.');
-      } else if (err.message?.toLowerCase().includes('email not confirmed')) {
-        setError('Please confirm your email address before logging in. Check your inbox for the confirmation link.');
+        setError('Please set a password for your account.');
       } else {
-        setError(err.message || "Something went wrong!");
+        setError(err.message || "Invalid credentials");
       }
     } finally {
       setLoading(false);
-      setLoadingMessage("Signing in...");
     }
   };
 
   const handlePasswordSetup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    
+
     if (newPassword.length < 6) {
       setError('Password must be at least 6 characters');
       return;
     }
-    
+
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}${API_ENDPOINTS.SET_PASSWORD}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password: newPassword
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: newPassword })
       });
-      
+
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to set password');
-      }
-      
-      setSuccessMessage('Password set successfully! You can now log in.');
+      if (!response.ok) throw new Error(data.error || 'Failed to set password');
+
       setNeedsPasswordSetup(false);
-      setNewPassword('');
-      setConfirmPassword('');
+      setPassword(newPassword);
+      setSuccessMessage('Password set! Please sign in.');
     } catch (err: any) {
       setError(err.message || 'Failed to set password');
     } finally {
@@ -117,241 +80,136 @@ export default function Login() {
     }
   };
 
-  return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
-      {/* Decorative background orbs */}
-      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+  const [successMessage, setSuccessMessage] = useState("");
 
-      {/* Content grid */}
-      <div className="relative z-10 grid min-h-screen grid-cols-1 lg:grid-cols-2">
-        {/* Left banner */}
-        <div className="hidden lg:flex flex-col justify-center px-12 text-white">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <Sparkles className="h-7 w-7" />
-              </div>
-              <h1 className="text-4xl font-extrabold tracking-tight">Welcome to SIRA</h1>
-            </div>
-            <p className="text-white/80 text-lg max-w-xl">
-              Create on-brand content, images and posts tailored to your business. Sign in to continue where you left off.
-            </p>
-            <div className="mt-8 grid grid-cols-2 gap-4 max-w-md">
-              <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-                <div className="text-2xl font-bold">10k+</div>
-                <div className="text-white/80 text-sm">Images generated</div>
-              </div>
-              <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
-                <div className="text-2xl font-bold">25k+</div>
-                <div className="text-white/80 text-sm">Posts created</div>
-              </div>
-            </div>
-          </motion.div>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SYRA</h1>
         </div>
 
-        {/* Right auth panel */}
-        <div className="flex items-center justify-center p-6 lg:p-12">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-            className="w-full max-w-md rounded-3xl border border-white/20 bg-white/80 p-6 shadow-2xl backdrop-blur dark:bg-gray-900/80"
-          >
-            {successMessage && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 rounded-xl border border-green-200 bg-green-50/90 dark:bg-green-900/30 px-4 py-3 flex items-center gap-2 text-green-700 dark:text-green-300"
+        {/* Form Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg text-sm">
+              {successMessage}
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {error}
+            </div>
+          )}
+
+          {needsPasswordSetup ? (
+            <form onSubmit={handlePasswordSetup}>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Set Password</h2>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Confirm password"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
               >
-                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm">{successMessage}</span>
-              </motion.div>
-            )}
+                {loading ? "Setting..." : "Set Password"}
+              </button>
 
-            {needsPasswordSetup ? (
-              <form onSubmit={handlePasswordSetup}>
-                <div className="mb-6 text-center">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Set up password</h2>
-                  {error && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-3 rounded-xl border border-red-200 bg-red-50/90 dark:bg-red-900/30 px-4 py-3 flex items-center gap-2 text-red-700 dark:text-red-300"
-                    >
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-sm">{error}</span>
-                    </motion.div>
-                  )}
-                </div>
+              <button
+                type="button"
+                onClick={() => { setNeedsPasswordSetup(false); setError(""); }}
+                className="mt-3 w-full text-sm text-gray-500 hover:text-gray-700"
+              >
+                Back to login
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Sign In</h2>
 
-                <div className="mb-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    disabled
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 p-3 text-gray-600 dark:border-gray-700 dark:bg-gray-800"
-                  />
-                </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
 
-                <div className="mb-4 relative">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">New password</label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter new password"
-                    className="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••••"
+                    required
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-[38px] text-sm text-gray-500 hover:text-gray-700"
                     onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
 
-                <div className="mb-6 relative">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm password</label>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
-                    className="w-full rounded-xl border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-800"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </button>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white shadow hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {loading ? "Setting up..." : "Set password"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setNeedsPasswordSetup(false); setError(""); setSuccessMessage(""); }}
-                  className="mt-3 w-full text-sm text-gray-500 hover:text-gray-700"
-                >
-                  Back to login
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                <div className="mb-6 text-center">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back</h2>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Sign in to continue your journey</p>
-                  {error && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-3 rounded-xl border border-red-200 bg-red-50/90 dark:bg-red-900/30 px-4 py-3 flex items-center gap-2 text-red-700 dark:text-red-300"
-                    >
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-sm">{error}</span>
-                    </motion.div>
-                  )}
-                </div>
-
-                <div className="mb-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="email"
-                      placeholder="you@example.com"
-                      className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      autoComplete="email"
-                      autoFocus
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-2">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      className="w-full rounded-xl border border-gray-300 pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent dark:border-gray-700 dark:bg-gray-800 transition-all"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mb-6 text-right">
-                  <Link to="/help" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">Forgot password?</Link>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3.5 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 transition-all duration-200"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                      </svg>
-                      {loadingMessage}
-                    </span>
-                  ) : "Sign In"}
-                </button>
-
-                <div className="mt-6">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white/80 dark:bg-gray-900/80 text-gray-500">Or continue with</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <Chrome className="w-5 h-5 text-red-500" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Google</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <Github className="w-5 h-5 text-gray-900 dark:text-white" />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</span>
-                    </button>
-                  </div>
-                </div>
-
-                <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-                  Don't have an account?{' '}
-                  <Link to="/signup" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">Create one</Link>
-                </p>
-              </form>
-            )}
-          </motion.div>
+              <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{' '}
+                <Link to="/signup" className="text-blue-600 hover:underline">Sign up</Link>
+              </p>
+            </form>
+          )}
         </div>
       </div>
     </div>

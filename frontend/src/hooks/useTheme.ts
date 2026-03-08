@@ -1,26 +1,24 @@
 import { useState, useEffect } from 'react';
 
 export function useTheme() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Force dark mode only - no light mode
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
-    }
+    // Always use dark mode
+    setTheme('dark');
   }, []);
 
   useEffect(() => {
     document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-    localStorage.setItem('theme', theme);
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
   }, [theme]);
 
+  // Theme toggle disabled - dark mode only
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    // No-op - dark mode only
   };
 
-  return { theme, toggleTheme };
+  return { theme: 'dark' as const, toggleTheme };
 }

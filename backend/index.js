@@ -10,6 +10,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { generateWithLeonardoAI } from './leonardo-integration.js';
 
 // Support __filename/__dirname in ESM and load env from server/.env or repo root .env
 const __filename = fileURLToPath(import.meta.url);
@@ -210,7 +211,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     await profile.save();
 
-    res.json({ 
+    res.json({
       message: 'User created successfully',
       user: {
         id: userId,
@@ -316,7 +317,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
     }
 
     const profile = await Profile.findOne({ id: user.id });
-    
+
     res.json({
       user: {
         id: user.id,
@@ -458,11 +459,11 @@ app.post('/api/profiles/upsert', async (req, res) => {
 
     await Profile.updateOne(
       { id },
-      { 
+      {
         $set: updateData,
-        $setOnInsert: { 
-          id, 
-          created_at: now 
+        $setOnInsert: {
+          id,
+          created_at: now
         }
       },
       { upsert: true }
@@ -607,10 +608,10 @@ app.post('/api/scheduled-posts', async (req, res) => {
     console.log('Scheduled posts request received');
     console.log('Request body size:', JSON.stringify(req.body).length, 'characters');
     console.log('Content length:', req.body.content?.length || 0, 'characters');
-    
+
     const { user_id, content, image_url, scheduled_at, status, platform } = req.body;
     if (!user_id || !content || !scheduled_at) return res.status(400).json({ error: 'user_id, content, scheduled_at required' });
-    
+
     // Validate content length (max 10,000 characters)
     if (content.length > 10000) {
       return res.status(400).json({ error: 'Content too long. Maximum 10,000 characters allowed.' });
@@ -653,12 +654,12 @@ app.patch('/api/scheduled-posts/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body || {};
     if (!id) return res.status(400).json({ error: 'id required' });
-    
+
     // Validate content length if content is being updated
     if (updates.content && updates.content.length > 10000) {
       return res.status(400).json({ error: 'Content too long. Maximum 10,000 characters allowed.' });
     }
-    
+
     await ScheduledPost.updateOne({ id }, { $set: updates });
     res.json({ ok: true });
   } catch (err) {
@@ -774,13 +775,74 @@ app.post('/api/deletion-complaints', async (req, res) => {
 // ---- Image Generation ----
 app.post('/api/generate-image', async (req, res) => {
   try {
-    const { user_id, prompt, image_type, width, height, quality, source } = req.body;
+    const { user_id, prompt, image_type, width, height, quality, source, engine } = req.body;
 
     if (!user_id || !prompt || !image_type || !width || !height || !quality) {
       return res.status(400).json({ error: 'user_id, prompt, image_type, width, height, quality required' });
     }
 
-    // Generate image using GoogleGenerativeAI SDK
+    // Default to Leonardo AI if engine not specified
+    const useLeonardo = engine === 'leonardo' || !engine;
+
+    let imageUrl;
+    let generationSource = 'leonardo';
+
+    if (useLeonardo) {
+      // Use Leonardo AI
+      const fullPrompt = `${prompt} | Style: ${image_type}`;
+      const result = await generateWithLeonardoAI(fullPrompt, width, height);
+      imageUrl = result.imageUrl;
+
+      // Download the image from URL and upload to Cloudinary
+      const imageResponse = await fetch(imageUrl);
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const buffer = Buffer.from(imageBuffer);
+
+      const transformations = [{ width: parseInt(width), height: parseInt(height), crop: 'fill' }];
+
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'image',
+            folder: 'sira-generated-images',
+            public_id: `image_${Date.now()}_${randomUUID().slice(0, 8)}`,
+            transformation: transformations
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(buffer);
+      });
+
+      // Save to MongoDB
+      const doc = {
+        id: randomUUID(),
+        user_id,
+        prompt,
+        cloudinary_url: uploadResult.secure_url,
+        cloudinary_public_id: uploadResult.public_id,
+        image_type,
+        width: parseInt(width),
+        height: parseInt(height),
+        quality,
+        source: source || generationSource,
+        created_at: new Date().toISOString()
+      };
+
+      await ImageGeneration.create(doc);
+
+      res.json({
+        ok: true,
+        image_url: uploadResult.secure_url,
+        public_id: uploadResult.public_id,
+        item: doc
+      });
+      return;
+    }
+
+    // Use Gemini (existing code)
+    generationSource = 'gemini';
     const fullPrompt = `${prompt} | Style: ${image_type} | Size: ${width}x${height} | Quality: ${quality}`;
 
     const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
@@ -808,7 +870,7 @@ app.post('/api/generate-image', async (req, res) => {
     const base64Data = image.bytes;
     const imageBuffer = Buffer.from(base64Data, 'base64');
     // Upload to Cloudinary with simple resize only (no overlays)
-    const transformations = [ { width: parseInt(width), height: parseInt(height), crop: 'fill' } ];
+    const transformations = [{ width: parseInt(width), height: parseInt(height), crop: 'fill' }];
 
     const uploadResult = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
@@ -842,8 +904,8 @@ app.post('/api/generate-image', async (req, res) => {
 
     await ImageGeneration.create(doc);
 
-    res.json({ 
-      ok: true, 
+    res.json({
+      ok: true,
       image_url: uploadResult.secure_url,
       public_id: uploadResult.public_id,
       item: doc
@@ -1067,7 +1129,7 @@ app.get('/api/image-generations', async (req, res) => {
   try {
     const { user_id, source } = req.query;
     if (!user_id) return res.status(400).json({ error: 'user_id required' });
-    
+
     const filter = { user_id: String(user_id) };
     if (source) {
       filter.source = String(source);
@@ -1075,11 +1137,11 @@ app.get('/api/image-generations', async (req, res) => {
       // Exclude carousel images by default if no source specified
       filter.source = { $ne: 'carousel' };
     }
-    
+
     const items = await ImageGeneration.find(filter)
       .sort({ created_at: -1 })
       .lean();
-    
+
     res.json({ items });
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
@@ -1091,16 +1153,16 @@ app.delete('/api/image-generations/:id', async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: 'id required' });
-    
+
     const image = await ImageGeneration.findOne({ id });
     if (!image) return res.status(404).json({ error: 'Image not found' });
-    
+
     // Delete from Cloudinary
     await cloudinary.uploader.destroy(image.cloudinary_public_id);
-    
+
     // Delete from MongoDB
     await ImageGeneration.deleteOne({ id });
-    
+
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
@@ -1115,7 +1177,7 @@ app.post('/api/carousel-generations', async (req, res) => {
     if (!user_id || !images || !base_prompt) {
       return res.status(400).json({ error: 'user_id, images, and base_prompt required' });
     }
-    
+
     const doc = {
       id: randomUUID(),
       user_id: String(user_id),
@@ -1128,7 +1190,7 @@ app.post('/api/carousel-generations', async (req, res) => {
       })),
       created_at: new Date().toISOString()
     };
-    
+
     await CarouselGeneration.create(doc);
     res.json({ ok: true, item: doc });
   } catch (err) {
@@ -1142,11 +1204,11 @@ app.get('/api/carousel-generations', async (req, res) => {
   try {
     const { user_id } = req.query;
     if (!user_id) return res.status(400).json({ error: 'user_id required' });
-    
+
     const items = await CarouselGeneration.find({ user_id: String(user_id) })
       .sort({ created_at: -1 })
       .lean();
-    
+
     res.json({ items });
   } catch (err) {
     res.status(500).json({ error: err && err.message ? err.message : 'Internal error' });
@@ -1480,7 +1542,7 @@ app.post('/api/linkedin/post', authenticateToken, async (req, res) => {
 
       const mediaAssetUrn = registerData?.value?.asset;
       const uploadUrl = registerData?.value?.uploadMechanism?.
-        ["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]?.uploadUrl;
+      ["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]?.uploadUrl;
       if (!mediaAssetUrn || !uploadUrl) {
         return res.status(500).json({ error: 'Failed to get LinkedIn upload URL' });
       }
@@ -1592,11 +1654,11 @@ app.get('/api/humanize/credits', async (req, res) => {
 app.post('/api/humanize/submit', async (req, res) => {
   try {
     const { content, readability, purpose, strength, model } = req.body;
-    
+
     if (!content) {
       return res.status(400).json({ error: 'content required' });
     }
-    
+
     if (content.length < 50) {
       return res.status(400).json({ error: 'Content must be at least 50 characters long' });
     }
@@ -1622,7 +1684,7 @@ app.post('/api/humanize/submit', async (req, res) => {
     });
 
     const data = await response.json();
-    
+
     // Handle API errors properly
     if (!response.ok) {
       return res.status(response.status).json(data);
@@ -1656,7 +1718,7 @@ app.post('/api/humanize/document', async (req, res) => {
     });
 
     const data = await response.json();
-    
+
     // Handle API errors properly
     if (!response.ok) {
       return res.status(response.status).json(data);

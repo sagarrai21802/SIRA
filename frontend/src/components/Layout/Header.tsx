@@ -1,12 +1,10 @@
 import { useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Sparkles, Sun, Moon, User, LogOut, Settings, Menu } from "lucide-react";
+import { Sparkles, User, LogOut, Settings, Menu } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../hooks/useTheme";
 
 export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { user, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
   // Stable user menu on hover
@@ -46,7 +44,7 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-black/10 dark:border-white/10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg">
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        
+
         {/* Left section: Hamburger + Logo */}
         <div className="flex items-center space-x-3">
           {showHamburger && (
@@ -65,16 +63,8 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
           </Link>
         </div>
 
-        {/* Right section: Theme toggle + Auth */}
+        {/* Right section: Auth */}
         <div className="flex items-center space-x-4">
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center justify-center"
-          >
-            {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-          </button>
-
           {/* Auth buttons */}
           {user ? (
             <div

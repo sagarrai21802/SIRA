@@ -1,51 +1,33 @@
-
-import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { Header } from "./components/Layout/Header";
-import { Footer } from "./components/Layout/Footer";
 import { Sidebar } from "./components/Layout/Sidebar";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { LoadingScreen } from "./components/LoadingScreen";
 import { ProfileGuard } from "./components/ProfileGuard";
 import { ThemeProvider } from "./components/Theme/ThemeProvider";
 import { LayoutProvider } from "./components/Layout/LayoutContext";
 import { Home } from "./pages/Home";
 import Login from "./pages/Auth/Login";
 import { Signup } from "./pages/Auth/Signup";
-import Profile from "./pages/Profile";
 import { Dashboard } from "./pages/Dashboard";
-import { ContentGenerator } from "./pages/ContentGenerator";
-import SEOToolkit from "./pages/SEOToolkit";
 import { useAuth, AuthProvider } from "./hooks/useAuth";
 import { useLayout } from "./components/Layout/LayoutContext";
 import GenerateTemplate from "./pages/Template";
-import { ImageGenerator } from "./pages/ImageGeneration";
-import ImageEditor from "./pages/ImageEditor";
-import { CarouselGenerator } from "./pages/CarouselGenerator";
+
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import ContactUs from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import AdGenerator from "./pages/Ad";
-import Settings from "./pages/Settings";
 import { AuthCallback } from "./pages/Auth/AuthCallback";
-import { Humanizer } from "./pages/Humanizer";
-import PromptGenerator from "./pages/Promptgenerator";
 import { Scheduler } from "./pages/Scheduler"; // Import the Scheduler component
 import InstagramPostGenerator from "./pages/InstagramPostGenerator";
 import FacebookPostGenerator from "./pages/facebookPostGenerator";
 import LinkedInPostGenerator from "./pages/LinkedinPostGenerator";
-import MetaTags from "./pages/MetaTags";
-import KeywordGenerator from "./pages/Keyword";
-import SchemaGenerator from "./pages/SchemaGenerator";
 import { ProfilePersonalization } from "./pages/Auth/ProfilePersonalization";
 import LinkedInCallback from "./pages/LinkdinCallback";
 import InstagramCallback from "./pages/InstagramCallback";
 import FacebookCallback from "./pages/FacebookCallback";
-import { Analytics } from "./pages/Analytics";
-import { NewProject } from "./pages/NewProject";
 import Careers from "./pages/Careers";
 import Blog from "./pages/Blog";
 import Press from "./pages/Press";
@@ -66,21 +48,12 @@ import DataDeletion from "./pages/DataDeletion";
 function AppContent() {
   const { loading: authLoading } = useAuth();
   const { isCollapsed, setIsCollapsed } = useLayout();
-  const [showLoading, setShowLoading] = useState(true);
 
   const location = useLocation();
   const noSidebarRoutes = ["/", "/login", "/signup", "/complaint-deletion"];
   const hideSidebar = noSidebarRoutes.includes(location.pathname);
 
-  useEffect(() => {
-    if (!authLoading) {
-      setShowLoading(false);
-    }
-  }, [authLoading]);
 
-  if (authLoading || showLoading) {
-    return <LoadingScreen />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
@@ -96,69 +69,48 @@ function AppContent() {
           <main className={`flex-1 ${isCollapsed ? 'py-4' : 'p-6'}`}>
             <ProfileGuard>
               <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/personalization" element={<ProtectedRoute><ProfilePersonalization /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/linkedin-callback" element={<LinkedInCallback />} />
-              <Route path="/instagram-callback" element={<InstagramCallback />} />
-              <Route path="/facebook-callback" element={<FacebookCallback />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/content" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
-              {/* <Route path="/metatags" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} /> */}
-              <Route path="/template" element={<ProtectedRoute><GenerateTemplate /></ProtectedRoute>} />
-              <Route path="/images" element={<ProtectedRoute><ImageGenerator /></ProtectedRoute>} />
-              <Route path="/studio" element={<ProtectedRoute><ImageEditor /></ProtectedRoute>} />
-              <Route path="/carousel-generator" element={<ProtectedRoute><CarouselGenerator /></ProtectedRoute>} />
-              <Route path="/ads" element={<ProtectedRoute><AdGenerator /></ProtectedRoute>} />
-              <Route path="/humanizer" element={<ProtectedRoute><Humanizer /></ProtectedRoute>} />
-              <Route path="/promptgenerator" element={<ProtectedRoute><PromptGenerator /></ProtectedRoute>} />
-              <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
-              <Route path="/about" element={<About />} />
-              <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
-              <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/linkedinpostgenerator" element={<ProtectedRoute><LinkedInPostGenerator /></ProtectedRoute>} />
-              <Route path="/facebookpostgenerator" element={<ProtectedRoute><FacebookPostGenerator /></ProtectedRoute>} />
-              <Route path="/instagrampostgenerator" element={<ProtectedRoute><InstagramPostGenerator /></ProtectedRoute>} />
-              <Route path="/seo/metatags" element={<ProtectedRoute><MetaTags/></ProtectedRoute>} />
-              <Route path="/seo/keyword" element={<ProtectedRoute><KeywordGenerator /></ProtectedRoute>} />
-              <Route path="/seo/schemagenerator" element={<ProtectedRoute><SchemaGenerator /></ProtectedRoute>} />
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/personalization" element={<ProtectedRoute><ProfilePersonalization /></ProtectedRoute>} />
+                <Route path="/linkedin-callback" element={<LinkedInCallback />} />
+                <Route path="/instagram-callback" element={<InstagramCallback />} />
+                <Route path="/facebook-callback" element={<FacebookCallback />} />
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                {/* <Route path="/metatags" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} /> */}
+                <Route path="/template" element={<ProtectedRoute><GenerateTemplate /></ProtectedRoute>} />
+                <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+                <Route path="/about" element={<About />} />
+                <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
+                <Route path="/contact" element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/linkedinpostgenerator" element={<ProtectedRoute><LinkedInPostGenerator /></ProtectedRoute>} />
+                <Route path="/facebookpostgenerator" element={<ProtectedRoute><FacebookPostGenerator /></ProtectedRoute>} />
+                <Route path="/instagrampostgenerator" element={<ProtectedRoute><InstagramPostGenerator /></ProtectedRoute>} />
 
-              {/* Add the Scheduler route */}
-              <Route path="/scheduler" element={<ProtectedRoute><Scheduler /></ProtectedRoute>} />
-              {/* Add the Analytics route */}
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-              {/* Add the New Project route */}
-              <Route path="/new-project" element={<ProtectedRoute><NewProject /></ProtectedRoute>} />
-              {/* Footer routes */}
-              <Route path="/content-generator" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
-              <Route path="/image-generation" element={<ProtectedRoute><ImageGenerator /></ProtectedRoute>} />
-              <Route path="/seo-toolkit" element={<ProtectedRoute><SEOToolkit /></ProtectedRoute>} />
-              <Route path="/careers" element={<ProtectedRoute><Careers /></ProtectedRoute>} />
-              <Route path="/blog" element={<ProtectedRoute><Blog /></ProtectedRoute>} />
-              <Route path="/press" element={<ProtectedRoute><Press /></ProtectedRoute>} />
-              <Route path="/partners" element={<ProtectedRoute><Partners /></ProtectedRoute>} />
-              <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-              <Route path="/docs" element={<ProtectedRoute><Docs /></ProtectedRoute>} />
-              <Route path="/tutorials" element={<ProtectedRoute><Tutorials /></ProtectedRoute>} />
-              <Route path="/api" element={<ProtectedRoute><API /></ProtectedRoute>} />
-              <Route path="/status" element={<ProtectedRoute><Status /></ProtectedRoute>} />
-              <Route path="/changelog" element={<ProtectedRoute><Changelog /></ProtectedRoute>} />
-              <Route path="/cookies" element={<ProtectedRoute><Cookies /></ProtectedRoute>} />
-              <Route path="/gdpr" element={<ProtectedRoute><GDPR /></ProtectedRoute>} />
-              <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
-              <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
-              {/* Public complaints/deletion page */}
-              <Route path="/complaint-deletion" element={<ComplaintDeletion />} />
-              <Route path="/datadeletion" element={<DataDeletion />} />
+                {/* Add the Scheduler route */}
+                <Route path="/scheduler" element={<ProtectedRoute><Scheduler /></ProtectedRoute>} />
+                <Route path="/careers" element={<ProtectedRoute><Careers /></ProtectedRoute>} />
+                <Route path="/blog" element={<ProtectedRoute><Blog /></ProtectedRoute>} />
+                <Route path="/press" element={<ProtectedRoute><Press /></ProtectedRoute>} />
+                <Route path="/partners" element={<ProtectedRoute><Partners /></ProtectedRoute>} />
+                <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                <Route path="/docs" element={<ProtectedRoute><Docs /></ProtectedRoute>} />
+                <Route path="/tutorials" element={<ProtectedRoute><Tutorials /></ProtectedRoute>} />
+                <Route path="/api" element={<ProtectedRoute><API /></ProtectedRoute>} />
+                <Route path="/status" element={<ProtectedRoute><Status /></ProtectedRoute>} />
+                <Route path="/changelog" element={<ProtectedRoute><Changelog /></ProtectedRoute>} />
+                <Route path="/cookies" element={<ProtectedRoute><Cookies /></ProtectedRoute>} />
+                <Route path="/gdpr" element={<ProtectedRoute><GDPR /></ProtectedRoute>} />
+                <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
+                <Route path="/compliance" element={<ProtectedRoute><Compliance /></ProtectedRoute>} />
+                {/* Public complaints/deletion page */}
+                <Route path="/complaint-deletion" element={<ComplaintDeletion />} />
+                <Route path="/datadeletion" element={<DataDeletion />} />
               </Routes>
             </ProfileGuard>
           </main>
-          <Footer />
         </div>
       </div>
 

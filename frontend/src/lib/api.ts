@@ -1,14 +1,14 @@
 // Centralized API configuration
 const inferDefaultApiBase = () => {
-  // Prefer localhost server in dev if env not provided
+  // Always use localhost for development
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1') {
       return 'http://localhost:4000';
     }
   }
-  // Fallback to production API
-  return 'https://sira-msb1.onrender.com';
+  // Default to localhost for local development
+  return 'http://localhost:4000';
 };
 
 export const API_BASE = (import.meta.env.VITE_API_BASE && String(import.meta.env.VITE_API_BASE).trim()) || inferDefaultApiBase();
@@ -28,24 +28,24 @@ export const API_ENDPOINTS = {
   LOGOUT: '/api/auth/logout',
   ME: '/api/auth/me',
   SET_PASSWORD: '/api/auth/set-password',
-  
+
   // Users & Profiles
   USERS_UPSERT: '/api/users/upsert',
   PROFILES_UPSERT: '/api/profiles/upsert',
   PROFILES_GET: (id: string) => `/api/profiles/${id}`,
-  
+
   // Content
   CONTENT_GENERATIONS: '/api/content-generations',
   CONTENT_GENERATIONS_GET: (id: string) => `/api/content-generations/${id}`,
-  
+
   // Templates
   TEMPLATE_GENERATIONS: '/api/template-generations',
   TEMPLATE_DAILY_COUNT: '/api/template-generations/daily-count',
-  
+
   // Scheduled Posts
   SCHEDULED_POSTS: '/api/scheduled-posts',
   SCHEDULED_POSTS_GET: (id: string) => `/api/scheduled-posts/${id}`,
-  
+
   // Images
   IMAGE_GENERATIONS: '/api/image-generations',
   IMAGE_GENERATIONS_GET: (id: string) => `/api/image-generations/${id}`,
@@ -54,12 +54,12 @@ export const API_ENDPOINTS = {
   EDIT_IMAGE: '/api/edit-image',
   ENHANCE_IMAGE_PROMPT: '/api/enhance-image-prompt',
   UPLOAD_PROFILE_PICTURE: '/api/upload-profile-picture',
-  
+
   // Humanizer
   HUMANIZE_CREDITS: '/api/humanize/credits',
   HUMANIZE_SUBMIT: '/api/humanize/submit',
   HUMANIZE_DOCUMENT: '/api/humanize/document',
-  
+
   // LinkedIn
   LINKEDIN_EXCHANGE_CODE: '/api/linkedin/exchange-code',
   LINKEDIN_STATUS: '/api/linkedin/status',
@@ -74,7 +74,7 @@ export const API_ENDPOINTS = {
   INSTAGRAM_EXCHANGE_CODE: '/api/instagram/exchange-code',
   INSTAGRAM_STATUS: '/api/instagram/status',
   INSTAGRAM_POST: '/api/instagram/post',
-  
+
   // Other
   FEEDBACK: '/api/feedback',
   STATS_COUNTS: '/api/stats/counts',

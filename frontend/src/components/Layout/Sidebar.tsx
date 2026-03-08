@@ -5,25 +5,13 @@ import { useLayout } from "./LayoutContext";
 import {
   LayoutDashboard,
   Layers,
-  BarChart3,
   Image,
-  FileText,
-  UserCircle,
-  Megaphone,
-  Zap,
-  Sparkles,
   Calendar,
   ChevronRight,
-  Settings,
   LogOut,
-  Plus,
-  TrendingUp,
   Linkedin,
   Facebook,
   Instagram,
-  Tags,
-  Search,
-  Table,
   Images,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,17 +34,17 @@ export function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   const menuItems = [
-    { 
-      name: "Dashboard", 
-      icon: LayoutDashboard, 
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
       href: "/dashboard",
       badge: null,
       color: "text-blue-600",
       bgColor: "bg-blue-50 dark:bg-blue-900/20"
     },
-    { 
-      name: "Scheduler", 
-      icon: Calendar, 
+    {
+      name: "Scheduler",
+      icon: Calendar,
       href: "/scheduler",
       badge: "New",
       color: "text-green-600",
@@ -74,86 +62,6 @@ export function Sidebar() {
         { name: "Facebook Post", href: "/facebookpostgenerator", icon: Facebook },
         { name: "Instagram Post", href: "/instagrampostgenerator", icon: Instagram },
       ],
-    },
-    { 
-      name: "Content", 
-      icon: FileText, 
-      href: "/content",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20"
-    },
-    {
-      name: "Images",
-      icon: Image,
-      href: "/images",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/20"
-    },
-    {
-      name: "Carousel",
-      icon: Images,
-      href: "/carousel-generator",
-      badge: "New",
-      color: "text-teal-600",
-      bgColor: "bg-teal-50 dark:bg-teal-900/20"
-    },
-    {
-      name: "SEO Tools",
-      icon: BarChart3,
-      href: "/seo/metatags",
-      badge: null,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
-      subItems: [
-        { name: "Meta Tag Generator", href: "/seo/metatags", icon: Tags },
-        { name: "Keywords Generator", href: "/seo/keyword", icon: Search },
-        { name: "Schema Generator", href: "/seo/schemagenerator", icon: Table },
-      ],
-    },
-    { 
-      name: "Ad Generator", 
-      icon: Megaphone, 
-      href: "/ads",
-      color: "text-orange-600",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20"
-    },
-    { 
-      name: "AI Humanizer", 
-      icon: Zap, 
-      href: "/humanizer",
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50 dark:bg-yellow-900/20"
-    },
-    { 
-      name: "Prompt Generator", 
-      icon: Sparkles, 
-      href: "/promptgenerator",
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-50 dark:bg-cyan-900/20"
-    },
-    {
-      name: "Analytics",
-      icon: TrendingUp,
-      href: "/analytics",
-      badge: null,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/20"
-    },
-    {
-      name: "Profile",
-      icon: UserCircle,
-      href: "/profile",
-      badge: null,
-      color: "text-gray-600",
-      bgColor: "bg-gray-50 dark:bg-gray-900/20"
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      href: "/settings",
-      badge: null,
-      color: "text-gray-600",
-      bgColor: "bg-gray-50 dark:bg-gray-900/20"
     },
   ];
 
@@ -185,11 +93,10 @@ export function Sidebar() {
                 {item.subItems ? (
                   <button
                     onClick={() => !isCollapsed && toggleExpanded(item.name)}
-                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-3 rounded-lg transition-all duration-200 group w-full relative ${
-                      isActive
-                        ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-500 shadow-md"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:shadow-sm"
-                    }`}
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-3 rounded-lg transition-all duration-200 group w-full relative ${isActive
+                      ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-500 shadow-md"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:shadow-sm"
+                      }`}
                     onMouseEnter={() => setHoveredMenu(item.name)}
                     onMouseLeave={() => setHoveredMenu(null)}
                     title={isCollapsed ? item.name : ''}
@@ -205,20 +112,18 @@ export function Sidebar() {
                     </div>
                     {!isCollapsed && (
                       <ChevronRight
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          isExpanded ? 'rotate-90' : ''
-                        }`}
+                        className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''
+                          }`}
                       />
                     )}
                   </button>
                 ) : (
                   <Link
                     to={item.href}
-                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-3 rounded-lg transition-all duration-200 group relative ${
-                      isActive
-                        ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-500 shadow-md"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:shadow-sm"
-                    }`}
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-3 rounded-lg transition-all duration-200 group relative ${isActive
+                      ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-500 shadow-md"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:shadow-sm"
+                      }`}
                     onMouseEnter={() => setHoveredMenu(item.name)}
                     onMouseLeave={() => setHoveredMenu(null)}
                     title={isCollapsed ? item.name : ''}
@@ -273,31 +178,6 @@ export function Sidebar() {
 
       {/* Quick Actions */}
       <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50`}>
-        <div className="space-y-2">
-          <h3 className={`text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 ${isCollapsed ? 'hidden' : ''}`}>
-            Quick Actions
-          </h3>
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Link to="/new-project" className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} p-3 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 group shadow-sm hover:shadow-md`} title={isCollapsed ? 'New Project' : ''}>
-              <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 shadow-sm">
-                <Plus className="w-4 h-4 text-white" />
-              </div>
-              <span className={`text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white ${isCollapsed ? 'hidden' : ''}`}>
-                New Project
-              </span>
-            </Link>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Link to="/analytics" className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} p-3 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 group shadow-sm hover:shadow-md`} title={isCollapsed ? 'Analytics' : ''}>
-              <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 shadow-sm">
-                <TrendingUp className="w-4 h-4 text-white" />
-              </div>
-              <span className={`text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white ${isCollapsed ? 'hidden' : ''}`}>
-                Analytics
-              </span>
-            </Link>
-          </motion.div>
-        </div>
       </div>
 
       {/* Footer */}

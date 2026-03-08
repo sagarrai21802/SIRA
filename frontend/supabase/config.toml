@@ -1,2 +1,0 @@
-[functions.scheduler]
-cron = "*/5 * * * *"

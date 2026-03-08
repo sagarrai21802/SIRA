@@ -8,46 +8,34 @@ html, body {
 @tailwind components;
 @tailwind utilities;
 
+/* Force dark mode defaults */
 :root {
-  --toast-bg: #ffffff;
-  --toast-color: #374151;
-  --toast-border: #e5e7eb;
+  color-scheme: dark;
 }
 
-.dark {
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-gray-900 text-white;
+}
+
+/* Toast customization for dark mode */
+:root, .dark {
   --toast-bg: #1f2937;
   --toast-color: #f3f4f6;
   --toast-border: #374151;
 }
 
-/* Custom scrollbar */
+/* Hide scrollbar but allow scrolling */
 ::-webkit-scrollbar {
-  width: 6px;
+  display: none;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #1e293b;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Smooth transitions */
